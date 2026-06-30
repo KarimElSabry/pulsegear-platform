@@ -21,13 +21,24 @@ export default function ProductGrid({
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
-  // ✅ useCallback عشان نقدر نستخدمها جوه الـ useEffect وبره
   const fetchProducts = useCallback(async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('products')
       .select(`*, images:product_images(*)`)
-      .eq('status', 'available')
       .order('created_at', { ascending: false })
+
+    // ✅ جيب كل الـ products (available + sold) عشان الـ filter يشتغل صح
+    // لو مفيش filter أو 'All' → جيب الكل
+    // لو 'In Stock' → جيب available بس
+    // لو 'Sold' → جيب sold بس
+    if (filterAvailability === 'In Stock') {
+      query = query.eq('status', 'available')
+    } else if (filterAvailability === 'Sold') {
+      query = query.eq('status', 'sold')
+    }
+    // 'All' → مفيش filter → بيجيب الكل ✅
+
+    const { data, error } = await query
 
     if (error) {
       console.error('❌ fetchProducts error:', error.message)
@@ -37,25 +48,22 @@ export default function ProductGrid({
 
     setProducts(data as Product[])
     setLoading(false)
-  }, [])
+  }, [filterAvailability]) // ✅ بيتحدث لما الـ filter يتغير
 
   useEffect(() => {
-    // ✅ أول fetch لما الصفحة تفتح
     fetchProducts()
 
-    // ✅ Realtime listener
     const channel = supabase
       .channel('products-realtime')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'products' },
         () => {
-          fetchProducts() // ✅ بيتحدث أوتوماتيك لما حاجة تتغير
+          fetchProducts()
         }
       )
       .subscribe()
 
-    // ✅ Cleanup لما الـ component يتمسح
     return () => {
       supabase.removeChannel(channel)
     }
@@ -72,10 +80,6 @@ export default function ProductGrid({
 
   if (filterCondition && filterCondition !== 'All') {
     displayed = displayed.filter((p) => p.condition === filterCondition)
-  }
-
-  if (filterAvailability === 'In Stock') {
-    displayed = displayed.filter((p) => p.status === 'available')
   }
 
   if (limit) {

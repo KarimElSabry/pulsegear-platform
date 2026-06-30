@@ -27,7 +27,7 @@ export default function ProductCard({ product }: Props) {
               alt={product.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              unoptimized // ✅ مهم عشان الـ URLs خارجية (vinted, etc.)
+              unoptimized
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">
@@ -35,10 +35,12 @@ export default function ProductCard({ product }: Props) {
             </div>
           )}
 
-          {/* Availability Badge */}
-          {product.status !== 'available' && (
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">
-              Sold Out
+          {/* ✅ SOLD Overlay Badge */}
+          {product.status === 'sold' && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="bg-red-600 text-white text-sm font-black px-4 py-2 rounded-full tracking-widest uppercase">
+                SOLD OUT
+              </span>
             </div>
           )}
         </div>
