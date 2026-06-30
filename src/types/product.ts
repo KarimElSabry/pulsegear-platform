@@ -30,6 +30,7 @@ export interface Product {
   status?: ProductStatus;
   featured?: boolean;
   created_at?: string;
+  sold_at?: string | null; 
   images?: ProductImage[];
 }
 

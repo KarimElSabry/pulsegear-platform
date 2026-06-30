@@ -1,14 +1,12 @@
-// src/app/sold/page.tsx
 import { ProductService } from '@/services/productService'
 import Image from 'next/image'
 
 export default async function SoldArchivePage() {
-  // ✅ جيب المنتجات المباعة من Supabase
   const soldProducts = await ProductService.getProducts({ status: 'sold' })
 
-  // ✅ Group by month using created_at (soldAt مش موجود)
+  // ✅ Group by month using sold_at or fallback to created_at
   const grouped = soldProducts.reduce((acc, product) => {
-    const month = new Date(product.created_at!).toLocaleDateString('en-US', {
+    const month = new Date(product.sold_at ?? product.created_at!).toLocaleDateString('en-US', {
       month: 'long',
       year: 'numeric',
     })
@@ -36,41 +34,48 @@ export default async function SoldArchivePage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {items.map((product) => {
-              const mainImage = product.images?.[0]?.image_url ?? '/placeholder.jpg'
+
+              // ✅ Primary image أو أول صورة
+              const mainImage =
+                product.images?.find((img) => img.is_primary)?.image_url ??
+                product.images?.[0]?.image_url ??
+                '/placeholder.jpg'
 
               return (
                 <div
                   key={product.id}
-                  className="relative rounded-xl overflow-hidden shadow-sm opacity-70 bg-zinc-900"
+                  className="relative rounded-xl overflow-hidden shadow-sm bg-zinc-900 group"
                 >
-                  {/* SOLD Overlay */}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                    <span className="text-white font-bold text-lg tracking-widest">
+                  {/* ✅ SOLD Overlay */}
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                    <span className="bg-red-600 text-white font-black text-sm px-4 py-1 rounded-full tracking-widest uppercase shadow-lg">
                       SOLD
                     </span>
                   </div>
 
-                  {/* Product Image ✅ next/image */}
+                  {/* Product Image */}
                   <div className="relative w-full h-48">
                     <Image
                       src={mainImage}
                       alt={product.title}
                       fill
-                      className="object-cover grayscale"
+                      className="object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
+                      unoptimized
                     />
                   </div>
 
                   {/* Product Info */}
-                  <div className="p-3 bg-zinc-800">
+                  <div className="p-3 bg-zinc-800 opacity-80">
                     <p className="text-sm font-medium text-zinc-200 truncate">
                       {product.title}
                     </p>
                     <p className="text-sm text-zinc-400">
                       {product.price_egp.toLocaleString()} EGP
                     </p>
+                    {/* ✅ sold_at لو موجود، وإلا created_at */}
                     <p className="text-xs text-zinc-500 mt-1">
                       Sold{' '}
-                      {new Date(product.created_at!).toLocaleDateString('en-US', {
+                      {new Date(product.sold_at ?? product.created_at!).toLocaleDateString('en-US', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',

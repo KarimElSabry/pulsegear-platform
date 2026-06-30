@@ -235,7 +235,7 @@ export class ProductService {
     const supabase = this.getClient()
     const { error } = await supabase
       .from('products')
-      .update({ status })
+      .update({ status, sold_at: status === 'sold' ? new Date().toISOString() : null, })
       .eq('id', id)
 
     if (error) {

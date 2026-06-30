@@ -1,6 +1,6 @@
 import { ProductService } from '@/services/productService'
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
+import ProductImageGallery from '@/components/ProductImageGallery'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -14,22 +14,14 @@ export default async function ProductDetailsPage({ params }: Props) {
 
   if (!product) return notFound()
 
-  const mainImage = product.images?.[0]?.image_url ?? '/placeholder.jpg'
+  const images = product.images ?? []
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-        {/* Image */}
-        <div className="bg-zinc-100 rounded-2xl overflow-hidden aspect-square relative">
-          <Image
-            src={mainImage}
-            alt={product.title}
-            fill
-            className="object-cover"
-            unoptimized
-          />
-        </div>
+        {/* ✅ Interactive Image Gallery */}
+        <ProductImageGallery images={images} title={product.title} />
 
         {/* Details */}
         <div className="flex flex-col justify-center gap-6">
@@ -63,22 +55,24 @@ export default async function ProductDetailsPage({ params }: Props) {
             </p>
           )}
 
-          {/* ✅ Description */}
+          {/* Description */}
           {product.description && (
-            <p className="text-zinc-400 text-sm leading-relaxed border-l-2 border-zinc-700 pl-4">
-              {product.description}
-            </p>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-white font-bold text-lg uppercase tracking-wide">
+                📝 Description
+              </h2>
+              <p className="text-zinc-400 text-sm leading-relaxed border-l-2 border-purple-600 pl-4 whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
           )}
 
           {/* Price */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <p className="text-sm text-zinc-500 mb-1">Final Price in Egypt</p>
-
-            {/* ✅ Gradient Price */}
             <p className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
               {product.price_egp?.toLocaleString()} EGP
             </p>
-
             <p className="text-xs text-zinc-500 mt-2">
               ✅ Includes shipping, customs & delivery.
             </p>
