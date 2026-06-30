@@ -1,5 +1,4 @@
-"use client";
-
+// components/GoogleAnalytics.tsx
 import Script from "next/script";
 
 const GoogleAnalytics = () => {
