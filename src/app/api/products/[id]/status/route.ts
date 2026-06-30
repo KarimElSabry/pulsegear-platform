@@ -4,15 +4,15 @@ import { revalidatePath } from 'next/cache'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // ← غيّرنا هنا
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: rawId } = await params // ← وهنا
+    const id = parseInt(rawId)
     const { status } = await req.json()
 
     await ProductService.updateStatus(id, status)
 
-    // ✅ الحل هنا
     revalidatePath('/', 'layout')
     revalidatePath('/products')
     revalidatePath('/admin')
