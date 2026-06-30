@@ -26,13 +26,16 @@ export async function POST(req: NextRequest) {
     }
 
     if (!data.is_active) {
-      return NextResponse.json({ error: 'This code is no longer active' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'This code is no longer active' },
+        { status: 403 }
+      )
     }
 
-    // ── Increment usage_count ──
+    // ── Increment usage_count ──  ✅ fixed parentheses
     await supabase
       .from('discount_codes')
-      .update({ usage_count: data.usage_count ?? 0 + 1 })
+      .update({ usage_count: (data.usage_count ?? 0) + 1 })
       .eq('id', data.id)
 
     return NextResponse.json({

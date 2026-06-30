@@ -30,6 +30,12 @@ export default function AdminLayout({
             📋 Reservations
           </a>
           <a
+            href="/admin/discounts"
+            className="text-gray-400 hover:text-white text-sm transition"
+          >
+            🏷️ Discount Codes
+          </a>
+          <a
             href="/"
             className="text-gray-400 hover:text-white text-sm transition ml-auto"
           >
