@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next"; // ← ضيف ده
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "Pulse Gear Egypt",
   description:
     "Premium Running Watches, Heart Rate Monitors and Running Accessories for Egyptian Athletes.",
+  verification: {
+    google: "DG_mrFdxIOFCNw5RiQrc-yz5uG_YRsf26m4VZ1Dl44M",
+  },
 };
 
 export default function RootLayout({
@@ -45,7 +48,7 @@ export default function RootLayout({
         <Footer />
 
         <Analytics />
-        <SpeedInsights /> {/* ← ضيف ده */}
+        <SpeedInsights />
 
       </body>
     </html>
