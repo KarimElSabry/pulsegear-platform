@@ -21,11 +21,12 @@ export function useWishlist() {
     localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const isLoved = (id: string) => wishlist.some((p) => p.id === id);
+  const isLoved = (id: number) => wishlist.some((p) => p.id === id);
 
   const toggleLove = (product: Product) => {
+    if (!product.id) return;
     setWishlist((prev) =>
-      isLoved(product.id)
+      isLoved(product.id!)
         ? prev.filter((p) => p.id !== product.id) // 💔 Unlove
         : [...prev, product]                       // ❤️ Love
     );

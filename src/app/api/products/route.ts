@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ProductService } from '@/services/productService'
-import { revalidatePath } from 'next/cache'
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    const id = parseInt(params.id)
-    await ProductService.deleteProduct(id)
-
-    // ✅ الحل هنا
-    revalidatePath('/', 'layout')
-    revalidatePath('/products')
-    revalidatePath('/admin')
-
-    return NextResponse.json({ success: true })
+    const products = await ProductService.getProducts()
+    return NextResponse.json(products)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
