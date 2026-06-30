@@ -1,5 +1,33 @@
 import Link from "next/link";
 import ProductGrid from "@/components/product/ProductGrid";
+import ContactForm from "@/components/ContactForm";
+
+const homeFaqs = [
+  {
+    q: "What is Pulse Gear?",
+    a: "An Egyptian platform sourcing premium running gear globally — delivered to your door across Egypt.",
+  },
+  {
+    q: "Are the products original?",
+    a: "Yes. All products are 100% authentic, sourced from trusted international sellers.",
+  },
+  {
+    q: "What conditions do products come in?",
+    a: "Brand New, Like New, Very Good, or Good — clearly displayed on every product page.",
+  },
+  {
+    q: "How long does delivery take?",
+    a: "Generally 1–2 weeks depending on the product source and international shipping.",
+  },
+  {
+    q: "How do I pay?",
+    a: "50% upfront via Instapay or bank transfer, and 50% cash on delivery.",
+  },
+  {
+    q: "Can I request a product not listed?",
+    a: "Absolutely! Use our Request a Product page and we'll source it for you.",
+  },
+];
 
 export default function HomePage() {
   return (
@@ -8,8 +36,6 @@ export default function HomePage() {
       {/* ===== HERO SECTION ===== */}
       <section className="w-full bg-zinc-950 text-white min-h-[90vh] flex items-center">
         <div className="max-w-6xl mx-auto px-6 py-24 w-full flex flex-col md:flex-row items-center gap-12">
-
-          {/* LEFT — Text */}
           <div className="flex flex-col gap-6 max-w-xl flex-1">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-red-500">
               Your Gear. Your Pace. Your Race.
@@ -37,8 +63,6 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-
-          {/* RIGHT — Image */}
           <div className="flex-1 w-full relative">
             <img
               src="/image.jpg"
@@ -47,7 +71,6 @@ export default function HomePage() {
             />
             <div className="absolute inset-0 rounded-3xl ring-1 ring-red-600/20 pointer-events-none" />
           </div>
-
         </div>
       </section>
 
@@ -115,7 +138,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== CTA SECTION ===== */}
+      {/* ===== REQUEST A PRODUCT ===== */}
       <section className="w-full bg-zinc-950 text-white py-20 px-6 border-t border-zinc-800">
         <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
           <h2 className="text-4xl font-black uppercase leading-tight">
@@ -130,6 +153,72 @@ export default function HomePage() {
           >
             Request a Product
           </Link>
+        </div>
+      </section>
+
+      {/* ===== GET IN TOUCH — FAQ + CONTACT FORM ===== */}
+      <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
+        <div className="max-w-6xl mx-auto">
+
+          {/* Section Header */}
+          <div className="flex flex-col items-center gap-2 mb-14 text-center">
+            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
+              Get In Touch
+            </span>
+            <h2 className="text-3xl font-black text-white uppercase">
+              We're Here To Help
+            </h2>
+            <p className="text-zinc-400 text-sm max-w-md">
+              Browse our most common questions or send us a message directly.
+            </p>
+          </div>
+
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+
+            {/* LEFT — FAQ */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-black text-white uppercase">
+                  Quick Answers
+                </h3>
+                <Link
+                  href="/faq"
+                  className="text-xs font-semibold text-red-500 hover:text-red-400 uppercase tracking-wide transition-colors duration-200"
+                >
+                  View All FAQs →
+                </Link>
+              </div>
+
+              {/* FAQ Items using same <details> style as FAQ page */}
+              <div className="flex flex-col gap-px">
+                {homeFaqs.map((faq, i) => (
+                  <details
+                    key={i}
+                    className="group border-t border-zinc-800 last:border-b last:border-zinc-800"
+                  >
+                    <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none">
+                      <span className="text-sm font-semibold text-white group-open:text-red-400 transition-colors duration-200">
+                        {faq.q}
+                      </span>
+                      <span className="text-zinc-500 group-open:text-red-500 transition-colors duration-200 text-xl shrink-0">
+                        +
+                      </span>
+                    </summary>
+                    <div className="pb-4 text-zinc-400 text-sm leading-relaxed">
+                      {faq.a}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — Contact Form */}
+            <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
+              <ContactForm />
+            </div>
+
+          </div>
         </div>
       </section>
 
