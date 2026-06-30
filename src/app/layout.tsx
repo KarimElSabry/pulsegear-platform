@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next"; // ← ضيف ده
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -43,7 +44,8 @@ export default function RootLayout({
 
         <Footer />
 
-        <Analytics /> {/* ← ده اللي اتضاف بس! */}
+        <Analytics />
+        <SpeedInsights /> {/* ← ضيف ده */}
 
       </body>
     </html>
