@@ -6,7 +6,7 @@ export type ProductCondition =
   | 'Satisfactory';
 
 export type ProductSource = 'vinted' | 'amazon' | 'manual';
-export type ProductStatus = 'available' | 'sold';
+export type ProductStatus = 'available' | 'sold' | 'reserved';
 
 export interface ProductImage {
   id?: number;

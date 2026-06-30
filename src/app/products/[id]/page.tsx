@@ -1,6 +1,7 @@
 import { ProductService } from '@/services/productService'
 import { notFound } from 'next/navigation'
 import ProductImageGallery from '@/components/ProductImageGallery'
+import PriceSection from '@/components/PriceSection'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -20,7 +21,7 @@ export default async function ProductDetailsPage({ params }: Props) {
     <main className="max-w-6xl mx-auto px-6 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-        {/* ✅ Interactive Image Gallery */}
+        {/* Image Gallery */}
         <ProductImageGallery images={images} title={product.title} />
 
         {/* Details */}
@@ -59,7 +60,7 @@ export default async function ProductDetailsPage({ params }: Props) {
           {product.description && (
             <div className="flex flex-col gap-2">
               <h2 className="text-white font-bold text-lg uppercase tracking-wide">
-                📝 Description
+                📝 Seller Description
               </h2>
               <p className="text-zinc-400 text-sm leading-relaxed border-l-2 border-purple-600 pl-4 whitespace-pre-line">
                 {product.description}
@@ -67,43 +68,13 @@ export default async function ProductDetailsPage({ params }: Props) {
             </div>
           )}
 
-          {/* Price */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-            <p className="text-sm text-zinc-500 mb-1">Final Price in Egypt</p>
-            <p className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
-              {product.price_egp?.toLocaleString()} EGP
-            </p>
-            <p className="text-xs text-zinc-500 mt-2">
-              ✅ Includes shipping, customs & delivery.
-            </p>
-            <p className="text-xs text-zinc-500 mt-1">
-              🚚 Shipping takes from 1-2 weeks.
-            </p>
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col gap-3">
-            <a
-              href={`https://wa.me/+201205322444?text=I'm interested in: ${encodeURIComponent(product.title)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-green-500 hover:bg-green-400 text-white font-black text-lg py-4 px-8 rounded-full text-center transition-all duration-200 uppercase tracking-wide"
-            >
-              📲 Reserve via WhatsApp
-            </a>
-            <a
-              href="https://instagram.com/pulsegear_egypt"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 hover:opacity-90 text-white font-black text-lg py-4 px-8 rounded-full text-center transition-all duration-200 uppercase tracking-wide"
-            >
-              📸 Reserve via Instagram
-            </a>
-          </div>
-
-          <p className="text-xs text-zinc-500 text-center">
-            We handle everything: sourcing, shipping, customs & delivery. Shipping takes 1-2 weeks.
-          </p>
+          {/* ✅ Price + Discount + Buttons — All in one Client Component */}
+          <PriceSection
+            originalPrice={product.price_egp ?? 0}
+            productId={product.id!}
+            productTitle={product.title}
+            status={product.status ?? 'available'}
+          />
 
         </div>
       </div>

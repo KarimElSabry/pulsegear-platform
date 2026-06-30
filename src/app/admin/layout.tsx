@@ -22,6 +22,13 @@ export default function AdminLayout({
           >
             📦 Manage Products
           </a>
+          {/* ✅ Reservations Link */}
+          <a
+            href="/admin/reservations"
+            className="text-gray-400 hover:text-white text-sm transition"
+          >
+            📋 Reservations
+          </a>
           <a
             href="/"
             className="text-gray-400 hover:text-white text-sm transition ml-auto"

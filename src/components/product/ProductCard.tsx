@@ -3,12 +3,17 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Product } from '@/types/product'
+import { useWishlist } from '@/hooks/useWishlist'
+import { useLikes } from '@/hooks/useLikes'
 
 type Props = {
   product: Product
 }
 
 export default function ProductCard({ product }: Props) {
+  const { isLoved, toggleLove } = useWishlist()
+  const { likes, loading, addLike } = useLikes(product.id!)
+
   // ✅ جيب أول صورة من الـ images array
   const primaryImage =
     product.images?.find((img) => img.is_primary)?.image_url ??
@@ -43,6 +48,45 @@ export default function ProductCard({ product }: Props) {
               </span>
             </div>
           )}
+          
+          {/* 🟡 RESERVED Overlay Badge */}
+          {product.status === 'reserved' && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="bg-yellow-500 text-black text-sm font-black px-4 py-2 rounded-full tracking-widest uppercase shadow-lg">
+                🔒 RESERVED
+              </span>
+            </div>
+          )}
+
+          {/* ❤️ Wishlist Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              toggleLove(product)
+            }}
+            className="absolute top-3 right-3 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200"
+            aria-label="Toggle Wishlist"
+          >
+            <span className="text-xl">
+              {isLoved(product.id!) ? '❤️' : '🤍'}
+            </span>
+          </button>
+
+          {/* 👍 Likes Button */}
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              addLike()
+            }}
+            className="absolute top-3 left-3 z-10 bg-black/60 hover:bg-black/80 rounded-full px-3 py-1.5 flex items-center gap-1 transition-all duration-200"
+            aria-label="Like Product"
+          >
+            <span className="text-xl">👍</span>
+            <span className="text-xs text-white font-bold">
+              {loading ? '...' : likes}
+            </span>
+          </button>
+
         </div>
 
         {/* Info */}

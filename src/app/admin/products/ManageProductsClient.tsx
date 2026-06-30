@@ -2,16 +2,242 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Product } from '@/types/product'
+import type { Product, ProductCondition, ProductStatus } from '@/types/product'
 import { deleteProduct, updateProductStatus } from '@/app/admin/actions'
 
 interface Props {
   products: Product[]
 }
 
+// ─── Edit Modal ───────────────────────────────────────────────────────────────
+function EditProductModal({
+  product,
+  onClose,
+  onSave,
+}: {
+  product: Product
+  onClose: () => void
+  onSave: (updated: Product) => void
+}) {
+  const [form, setForm] = useState<Product>({ ...product })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const conditions: ProductCondition[] = [
+    'New with tags',
+    'New without tags',
+    'Very good',
+    'Good',
+    'Satisfactory',
+  ]
+
+  const statuses: ProductStatus[] = ['available', 'sold', 'reserved']
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target
+    setForm((prev) => ({
+      ...prev,
+      [name]:
+        type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : name === 'price_egp'
+          ? Number(value)
+          : value,
+    }))
+  }
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/products/${product.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          brand: form.brand,
+          category: form.category,
+          condition: form.condition,
+          price_egp: form.price_egp,
+          description: form.description,
+          status: form.status,
+          featured: form.featured,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Failed to update product')
+
+      const updated = await res.json()
+      onSave(updated)
+      onClose()
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    // ── Backdrop ──
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      {/* ── Modal Box ── */}
+      <div
+        className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-white text-xl font-bold">✏️ Edit Product</h2>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-white text-2xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {/* Title */}
+          <div>
+            <label className="text-zinc-400 text-sm mb-1 block">Title</label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          {/* Brand + Category */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-zinc-400 text-sm mb-1 block">Brand</label>
+              <input
+                name="brand"
+                value={form.brand ?? ''}
+                onChange={handleChange}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="text-zinc-400 text-sm mb-1 block">Category</label>
+              <input
+                name="category"
+                value={form.category ?? ''}
+                onChange={handleChange}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="text-zinc-400 text-sm mb-1 block">Price (EGP)</label>
+            <input
+              name="price_egp"
+              type="number"
+              value={form.price_egp}
+              onChange={handleChange}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          {/* Condition + Status */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-zinc-400 text-sm mb-1 block">Condition</label>
+              <select
+                name="condition"
+                value={form.condition ?? ''}
+                onChange={handleChange}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+              >
+                <option value="">— Select —</option>
+                {conditions.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-zinc-400 text-sm mb-1 block">Status</label>
+              <select
+                name="status"
+                value={form.status ?? 'available'}
+                onChange={handleChange}
+                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
+              >
+                {statuses.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="text-zinc-400 text-sm mb-1 block">Description</label>
+            <textarea
+              name="description"
+              value={form.description ?? ''}
+              onChange={handleChange}
+              rows={3}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+            />
+          </div>
+
+          {/* Featured */}
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="featured"
+              id="featured"
+              checked={form.featured ?? false}
+              onChange={handleChange}
+              className="w-4 h-4 accent-blue-500"
+            />
+            <label htmlFor="featured" className="text-zinc-400 text-sm">
+              Featured Product
+            </label>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-red-400 text-sm bg-red-900/20 border border-red-800 rounded-xl px-4 py-2">
+              ❌ {error}
+            </p>
+          )}
+
+          {/* Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-2 rounded-xl text-sm transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-sm transition"
+            >
+              {loading ? 'Saving...' : '💾 Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ManageProductsClient({ products: initialProducts }: Props) {
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>(initialProducts)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   const handleStatusChange = async (id: number, status: 'available' | 'sold') => {
     try {
@@ -36,59 +262,95 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
     }
   }
 
+  const handleSave = (updated: Product) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
+    )
+    router.refresh()
+  }
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Products Management</h1>
+      <h1 className="text-2xl font-bold mb-6 text-white">Products Management</h1>
 
       {products.length === 0 ? (
-        <p className="text-gray-500">No products added</p>
+        <p className="text-zinc-500">No products added</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-200">
+        <div className="overflow-x-auto rounded-2xl border border-zinc-700">
+          <table className="w-full border-collapse">
+
+            {/* ── Headers ── */}
             <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-200 p-3 text-left">Product</th>
-                <th className="border border-gray-200 p-3 text-left">Status</th>
-                <th className="border border-gray-200 p-3 text-left">Price</th>
-                <th className="border border-gray-200 p-3 text-left">Actions</th>
+              <tr className="bg-zinc-800 border-b border-zinc-700">
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Product</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Status</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Price</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Actions</th>
               </tr>
             </thead>
+
+            {/* ── Rows ── */}
             <tbody>
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="border border-gray-200 p-3">{product.title}</td>
-                  <td className="border border-gray-200 p-3">
+              {products.map((product, i) => (
+                <tr
+                  key={product.id}
+                  className={`border-b border-zinc-800 transition-colors hover:bg-zinc-800/60 ${
+                    i % 2 === 0 ? 'bg-zinc-900' : 'bg-zinc-900/60'
+                  }`}
+                >
+                  {/* Title */}
+                  <td className="p-4 text-white text-sm font-medium">{product.title}</td>
+
+                  {/* Status Badge */}
+                  <td className="p-4">
                     <span
-                      className={`px-2 py-1 rounded text-sm font-medium ${
+                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                         product.status === 'available'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                          : product.status === 'reserved'
+                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
                       }`}
                     >
-                      {product.status === 'available' ? 'Available' : 'Sold'}
+                      {product.status}
                     </span>
                   </td>
-                  <td className="border border-gray-200 p-3">{product.price_egp} EGP</td>
-                  <td className="border border-gray-200 p-3">
-                    <div className="flex gap-2">
+
+                  {/* Price */}
+                  <td className="p-4 text-zinc-300 text-sm">{product.price_egp} EGP</td>
+
+                  {/* Actions */}
+                  <td className="p-4">
+                    <div className="flex gap-2 flex-wrap">
+                      {/* ✏️ Edit */}
+                      <button
+                        onClick={() => setEditingProduct(product)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
+                      >
+                        ✏️ Edit
+                      </button>
+
+                      {/* Mark as Sold / Available */}
                       {product.status === 'available' ? (
                         <button
                           onClick={() => handleStatusChange(product.id!, 'sold')}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                          className="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-lg text-xs font-bold transition"
                         >
                           Mark as Sold
                         </button>
                       ) : (
                         <button
                           onClick={() => handleStatusChange(product.id!, 'available')}
-                          className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+                          className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
                         >
                           Mark as Available
                         </button>
                       )}
+
+                      {/* 🗑️ Delete */}
                       <button
                         onClick={() => handleDelete(product.id!)}
-                        className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                        className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
                       >
                         Delete
                       </button>
@@ -99,6 +361,15 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* ── Edit Modal ── */}
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          onClose={() => setEditingProduct(null)}
+          onSave={handleSave}
+        />
       )}
     </div>
   )

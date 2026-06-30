@@ -4,12 +4,17 @@ import { revalidatePath } from 'next/cache'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> } // ← غيّرنا هنا
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: rawId } = await params // ← وهنا
+    const { id: rawId } = await params
     const id = parseInt(rawId)
     const { status } = await req.json()
+
+    // ✅ Validate status
+    if (!['available', 'sold', 'reserved'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+    }
 
     await ProductService.updateStatus(id, status)
 

@@ -35,6 +35,8 @@ export default function ProductGrid({
       query = query.eq('status', 'available')
     } else if (filterAvailability === 'Sold') {
       query = query.eq('status', 'sold')
+    }  else if (filterAvailability === 'Reserved') {
+       query = query.eq('status', 'reserved')
     }
     // 'All' → مفيش filter → بيجيب الكل ✅
 

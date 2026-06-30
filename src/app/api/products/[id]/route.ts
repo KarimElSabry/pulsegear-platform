@@ -1,22 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ProductService } from '@/services/productService'
-import { revalidatePath } from 'next/cache'
+import { createServerClient } from '@/lib/supabase'
 
-export async function DELETE(
+export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: rawId } = await params
-    const id = parseInt(rawId)
-    await ProductService.deleteProduct(id)
+    const { id } = await params
+    const body = await req.json()
 
-    revalidatePath('/', 'layout')
-    revalidatePath('/products')
-    revalidatePath('/admin')
+    const supabase = createServerClient()
 
-    return NextResponse.json({ success: true })
+    const { data, error } = await supabase
+      .from('products')
+      .update(body)
+      .eq('id', Number(id))
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json(data)
   } catch (error: any) {
+    console.error('[PATCH /api/products/:id]', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
