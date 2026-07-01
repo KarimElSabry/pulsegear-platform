@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/check-vinted-status",
+      "schedule": "0 */6 * * *"
+    }
+  ]
+}

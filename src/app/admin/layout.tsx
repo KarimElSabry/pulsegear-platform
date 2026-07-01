@@ -1,4 +1,6 @@
 // src/app/admin/layout.tsx
+import LogoutButton from './LogoutButton'
+
 export default function AdminLayout({
   children,
 }: {
@@ -22,7 +24,6 @@ export default function AdminLayout({
           >
             📦 Manage Products
           </a>
-          {/* ✅ Reservations Link */}
           <a
             href="/admin/reservations"
             className="text-gray-400 hover:text-white text-sm transition"
@@ -41,6 +42,9 @@ export default function AdminLayout({
           >
             ← Back to Site
           </a>
+
+          {/* ✅ Logout Button */}
+          <LogoutButton />
         </div>
       </nav>
 

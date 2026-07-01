@@ -40,7 +40,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <GoogleAnalytics /> {/* ✅ اتنقلت هنا */}
+        <GoogleAnalytics />
       </head>
       <body className="min-h-screen flex flex-col">
 

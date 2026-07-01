@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus } from '@/types/product'
-import { deleteProduct, updateProductStatus } from '@/app/admin/actions'
+import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
 interface Props {
   products: Product[]
@@ -80,12 +80,10 @@ function EditProductModal({
   }
 
   return (
-    // ── Backdrop ──
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
-      {/* ── Modal Box ── */}
       <div
         className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -239,6 +237,17 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
   const [products, setProducts] = useState<Product[]>(initialProducts)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
+  // ── Vinted Sync State ──────────────────────────────────────────────────────
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<{
+    checked: number
+    sold: number
+    errors: number
+  } | null>(null)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleStatusChange = async (id: number, status: 'available' | 'sold') => {
     try {
       await updateProductStatus(id, status)
@@ -269,17 +278,83 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
     router.refresh()
   }
 
+  const handleVintedSync = async () => {
+    setSyncing(true)
+    setSyncResult(null)
+    setSyncError(null)
+
+    try {
+      const data = await triggerVintedSync()
+      setSyncResult({
+        checked: data.checked,
+        sold: data.sold,
+        errors: data.errors,
+      })
+      // ✅ Refresh الـ table عشان تشوف الـ sold products اتغيرت
+      router.refresh()
+    } catch (err: any) {
+      setSyncError(err.message || 'Sync failed')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-white">Products Management</h1>
 
+      {/* ── Header + Sync Button ── */}
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <h1 className="text-2xl font-bold text-white">Products Management</h1>
+
+        {/* 🔄 Vinted Sync */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={handleVintedSync}
+            disabled={syncing}
+            className="flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-500 
+                       disabled:opacity-50 disabled:cursor-not-allowed text-white 
+                       rounded-xl text-sm font-bold transition"
+          >
+            {syncing ? (
+              <>
+                <span className="animate-spin inline-block">⏳</span>
+                Syncing...
+              </>
+            ) : (
+              '🔄 Sync Vinted Now'
+            )}
+          </button>
+
+          {/* ✅ Success Result */}
+          {syncResult && (
+            <div className="text-sm bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-zinc-300">
+              ✅ Checked: <strong className="text-white">{syncResult.checked}</strong>
+              {' · '}
+              🔴 Sold: <strong className="text-red-400">{syncResult.sold}</strong>
+              {' · '}
+              ⚠️ Errors: <strong className="text-yellow-400">{syncResult.errors}</strong>
+            </div>
+          )}
+
+          {/* ❌ Error */}
+          {syncError && (
+            <div className="text-sm bg-red-900/20 border border-red-800 rounded-xl px-4 py-2 text-red-400">
+              ❌ {syncError}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Table ── */}
       {products.length === 0 ? (
         <p className="text-zinc-500">No products added</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-zinc-700">
           <table className="w-full border-collapse">
 
-            {/* ── Headers ── */}
+            {/* Headers */}
             <thead>
               <tr className="bg-zinc-800 border-b border-zinc-700">
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Product</th>
@@ -289,7 +364,7 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
               </tr>
             </thead>
 
-            {/* ── Rows ── */}
+            {/* Rows */}
             <tbody>
               {products.map((product, i) => (
                 <tr

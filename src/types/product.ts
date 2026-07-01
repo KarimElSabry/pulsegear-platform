@@ -1,61 +1,88 @@
+// ─── Enums / Unions ───────────────────────────────────────────────────────────
+
 export type ProductCondition =
   | 'New with tags'
   | 'New without tags'
   | 'Very good'
   | 'Good'
-  | 'Satisfactory';
+  | 'Satisfactory'
 
-export type ProductSource = 'vinted' | 'amazon' | 'manual';
-export type ProductStatus = 'available' | 'sold' | 'reserved';
+export type ProductSource   = 'vinted' | 'amazon' | 'manual'
+export type ProductStatus   = 'available' | 'sold' | 'reserved'
+export type ProductPlatform = 'vinted' | 'ebay' | 'amazon' | 'manual' | 'other'
+
+// ─── Product Image ────────────────────────────────────────────────────────────
 
 export interface ProductImage {
-  id?: number;
-  product_id?: number;
-  image_url: string;
-  is_primary: boolean;
-  display_order: number;
+  id?:            number
+  product_id?:    number
+  image_url:      string
+  is_primary:     boolean
+  display_order:  number
 }
+
+// ─── Core Product ─────────────────────────────────────────────────────────────
 
 export interface Product {
-  id?: number;
-  title: string;
-  slug?: string;
-  brand?: string;
-  category?: string;
-  condition?: ProductCondition;
-  price_egp: number;
-  description?: string;
-  source?: ProductSource;
-  source_url?: string;
-  status?: ProductStatus;
-  featured?: boolean;
-  created_at?: string;
-  sold_at?: string | null; 
-  images?: ProductImage[];
+  // 🔑 Identity
+  id?:               number
+  slug?:             string
+
+  // 📝 Basic Info
+  title:             string
+  description?:      string
+  brand?:            string
+  category?:         string
+  size?:             string | null       // ✅ جديد
+
+  // 💰 Pricing
+  price_egp:         number
+  original_price?:   number | null       // ✅ جديد (EUR)
+
+  // 📦 Condition & Status
+  condition?:        ProductCondition
+  status?:           ProductStatus
+  featured?:         boolean
+
+  // 🔗 Source
+  source?:           ProductSource
+  source_url?:       string
+  source_platform?:  ProductPlatform     // ✅ جديد
+
+  // 🕐 Timestamps
+  created_at?:       string
+  sold_at?:          string | null
+  reserved_until?:   string | null       // ✅ جديد
+
+  // 🖼️ Relations
+  images?:           ProductImage[]
 }
+
+// ─── Vinted Parser ────────────────────────────────────────────────────────────
 
 export interface VintedParseResult {
-  success: boolean;
-  product?: Omit<Product, 'id' | 'created_at'>;
-  images?: string[];
-  error?: string;
+  success:   boolean
+  product?:  Omit<Product, 'id' | 'created_at'>
+  images?:   string[]
+  error?:    string
 }
 
-// ✅ أضفناهم هنا
+// ─── Filters & Pagination ─────────────────────────────────────────────────────
+
 export interface ProductFilters {
-  brand?: string;
-  category?: string;
-  status?: ProductStatus;
-  featured?: boolean;
-  search?: string;
-  page?: number;
-  limit?: number;
+  brand?:     string
+  category?:  string
+  status?:    ProductStatus
+  featured?:  boolean
+  search?:    string
+  page?:      number
+  limit?:     number
 }
 
 export interface PaginatedProducts {
-  data: Product[];
-  total: number;
-  page: number;
-  limit: number;
-  hasMore: boolean;
+  data:     Product[]
+  total:    number
+  page:     number
+  limit:    number
+  hasMore:  boolean
 }
