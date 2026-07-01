@@ -12,7 +12,7 @@ type Props = {
 
 export default function ProductCard({ product }: Props) {
   const { isLoved, toggleLove } = useWishlist()
-  const { likes, loading, addLike } = useLikes(product.id!)
+  const { likes, loading, addLike, liked } = useLikes(product.id!) // ✅ أضفنا liked
 
   // ✅ جيب أول صورة من الـ images array
   const primaryImage =
@@ -48,7 +48,7 @@ export default function ProductCard({ product }: Props) {
               </span>
             </div>
           )}
-          
+
           {/* 🟡 RESERVED Overlay Badge */}
           {product.status === 'reserved' && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -72,16 +72,21 @@ export default function ProductCard({ product }: Props) {
             </span>
           </button>
 
-          {/* 👍 Likes Button */}
+          {/* 👍 Likes Button — ✅ Updated */}
           <button
             onClick={(e) => {
               e.preventDefault()
               addLike()
             }}
-            className="absolute top-3 left-3 z-10 bg-black/60 hover:bg-black/80 rounded-full px-3 py-1.5 flex items-center gap-1 transition-all duration-200"
+            disabled={liked} // ✅ منع Double Like
+            className={`absolute top-3 left-3 z-10 rounded-full px-3 py-1.5 flex items-center gap-1 transition-all duration-200
+              ${liked
+                ? 'bg-blue-500/80 cursor-not-allowed'   // ✅ بعد الضغط
+                : 'bg-black/60 hover:bg-black/80'        // قبل الضغط
+              }`}
             aria-label="Like Product"
           >
-            <span className="text-xl">👍</span>
+            <span className="text-xl">{liked ? '👍' : '👍'}</span>
             <span className="text-xs text-white font-bold">
               {loading ? '...' : likes}
             </span>

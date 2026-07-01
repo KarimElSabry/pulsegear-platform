@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export function useLikes(productId: number) {
   const [likes, setLikes] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  // ✅ جيب الـ Likes من الـ API
+  // ✅ جيب الـ liked من localStorage عشان يفضل بعد الـ Refresh
+  const storageKey = `liked_product_${productId}`
+  const [liked, setLiked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem(storageKey) === 'true'
+  })
+
   useEffect(() => {
     if (!productId) return
-
     fetch(`/api/likes?product_id=${productId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -16,10 +21,14 @@ export function useLikes(productId: number) {
       })
   }, [productId])
 
-  // ✅ أضيف Like جديد
   const addLike = async () => {
-    setLikes((prev) => prev + 1) // ✅ Optimistic Update — يتحدث فوراً
-    
+    if (liked) return
+    setLiked(true)
+    setLikes((prev) => prev + 1)
+
+    // ✅ احفظ في localStorage عشان يفضل بعد الـ Refresh
+    localStorage.setItem(storageKey, 'true')
+
     await fetch('/api/likes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -27,5 +36,5 @@ export function useLikes(productId: number) {
     })
   }
 
-  return { likes, loading, addLike }
+  return { likes, loading, addLike, liked }
 }

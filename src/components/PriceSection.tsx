@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useLikes } from '@/hooks/useLikes' // ✅ أضفنا
 import DiscountInput from './DiscountInput'
 import ReserveButton from './ReserveButton'
 
@@ -20,6 +21,8 @@ export default function PriceSection({
   const [finalPrice, setFinalPrice] = useState(originalPrice)
   const [discountPercent, setDiscountPercent] = useState<number | null>(null)
   const [discountCode, setDiscountCode] = useState<string | null>(null)
+
+  const { likes, loading, addLike, liked } = useLikes(productId) // ✅ أضفنا
 
   const handleDiscountApplied = (
     discountedPrice: number,
@@ -72,6 +75,20 @@ export default function PriceSection({
           🚚 Shipping takes from 1-2 weeks.
         </p>
       </div>
+
+      {/* ✅ Likes Button */}
+      <button
+        onClick={addLike}
+        disabled={liked}
+        className={`flex items-center gap-2 w-fit px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-200
+          ${liked
+            ? 'bg-blue-500 text-white cursor-not-allowed'
+            : 'bg-zinc-800 text-white hover:bg-blue-500 cursor-pointer'
+          }`}
+      >
+        <span className="text-lg">👍</span>
+        <span>{loading ? '...' : likes} {likes === 1 ? 'Like' : 'Likes'}</span>
+      </button>
 
       {/* Discount Input */}
       <DiscountInput
