@@ -33,11 +33,14 @@ export interface Product {
   description?:      string
   brand?:            string
   category?:         string
-  size?:             string | null       // ✅ جديد
+  size?:             string | null
+
+  // 🔖 Reservation
+  is_reservable:     boolean             // ✅ من الـ DB — true أو false
 
   // 💰 Pricing
   price_egp:         number
-  original_price?:   number | null       // ✅ جديد (EUR)
+  original_price?:   number | null
 
   // 📦 Condition & Status
   condition?:        ProductCondition
@@ -47,12 +50,12 @@ export interface Product {
   // 🔗 Source
   source?:           ProductSource
   source_url?:       string
-  source_platform?:  ProductPlatform     // ✅ جديد
+  source_platform?:  ProductPlatform
 
   // 🕐 Timestamps
   created_at?:       string
   sold_at?:          string | null
-  reserved_until?:   string | null       // ✅ جديد
+  reserved_until?:   string | null
 
   // 🖼️ Relations
   images?:           ProductImage[]

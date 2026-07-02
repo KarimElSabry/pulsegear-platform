@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useLikes } from '@/hooks/useLikes' // ✅ أضفنا
+import { useLikes } from '@/hooks/useLikes'
 import DiscountInput from './DiscountInput'
 import ReserveButton from './ReserveButton'
 
@@ -9,6 +9,7 @@ interface Props {
   originalPrice: number
   productId: number
   productTitle: string
+  isReservable: boolean        // ✅ بدل productCondition
   status: string
 }
 
@@ -16,13 +17,14 @@ export default function PriceSection({
   originalPrice,
   productId,
   productTitle,
+  isReservable,                // ✅ بدل productCondition
   status,
 }: Props) {
   const [finalPrice, setFinalPrice] = useState(originalPrice)
   const [discountPercent, setDiscountPercent] = useState<number | null>(null)
   const [discountCode, setDiscountCode] = useState<string | null>(null)
 
-  const { likes, loading, addLike, liked } = useLikes(productId) // ✅ أضفنا
+  const { likes, loading, addLike, liked } = useLikes(productId)
 
   const handleDiscountApplied = (
     discountedPrice: number,
@@ -40,7 +42,6 @@ export default function PriceSection({
     setDiscountCode(null)
   }
 
-  // ── WhatsApp message with discount ──
   const waMessage = discountCode
     ? `I'm interested in: ${productTitle}\n🏷️ Discount Code: ${discountCode} (${discountPercent}% off)\n💰 My Price: ${finalPrice.toLocaleString()} EGP`
     : `I'm interested in: ${productTitle}`
@@ -52,7 +53,6 @@ export default function PriceSection({
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
         <p className="text-sm text-zinc-500 mb-1">Final Price in Egypt</p>
 
-        {/* Discounted price */}
         {discountPercent && (
           <div className="flex items-center gap-3 mb-1">
             <p className="text-2xl text-zinc-500 line-through">
@@ -76,7 +76,7 @@ export default function PriceSection({
         </p>
       </div>
 
-      {/* ✅ Likes Button */}
+      {/* Likes Button */}
       <button
         onClick={addLike}
         disabled={liked}
@@ -101,6 +101,7 @@ export default function PriceSection({
       <ReserveButton
         productId={productId}
         productTitle={productTitle}
+        isReservable={isReservable}  // ✅ بدل productCondition
         status={status as any}
         discountedPrice={discountPercent ? finalPrice : undefined}
         discountCode={discountCode ?? undefined}

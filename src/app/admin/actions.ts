@@ -88,6 +88,9 @@ export async function addProduct(formData: FormData): Promise<void> {
   const conditionRaw = formData.get('condition') as string
   const condition = conditionMap[conditionRaw]
 
+  // ✅ اقرأ is_reservable من الـ form
+  const isReservable = formData.get('is_reservable') === 'true'
+
   await ProductService.createProduct(
     {
       title:          formData.get('title') as string,
@@ -103,6 +106,7 @@ export async function addProduct(formData: FormData): Promise<void> {
       source:         sourceUrl?.includes('vinted') ? 'vinted' : 'manual',
       source_url:     sourceUrl,
       status:         'available',
+      is_reservable:  isReservable,   // ✅ بيتبعت للـ DB
     },
     imageUrls
   )

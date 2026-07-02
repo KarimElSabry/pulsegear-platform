@@ -10,8 +10,7 @@ type Props = {
 export default async function ProductDetailsPage({ params }: Props) {
   const { id } = await params
 
-  const products = await ProductService.getProducts()
-  const product = products.find((p) => String(p.id) === id || p.slug === id)
+  const product = await ProductService.getProductBySlug(id)
 
   if (!product) return notFound()
 
@@ -21,13 +20,10 @@ export default async function ProductDetailsPage({ params }: Props) {
     <main className="max-w-6xl mx-auto px-6 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
 
-        {/* Image Gallery */}
         <ProductImageGallery images={images} title={product.title} />
 
-        {/* Details */}
         <div className="flex flex-col justify-center gap-6">
 
-          {/* Brand + Category */}
           <div className="flex gap-3">
             {product.brand && (
               <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">
@@ -41,12 +37,10 @@ export default async function ProductDetailsPage({ params }: Props) {
             )}
           </div>
 
-          {/* Title */}
           <h1 className="text-4xl font-black text-white uppercase leading-tight">
             {product.title}
           </h1>
 
-          {/* Condition */}
           {product.condition && (
             <p className="text-sm text-zinc-400 font-medium">
               Condition:{' '}
@@ -56,7 +50,6 @@ export default async function ProductDetailsPage({ params }: Props) {
             </p>
           )}
 
-          {/* Description */}
           {product.description && (
             <div className="flex flex-col gap-2">
               <h2 className="text-white font-bold text-lg uppercase tracking-wide">
@@ -68,11 +61,11 @@ export default async function ProductDetailsPage({ params }: Props) {
             </div>
           )}
 
-          {/* ✅ Price + Discount + Buttons — All in one Client Component */}
           <PriceSection
             originalPrice={product.price_egp ?? 0}
             productId={product.id!}
             productTitle={product.title}
+            isReservable={product.is_reservable ?? false}  // ✅ من الـ DB مباشرة
             status={product.status ?? 'available'}
           />
 

@@ -6,20 +6,25 @@ import ReservationModal from './ReservationModal'
 interface ReserveButtonProps {
   productId: number
   productTitle: string
+  isReservable: boolean        // ✅ بدل productCondition
   status: string
-  discountedPrice?: number   // ← جديد
-  discountCode?: string      // ← جديد
+  discountedPrice?: number
+  discountCode?: string
 }
 
 export default function ReserveButton({
   productId,
   productTitle,
+  isReservable,                // ✅ بدل productCondition
   status,
   discountedPrice,
   discountCode,
 }: ReserveButtonProps) {
   const [showModal, setShowModal] = useState(false)
   const [reserved, setReserved] = useState(false)
+
+  // ✅ لو مش reservable — مش بيظهر الـ button خالص
+  if (!isReservable) return null
 
   if (status !== 'available' && !reserved) {
     return (
@@ -53,8 +58,8 @@ export default function ReserveButton({
         <ReservationModal
           productId={productId}
           productTitle={productTitle}
-          discountedPrice={discountedPrice}  // ← جديد
-          discountCode={discountCode}        // ← جديد
+          discountedPrice={discountedPrice}
+          discountCode={discountCode}
           onClose={() => setShowModal(false)}
           onSuccess={() => {
             setShowModal(false)

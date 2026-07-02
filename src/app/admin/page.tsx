@@ -120,6 +120,21 @@ export default function AdminPage() {
             </div>
           </div>
 
+          {/* ✅ Allow Reservation */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-200">
+              Allow Reservation? <span className="text-purple-400">*</span>
+            </label>
+            <select
+              name="is_reservable"
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+            >
+              <option value="true">✅ Yes — Can be reserved</option>
+              <option value="false">🚫 No — Cannot be reserved</option>
+            </select>
+          </div>
+
           {/* Source URL */}
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">Source URL</label>

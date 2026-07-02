@@ -1,20 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ProductCondition } from '@/types/product'
-
-// ✅ Allowed conditions
-const RESERVABLE_CONDITIONS: ProductCondition[] = [
-  'New without tags',
-  'Very good',
-  'Good',
-  'Satisfactory',
-]
 
 interface ReservationModalProps {
   productId: number
   productTitle: string
-  productCondition?: ProductCondition  // ← optional
   discountedPrice?: number
   discountCode?: string
   onClose: () => void
@@ -24,7 +14,6 @@ interface ReservationModalProps {
 export default function ReservationModal({
   productId,
   productTitle,
-  productCondition,
   discountedPrice,
   discountCode,
   onClose,
@@ -35,11 +24,6 @@ export default function ReservationModal({
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // ✅ Check if condition is allowed
-  const isReservable = productCondition
-    ? RESERVABLE_CONDITIONS.includes(productCondition)
-    : false  // ← لو مفيش condition، مش هيتريزيرف
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,29 +79,10 @@ export default function ReservationModal({
         </div>
 
         {/* Product Title */}
-        <p className="text-sm text-gray-500 mb-2">
+        <p className="text-sm text-gray-500 mb-4">
           You are reserving:{' '}
           <span className="font-semibold text-gray-700">{productTitle}</span>
         </p>
-
-        {/* ✅ Condition Not Allowed Banner */}
-        {!isReservable && (
-          <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
-            <span className="text-red-500 text-sm">🚫</span>
-            <div>
-              <p className="text-xs text-red-600 font-semibold">
-                Reservation Not Available
-              </p>
-              <p className="text-xs text-red-500">
-                Products with condition{' '}
-                <span className="font-black">
-                  {productCondition ?? 'unknown'}
-                </span>{' '}
-                cannot be reserved.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* ✅ Discount Badge */}
         {discountedPrice && discountCode && (
@@ -149,8 +114,7 @@ export default function ReservationModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
               required
-              disabled={!isReservable}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -165,8 +129,7 @@ export default function ReservationModal({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Enter your phone number"
               required
-              disabled={!isReservable}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -180,8 +143,7 @@ export default function ReservationModal({
               onChange={(e) => setNote(e.target.value)}
               placeholder="Any additional notes..."
               rows={3}
-              disabled={!isReservable}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
@@ -203,7 +165,7 @@ export default function ReservationModal({
             </button>
             <button
               type="submit"
-              disabled={loading || !isReservable}
+              disabled={loading}
               className="flex-1 bg-blue-600 text-white rounded-lg py-2 text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Reserving...' : 'Confirm Reserve'}

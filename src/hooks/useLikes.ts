@@ -3,13 +3,15 @@
 import { useState, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-export function useLikes(productId: number) {
+export function useLikes(productId: number, productStatus?: string) {  // ✅ أضفنا status
   const [likes, setLikes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [liked, setLiked] = useState(false)
 
   const storageKey = `liked_product_${productId}`
   const userKey = 'user_identifier'
+
+  const isSold = productStatus === 'sold'  // ✅ الـ lock condition
 
   const getUserIdentifier = () => {
     if (typeof window === 'undefined') return ''
@@ -21,13 +23,13 @@ export function useLikes(productId: number) {
     return id
   }
 
-  // ✅ Read localStorage after component mounts
+  // ✅ Read localStorage after mount
   useEffect(() => {
     const value = localStorage.getItem(storageKey)
     setLiked(value === 'true')
   }, [storageKey])
 
-  // ✅ Polling every 10 seconds
+  // ✅ Fetch likes — poll only if NOT sold
   useEffect(() => {
     if (!productId) return
 
@@ -44,12 +46,17 @@ export function useLikes(productId: number) {
     }
 
     fetchLikes()
+
+    // ✅ If sold — fetch once and stop, no polling needed
+    if (isSold) return
+
     const interval = setInterval(fetchLikes, 10000)
     return () => clearInterval(interval)
-  }, [productId])
+  }, [productId, isSold])
 
   const addLike = async () => {
     if (liked) return
+    if (isSold) return  // ✅ Hard block on sold products
 
     setLiked(true)
     setLikes((prev) => prev + 1)
@@ -70,6 +77,14 @@ export function useLikes(productId: number) {
       if (data.likes !== undefined) {
         setLikes(data.likes)
       }
+
+      // ✅ If backend rejected (403) — rollback optimistic update
+      if (!res.ok) {
+        setLiked(false)
+        setLikes((prev) => prev - 1)
+        localStorage.removeItem(storageKey)
+      }
+
     } catch (err) {
       console.error('Failed to add like:', err)
       setLiked(false)
@@ -78,5 +93,5 @@ export function useLikes(productId: number) {
     }
   }
 
-  return { likes, loading, addLike, liked }
+  return { likes, loading, addLike, liked, isSold }  // ✅ export isSold
 }

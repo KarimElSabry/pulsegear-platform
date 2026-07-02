@@ -54,6 +54,27 @@ export class ProductService {
     return data as Product[]
   }
 
+  // ✅ Fetch Single Product by ID  ← جديد
+  static async getProductById(id: number): Promise<Product | null> {
+    const supabase = this.getClient()
+
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        images:product_images(*)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('[ProductService] getProductById error:', error.message)
+      return null
+    }
+
+    return data as Product
+  }
+
   // ✅ Fetch Single Product by Slug
   static async getProductBySlug(slug: string): Promise<Product | null> {
     const supabase = this.getClient()
@@ -186,7 +207,6 @@ export class ProductService {
   ): Promise<Product | null> {
     const supabase = this.getClient()
 
-    // ✅ Generate unique slug
     const slug = await generateUniqueSlug(supabase, product.title)
 
     const { data, error } = await supabase
@@ -235,7 +255,7 @@ export class ProductService {
     const supabase = this.getClient()
     const { error } = await supabase
       .from('products')
-      .update({ status, sold_at: status === 'sold' ? new Date().toISOString() : null, })
+      .update({ status, sold_at: status === 'sold' ? new Date().toISOString() : null })
       .eq('id', id)
 
     if (error) {
@@ -261,7 +281,6 @@ export class ProductService {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// ✅ Slugify
 function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -271,7 +290,6 @@ function slugify(text: string): string {
     .replace(/--+/g, '-')
 }
 
-// ✅ Generate Unique Slug - بيتحقق من الـ DB ولو في تكرار بيضيف رقم
 async function generateUniqueSlug(supabase: any, title: string): Promise<string> {
   const baseSlug = slugify(title)
 
@@ -280,18 +298,12 @@ async function generateUniqueSlug(supabase: any, title: string): Promise<string>
     .select('slug')
     .ilike('slug', `${baseSlug}%`)
 
-  if (!data || data.length === 0) {
-    return baseSlug // ✅ مفيش تكرار
-  }
+  if (!data || data.length === 0) return baseSlug
 
   const existingSlugs = data.map((p: any) => p.slug)
 
-  // ✅ لو الـ baseSlug نفسه مش موجود، رجعه
-  if (!existingSlugs.includes(baseSlug)) {
-    return baseSlug
-  }
+  if (!existingSlugs.includes(baseSlug)) return baseSlug
 
-  // ✅ ابحث عن أول رقم متاح
   let counter = 1
   let newSlug = `${baseSlug}-${counter}`
 

@@ -278,6 +278,24 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
     router.refresh()
   }
 
+  // ✅ NEW — Toggle is_reservable
+  const handleToggleReservable = async (id: number, current: boolean) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_reservable: !current }),
+      })
+      if (!res.ok) throw new Error('Failed to update')
+
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, is_reservable: !current } : p))
+      )
+    } catch (error) {
+      console.error('Failed to toggle reservable:', error)
+    }
+  }
+
   const handleVintedSync = async () => {
     setSyncing(true)
     setSyncResult(null)
@@ -290,7 +308,6 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
         sold: data.sold,
         errors: data.errors,
       })
-      // ✅ Refresh الـ table عشان تشوف الـ sold products اتغيرت
       router.refresh()
     } catch (err: any) {
       setSyncError(err.message || 'Sync failed')
@@ -360,6 +377,8 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Product</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Status</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Price</th>
+                {/* ✅ NEW */}
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Reserve</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Actions</th>
               </tr>
             </thead>
@@ -393,6 +412,25 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
 
                   {/* Price */}
                   <td className="p-4 text-zinc-300 text-sm">{product.price_egp} EGP</td>
+
+                  {/* ✅ NEW — Reserve Toggle */}
+                  <td className="p-4">
+                    <button
+                      onClick={() =>
+                        handleToggleReservable(product.id!, product.is_reservable ?? false)
+                      }
+                      title={product.is_reservable ? 'Click to disable reservation' : 'Click to enable reservation'}
+                      className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                        product.is_reservable ? 'bg-purple-600' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+                          product.is_reservable ? 'translate-x-7' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </td>
 
                   {/* Actions */}
                   <td className="p-4">
