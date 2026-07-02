@@ -65,7 +65,7 @@ export default function PriceSection({
         )}
 
         <p className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 bg-clip-text text-transparent">
-          {finalPrice.toLocaleString()} EGP
+          {finalPrice.toLocaleString('en-US')} EGP
         </p>
 
         <p className="text-xs text-zinc-500 mt-2">

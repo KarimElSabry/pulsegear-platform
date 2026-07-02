@@ -11,7 +11,7 @@ export default function ReservationsClient({
   const [reservations, setReservations] = useState(initial)
 
   const updateStatus = async (id: number, status: 'confirmed' | 'cancelled') => {
-    await fetch(`/api/reservations/${id}/status`, {
+    await fetch(`/api//products/reservations/${id}/status`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),

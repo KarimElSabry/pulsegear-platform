@@ -230,7 +230,7 @@ export class ProductService {
   // ✅ Update Status
   static async updateStatus(
     id: number,
-    status: 'available' | 'sold'
+    status: 'available' | 'sold' | 'reserved'
   ): Promise<void> {
     const supabase = this.getClient()
     const { error } = await supabase

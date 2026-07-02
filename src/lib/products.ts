@@ -70,7 +70,7 @@ export const ProductService = {
   },
 
   // ✅ غير status المنتج
-  async updateStatus(id: number, status: 'available' | 'sold'): Promise<void> {
+  async updateStatus(id: number, status: 'available' | 'sold' | 'reserved'): Promise<void> {
     const supabase = createServerClient()
     const { error } = await supabase
       .from('products')
