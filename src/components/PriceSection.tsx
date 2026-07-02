@@ -9,7 +9,7 @@ interface Props {
   originalPrice: number
   productId: number
   productTitle: string
-  isReservable: boolean        // ✅ بدل productCondition
+  isReservable: boolean
   status: string
 }
 
@@ -17,14 +17,15 @@ export default function PriceSection({
   originalPrice,
   productId,
   productTitle,
-  isReservable,                // ✅ بدل productCondition
+  isReservable,
   status,
 }: Props) {
   const [finalPrice, setFinalPrice] = useState(originalPrice)
   const [discountPercent, setDiscountPercent] = useState<number | null>(null)
   const [discountCode, setDiscountCode] = useState<string | null>(null)
 
-  const { likes, loading, addLike, liked } = useLikes(productId)
+  // ✅ بعتنا status للـ useLikes عشان يوقف الـ polling لو sold
+  const { likes, loading, addLike, liked, isSold } = useLikes(productId, status)
 
   const handleDiscountApplied = (
     discountedPrice: number,
@@ -79,11 +80,13 @@ export default function PriceSection({
       {/* Likes Button */}
       <button
         onClick={addLike}
-        disabled={liked}
+        disabled={liked || isSold}
         className={`flex items-center gap-2 w-fit px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-200
-          ${liked
-            ? 'bg-blue-500 text-white cursor-not-allowed'
-            : 'bg-zinc-800 text-white hover:bg-blue-500 cursor-pointer'
+          ${isSold
+            ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed opacity-50'
+            : liked
+              ? 'bg-blue-500 text-white cursor-not-allowed'
+              : 'bg-zinc-800 text-white hover:bg-blue-500 cursor-pointer'
           }`}
       >
         <span className="text-lg">👍</span>
@@ -101,7 +104,7 @@ export default function PriceSection({
       <ReserveButton
         productId={productId}
         productTitle={productTitle}
-        isReservable={isReservable}  // ✅ بدل productCondition
+        isReservable={isReservable}
         status={status as any}
         discountedPrice={discountPercent ? finalPrice : undefined}
         discountCode={discountCode ?? undefined}
