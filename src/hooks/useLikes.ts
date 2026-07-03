@@ -31,7 +31,6 @@ export function useLikes(productId: number, productStatus?: string) {
 
   // ✅ Fetch likes — poll only if NOT sold
   useEffect(() => {
-    // ✅ Guard 1 — productId لازم يكون number صحيح
     if (!productId || isNaN(productId) || productId <= 0) {
       setLoading(false)
       return
@@ -41,7 +40,6 @@ export function useLikes(productId: number, productStatus?: string) {
       try {
         const res = await fetch(`/api/products/likes?product_id=${productId}`)
 
-        // ✅ Guard 2 — تأكد إن الـ response JSON مش HTML
         const contentType = res.headers.get('content-type')
         if (!contentType?.includes('application/json')) {
           console.error(`[useLikes] Non-JSON response for product ${productId}`)
@@ -49,7 +47,6 @@ export function useLikes(productId: number, productStatus?: string) {
           return
         }
 
-        // ✅ Guard 3 — تأكد إن الـ response ok
         if (!res.ok) {
           console.error(`[useLikes] HTTP ${res.status} for product ${productId}`)
           setLoading(false)
@@ -58,7 +55,6 @@ export function useLikes(productId: number, productStatus?: string) {
 
         const data = await res.json()
 
-        // ✅ Guard 4 — تأكد إن likes موجود في الـ response
         if (data.likes === undefined) {
           console.error(`[useLikes] No likes field in response for product ${productId}`)
           setLoading(false)
@@ -75,7 +71,6 @@ export function useLikes(productId: number, productStatus?: string) {
 
     fetchLikes()
 
-    // ✅ If sold — fetch once and stop, no polling needed
     if (isSold) return
 
     const interval = setInterval(fetchLikes, 10000)
@@ -100,7 +95,6 @@ export function useLikes(productId: number, productStatus?: string) {
         }),
       })
 
-      // ✅ Guard 2 — تأكد إن الـ response JSON مش HTML
       const contentType = res.headers.get('content-type')
       if (!contentType?.includes('application/json')) {
         console.error(`[useLikes] Non-JSON POST response for product ${productId}`)
@@ -112,16 +106,18 @@ export function useLikes(productId: number, productStatus?: string) {
 
       const data = await res.json()
 
-      if (data.likes !== undefined) {
-        setLikes(data.likes)
+      // ✅ لو تمام — حدّث بالـ count الحقيقي من الـ backend
+      if (res.ok) {
+        if (data.likes !== undefined) {
+          setLikes(data.likes)
+        }
+        return
       }
 
-      // ✅ If backend rejected (403) — rollback optimistic update
-      if (!res.ok) {
-        setLiked(false)
-        setLikes((prev) => prev - 1)
-        localStorage.removeItem(storageKey)
-      }
+      // ✅ لو فشل — rollback بس من غير ما نستخدم data.likes
+      setLiked(false)
+      setLikes((prev) => prev - 1)
+      localStorage.removeItem(storageKey)
 
     } catch (err) {
       console.error(`[useLikes] Failed to add like for product ${productId}:`, err)
