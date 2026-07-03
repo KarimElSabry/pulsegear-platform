@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/check-vinted-status",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 0 * * *"
     },
     {
       "path": "/api/newsletter/send-weekly",

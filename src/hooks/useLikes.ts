@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-export function useLikes(productId: number, productStatus?: string) {  // ✅ أضفنا status
+export function useLikes(productId: number, productStatus?: string) {
   const [likes, setLikes] = useState(0)
   const [loading, setLoading] = useState(true)
   const [liked, setLiked] = useState(false)
@@ -11,7 +11,7 @@ export function useLikes(productId: number, productStatus?: string) {  // ✅ أ
   const storageKey = `liked_product_${productId}`
   const userKey = 'user_identifier'
 
-  const isSold = productStatus === 'sold'  // ✅ الـ lock condition
+  const isSold = productStatus === 'sold'
 
   const getUserIdentifier = () => {
     if (typeof window === 'undefined') return ''
@@ -31,16 +31,44 @@ export function useLikes(productId: number, productStatus?: string) {  // ✅ أ
 
   // ✅ Fetch likes — poll only if NOT sold
   useEffect(() => {
-    if (!productId) return
+    // ✅ Guard 1 — productId لازم يكون number صحيح
+    if (!productId || isNaN(productId) || productId <= 0) {
+      setLoading(false)
+      return
+    }
 
     const fetchLikes = async () => {
       try {
         const res = await fetch(`/api/products/likes?product_id=${productId}`)
+
+        // ✅ Guard 2 — تأكد إن الـ response JSON مش HTML
+        const contentType = res.headers.get('content-type')
+        if (!contentType?.includes('application/json')) {
+          console.error(`[useLikes] Non-JSON response for product ${productId}`)
+          setLoading(false)
+          return
+        }
+
+        // ✅ Guard 3 — تأكد إن الـ response ok
+        if (!res.ok) {
+          console.error(`[useLikes] HTTP ${res.status} for product ${productId}`)
+          setLoading(false)
+          return
+        }
+
         const data = await res.json()
+
+        // ✅ Guard 4 — تأكد إن likes موجود في الـ response
+        if (data.likes === undefined) {
+          console.error(`[useLikes] No likes field in response for product ${productId}`)
+          setLoading(false)
+          return
+        }
+
         setLikes(data.likes)
         setLoading(false)
       } catch (err) {
-        console.error('Failed to fetch likes:', err)
+        console.error(`[useLikes] Failed to fetch likes for product ${productId}:`, err)
         setLoading(false)
       }
     }
@@ -56,7 +84,7 @@ export function useLikes(productId: number, productStatus?: string) {  // ✅ أ
 
   const addLike = async () => {
     if (liked) return
-    if (isSold) return  // ✅ Hard block on sold products
+    if (isSold) return
 
     setLiked(true)
     setLikes((prev) => prev + 1)
@@ -72,6 +100,16 @@ export function useLikes(productId: number, productStatus?: string) {  // ✅ أ
         }),
       })
 
+      // ✅ Guard 2 — تأكد إن الـ response JSON مش HTML
+      const contentType = res.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        console.error(`[useLikes] Non-JSON POST response for product ${productId}`)
+        setLiked(false)
+        setLikes((prev) => prev - 1)
+        localStorage.removeItem(storageKey)
+        return
+      }
+
       const data = await res.json()
 
       if (data.likes !== undefined) {
@@ -86,12 +124,12 @@ export function useLikes(productId: number, productStatus?: string) {  // ✅ أ
       }
 
     } catch (err) {
-      console.error('Failed to add like:', err)
+      console.error(`[useLikes] Failed to add like for product ${productId}:`, err)
       setLiked(false)
       setLikes((prev) => prev - 1)
       localStorage.removeItem(storageKey)
     }
   }
 
-  return { likes, loading, addLike, liked, isSold }  // ✅ export isSold
+  return { likes, loading, addLike, liked, isSold }
 }
