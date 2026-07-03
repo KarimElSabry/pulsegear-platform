@@ -12,7 +12,7 @@ type Props = {
 
 export default function ProductCard({ product }: Props) {
   const { isLoved, toggleLove } = useWishlist()
-  const { likes, loading, addLike, liked } = useLikes(product.id!)
+  const { likes, loading, addLike, liked, isSold } = useLikes(product.id!, product.status) // ✅ بعت الـ status
 
   const primaryImage =
     product.images?.find((img) => img.is_primary)?.image_url ??
@@ -61,7 +61,7 @@ export default function ProductCard({ product }: Props) {
           <button
             onClick={(e) => {
               e.preventDefault()
-              e.stopPropagation() // ✅ Added
+              e.stopPropagation()
               toggleLove(product)
             }}
             className="absolute top-3 right-3 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transition-all duration-200"
@@ -72,26 +72,28 @@ export default function ProductCard({ product }: Props) {
             </span>
           </button>
 
-          {/* 👍 Likes Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation() // ✅ Added
-              addLike()
-            }}
-            disabled={liked}
-            className={`absolute top-3 left-3 z-10 rounded-full px-3 py-1.5 flex items-center gap-1 transition-all duration-200
-              ${liked
-                ? 'bg-blue-500/80 cursor-not-allowed'
-                : 'bg-black/60 hover:bg-black/80'
-              }`}
-            aria-label="Like Product"
-          >
-            <span className="text-xl">👍</span>
-            <span className="text-xs text-white font-bold">
-              {loading ? '...' : likes}
-            </span>
-          </button>
+          {/* 👍 Likes Button — ✅ مخفي لو sold */}
+          {!isSold && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                addLike()
+              }}
+              disabled={liked}
+              className={`absolute top-3 left-3 z-10 rounded-full px-3 py-1.5 flex items-center gap-1 transition-all duration-200
+                ${liked
+                  ? 'bg-blue-500/80 cursor-not-allowed'
+                  : 'bg-black/60 hover:bg-black/80'
+                }`}
+              aria-label="Like Product"
+            >
+              <span className="text-xl">👍</span>
+              <span className="text-xs text-white font-bold">
+                {loading ? '...' : likes}
+              </span>
+            </button>
+          )}
 
         </div>
 
