@@ -26,6 +26,25 @@ export default async function SoldArchivePage() {
         </p>
       </div>
 
+      {/* ─── Urgency Banner ─────────────────────── */}
+      <div className="bg-amber-950/40 border border-amber-800/50 
+                      rounded-2xl p-5 mb-10 text-center">
+        <p className="text-amber-400 font-bold text-lg">
+          🔥 {soldProducts.length} item{soldProducts.length !== 1 ? 's' : ''} sold so far!
+        </p>
+        <p className="text-amber-600 text-sm mt-1">
+          Items go fast — check what's still available!
+        </p>
+        <a
+          href="/products"
+          className="inline-block mt-3 bg-amber-500 hover:bg-amber-600 
+                     text-white font-bold px-6 py-2 rounded-full 
+                     text-sm transition-colors"
+        >
+          Browse Available Products ←
+        </a>
+      </div>
+
       {/* ─── Grouped by Month ───────────────────── */}
       {Object.entries(grouped).map(([month, items]) => (
         <section key={month} className="mb-12">

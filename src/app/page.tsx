@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductGrid from "@/components/product/ProductGrid";
 import ContactForm from "@/components/ContactForm";
+import HeroCarousel from "@/components/HeroCarousel";
 
 const homeFaqs = [
   {
@@ -63,14 +64,10 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="flex-1 w-full relative">
-            <img
-              src="/image.jpg"
-              alt="Athlete with sports watch"
-              className="w-full h-[500px] object-cover rounded-3xl"
-            />
-            <div className="absolute inset-0 rounded-3xl ring-1 ring-red-600/20 pointer-events-none" />
-          </div>
+
+          {/* ✅ HeroCarousel بدل الصورة الواحدة */}
+          <HeroCarousel />
+
         </div>
       </section>
 
@@ -89,6 +86,40 @@ export default function HomePage() {
             </Link>
           </div>
           <ProductGrid limit={3} />
+        </div>
+      </section>
+
+      {/* ===== SOLD ARCHIVE BANNER ===== */}
+      <section className="w-full bg-zinc-900 py-14 px-6 border-t border-zinc-800">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+
+          {/* Left — Text */}
+          <div className="flex flex-col gap-3">
+            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
+              Sold Archive
+            </span>
+            <h2 className="text-2xl md:text-3xl font-black text-white uppercase leading-tight">
+              These Gems Found Their Home 🏷️
+            </h2>
+            <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+              Browse our sold items to see what's been flying off the shelves —
+              and don't miss out on what's still available!
+            </p>
+          </div>
+
+          {/* Right — CTA */}
+          <div className="flex flex-col items-center gap-3 shrink-0">
+            <Link
+              href="/sold"
+              className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-red-500 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
+            >
+              View Sold Archive →
+            </Link>
+            <span className="text-xs text-zinc-500">
+              Items go fast — check what's still available!
+            </span>
+          </div>
+
         </div>
       </section>
 
@@ -190,7 +221,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              {/* FAQ Items using same <details> style as FAQ page */}
+              {/* FAQ Items */}
               <div className="flex flex-col gap-px">
                 {homeFaqs.map((faq, i) => (
                   <details

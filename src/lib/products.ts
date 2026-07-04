@@ -15,6 +15,25 @@ export const ProductService = {
     return data || []
   },
 
+  // ✅ جيب منتجات بفلتر 🆕
+  async getProducts(filters?: { status?: 'available' | 'sold' | 'reserved' }): Promise<Product[]> {
+    const supabase = createServerClient()
+
+    let query = supabase
+      .from('products')
+      .select(`*, images:product_images(*)`)
+      .order('sold_at', { ascending: false })
+
+    if (filters?.status) {
+      query = query.eq('status', filters.status)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+    return data || []
+  },
+
   // ✅ جيب منتج واحد بالـ slug
   async getBySlug(slug: string): Promise<Product | null> {
     const supabase = createServerClient()

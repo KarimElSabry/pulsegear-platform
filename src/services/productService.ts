@@ -54,7 +54,7 @@ export class ProductService {
     return data as Product[]
   }
 
-  // ✅ Fetch Single Product by ID  ← جديد
+  // ✅ Fetch Single Product by ID
   static async getProductById(id: number): Promise<Product | null> {
     const supabase = this.getClient()
 
@@ -200,7 +200,7 @@ export class ProductService {
     }
   }
 
-  // ✅ Create Product
+  // ✅ Create Product — Fixed Explicit INSERT
   static async createProduct(
     product: Omit<Product, 'id' | 'created_at'>,
     imageUrls: string[]
@@ -209,9 +209,26 @@ export class ProductService {
 
     const slug = await generateUniqueSlug(supabase, product.title)
 
+    // ✅ Explicit INSERT — no extra fields leaked from the Product object
     const { data, error } = await supabase
       .from('products')
-      .insert({ ...product, slug })
+      .insert({
+        slug,
+        title:           product.title,
+        description:     product.description     ?? null,
+        brand:           product.brand           ?? null,
+        category:        product.category        ?? null,
+        size:            product.size            ?? null,
+        price_egp:       product.price_egp,
+        original_price:  product.original_price  ?? null,
+        condition:       product.condition       ?? null,
+        status:          product.status          ?? 'available',
+        featured:        product.featured        ?? false,
+        source:          product.source          ?? null,
+        source_url:      product.source_url      ?? null,
+        source_platform: product.source_platform ?? null,
+        is_reservable:   product.is_reservable   ?? false,
+      })
       .select()
       .single()
 
@@ -225,9 +242,9 @@ export class ProductService {
 
     if (imageUrls.length > 0) {
       const images = imageUrls.map((url, index) => ({
-        product_id: data.id,
-        image_url: url,
-        is_primary: index === 0,
+        product_id:    data.id,
+        image_url:     url,
+        is_primary:    index === 0,
         display_order: index,
       }))
 

@@ -7,6 +7,7 @@ import { useState } from "react";
 const navLinks = [
   { label: "Products", href: "/products" },
   { label: "Brands", href: "/brands" },
+  { label: "Sold", href: "/sold" },          // 🆕 ضفناها هنا
   { label: "Request Product", href: "/request-product" },
   { label: "Wishlist", href: "/wishlist" },
   { label: "FAQ", href: "/faq" },
