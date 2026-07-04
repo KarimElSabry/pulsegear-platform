@@ -1,223 +1,405 @@
-import Link from "next/link";
-import ProductGrid from "@/components/product/ProductGrid";
-import ContactForm from "@/components/ContactForm";
+// app/faq/page.tsx
 
-const homeFaqs = [
+const conditions = [
   {
-    q: "What is Pulse Gear?",
-    a: "An Egyptian platform sourcing premium running gear globally — delivered to your door across Egypt.",
+    label: "New",
+    color: "text-emerald-400",
+    dot: "bg-emerald-400",
+    desc: "Brand-new, unused, unopened, in original packaging with all accessories.",
   },
   {
-    q: "Are the products original?",
-    a: "Yes. All products are 100% authentic, sourced from trusted international sellers.",
+    label: "Like New",
+    color: "text-green-400",
+    dot: "bg-green-400",
+    desc: "Unused, original condition, opened or without original packaging.",
   },
   {
-    q: "What conditions do products come in?",
-    a: "Brand New, Like New, Very Good, or Good — clearly displayed on every product page.",
+    label: "Very Good",
+    color: "text-blue-400",
+    dot: "bg-blue-400",
+    desc: "Gently-used, excellent condition, minor imperfections not affecting use or appearance.",
   },
   {
-    q: "How long does delivery take?",
-    a: "Generally 1–2 weeks depending on the product source and international shipping.",
+    label: "Good",
+    color: "text-yellow-400",
+    dot: "bg-yellow-400",
+    desc: "Regularly-used, shows wear, still functions as intended.",
   },
   {
-    q: "How do I pay?",
-    a: "50% upfront via Instapay or bank transfer, and 50% cash on delivery.",
-  },
-  {
-    q: "Can I request a product not listed?",
-    a: "Absolutely! Use our Request a Product page and we'll source it for you.",
+    label: "Satisfactory",
+    color: "text-orange-400",
+    dot: "bg-orange-400",
+    desc: "Well-used, clear signs of wear and imperfections, still works as intended.",
   },
 ];
 
-export default function HomePage() {
+const faqs = [
+  {
+    section: "About Pulse Gear",
+    questions: [
+      {
+        q: "What is Pulse Gear?",
+        type: "text",
+        a: `Pulse Gear is an Egyptian platform dedicated to helping runners train smarter by providing premium running watches, heart rate monitors, accessories, and performance tools at competitive prices.
+
+We carefully source products from trusted international marketplaces and handle the entire process — from sourcing and purchasing to shipping and delivery — making it easy for athletes in Egypt to access equipment that is often unavailable locally.`,
+      },
+      {
+        q: "Why should I buy from Pulse Gear instead of ordering myself?",
+        type: "text",
+        a: `We take care of everything for you:
+
+• Product sourcing
+• Communication with the seller
+• International shipping
+• Import process
+• Delivery inside Egypt
+
+Instead of dealing with multiple websites, shipping companies, customs, and payment methods, you only communicate with Pulse Gear.`,
+      },
+      {
+        q: "Can you get products that are not listed on the website?",
+        type: "text",
+        a: `Yes.
+
+If you cannot find a product on our website, simply use the Request Product page or contact us through Instagram or WhatsApp.
+
+We'll do our best to source it for you.`,
+      },
+    ],
+  },
+  {
+    section: "Products",
+    questions: [
+      {
+        q: "Are all products brand new?",
+        type: "text",
+        a: `No.
+
+We offer products in multiple conditions:
+
+• New
+• Like New
+• Very Good
+• Good
+• Satisfactory
+
+The condition is clearly displayed on every product page.`,
+      },
+      {
+        // ✅ Rich conditions layout
+        q: "What do the product conditions mean?",
+        type: "conditions",
+        a: "",
+      },
+      {
+        q: "Are used products tested?",
+        type: "text",
+        a: `Whenever possible, products are checked before being offered.
+
+The product condition shown on the website reflects our evaluation together with the seller's description.`,
+      },
+      {
+        q: `Why are some products marked "Out of Stock"?`,
+        type: "text",
+        a: `Many products come from second-hand marketplaces where only one unit may be available.
+
+If it has already been sold, it will appear as Out of Stock or be moved to our Sold Archive.`,
+      },
+      {
+        q: "What is the Sold Archive?",
+        type: "text",
+        a: `The Sold Archive shows products that have already been successfully sourced and sold.
+
+It helps customers understand what kinds of products are available through Pulse Gear and demonstrates our sourcing history.`,
+      },
+    ],
+  },
+  {
+    section: "Pricing",
+    questions: [
+      {
+        q: "Why are your prices different?",
+        type: "text",
+        a: `The price shown on Pulse Gear is the final estimated price for delivery to Egypt.
+
+It includes everything needed to get the product to your door:
+
+• International purchasing
+• Shipping
+• Import costs
+• Operational costs
+
+You do not need to calculate any additional expenses yourself.`,
+      },
+      {
+        q: "Which price should I trust?",
+        type: "text",
+        a: `Always rely on the price displayed on Pulse Gear.
+
+Marketplace prices may change frequently, while our displayed price reflects what you can expect to pay.`,
+      },
+    ],
+  },
+  {
+    section: "Orders",
+    questions: [
+      {
+        q: "How do I reserve a product?",
+        type: "text",
+        a: `Simply press the Reserve on WhatsApp button or contact us through Instagram.`,
+      },
+      {
+        q: "How do I order?",
+        type: "text",
+        a: `The process is simple:
+
+1. Browse products
+2. Reserve your product
+3. We confirm availability
+4. We purchase it
+5. We ship it
+6. We deliver it to you in Egypt`,
+      },
+      {
+        q: "Can I request multiple products?",
+        type: "text",
+        a: `Yes.
+
+You can reserve multiple products or request products that are not currently listed.`,
+      },
+      {
+        q: "Can I cancel my reservation?",
+        type: "text",
+        a: `Please contact us as soon as possible.
+
+Cancellation depends on whether the purchasing process has already started.`,
+      },
+    ],
+  },
+  {
+    section: "Shipping",
+    questions: [
+      {
+        q: "Do you ship across Egypt?",
+        type: "text",
+        a: `Yes, we deliver to all governorates across Egypt.
+
+Delivery to major cities such as Cairo and Alexandria is typically faster. Orders to other governorates may require additional time depending on the location.`,
+      },
+      {
+        q: "How long does delivery take?",
+        type: "text",
+        a: `Delivery generally takes between 1 to 2 weeks depending on the product source and international shipping process.
+
+An estimated delivery timeframe will always be shared with you before confirming your order.`,
+      },
+    ],
+  },
+  {
+    section: "Product Compatibility",
+    questions: [
+      {
+        q: "Will this heart rate strap work with my watch?",
+        type: "text",
+        a: `Each product page will indicate compatibility.
+
+If you're unsure, contact us and we'll help you before placing an order.`,
+      },
+      {
+        q: "Do you sell replacement straps?",
+        type: "text",
+        a: `Yes.
+
+We also source replacement chest straps and accessories whenever available.`,
+      },
+      {
+        q: "Can you find accessories for my watch?",
+        type: "text",
+        a: `Absolutely.
+
+If the accessory isn't listed, submit a Product Request and we'll do our best to source it for you.`,
+      },
+    ],
+  },
+  {
+    section: "Warranty",
+    questions: [
+      {
+        q: "Do your products come with a warranty?",
+        type: "text",
+        a: `Warranty depends on the product type and source.
+
+Any available warranty information will be clearly mentioned on the product page.`,
+      },
+    ],
+  },
+  {
+    section: "Payments",
+    questions: [
+      {
+        q: "How do I pay?",
+        type: "text",
+        a: `Payment is split into two parts:
+
+• 50% upfront before we ship the product — via Instapay or bank transfer
+• 50% cash on delivery when the product arrives to you`,
+      },
+      {
+        q: "Do I pay before you purchase the product?",
+        type: "text",
+        a: `Yes, a 50% deposit is required before we proceed with shipping.
+
+We will walk you through the full payment process after confirming your order.`,
+      },
+    ],
+  },
+  {
+    section: "Wishlist",
+    questions: [
+      {
+        q: "What is the Wishlist?",
+        type: "text",
+        a: `Wishlist allows you to save products that you're interested in and revisit them later.`,
+      },
+      {
+        q: "Does adding a product to my Wishlist reserve it?",
+        type: "text",
+        a: `No.
+
+Wishlist only saves the product for you. Products remain available to other customers until formally reserved.`,
+      },
+    ],
+  },
+  {
+    section: "Contact",
+    questions: [
+      {
+        q: "How can I contact Pulse Gear?",
+        type: "text",
+        a: `You can reach us through:
+
+• Instagram
+• WhatsApp
+• Product Request page`,
+      },
+      {
+        q: "I still have questions. What should I do?",
+        type: "text",
+        a: `We're always happy to help.
+
+Contact us through WhatsApp or Instagram, and we'll guide you to the right product.`,
+      },
+    ],
+  },
+];
+
+export default function FAQPage() {
   return (
-    <main className="w-full">
+    <main className="w-full bg-zinc-950 min-h-screen text-white">
 
-      {/* ===== HERO SECTION ===== */}
-      <section className="w-full bg-zinc-950 text-white min-h-[90vh] flex items-center">
-        <div className="max-w-6xl mx-auto px-6 py-24 w-full flex flex-col md:flex-row items-center gap-12">
-          <div className="flex flex-col gap-6 max-w-xl flex-1">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-red-500">
-              Your Gear. Your Pace. Your Race.
-            </span>
-            <h1 className="text-6xl md:text-7xl font-black leading-[1.05] uppercase tracking-tight">
-              Train Smarter.{" "}
-              <span className="text-red-500">Perform Better.</span>
-            </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed">
-              Premium running watches, heart rate monitors, and accessories
-              sourced globally, priced competitively, hand-delivered to your doorstep across Egypt.
-            </p>
-            <div className="flex flex-wrap gap-4 mt-2">
-              <Link
-                href="/products"
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-              >
-                Browse Products
-              </Link>
-              <Link
-                href="/request-product"
-                className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-              >
-                Request a Product
-              </Link>
-            </div>
-          </div>
-          <div className="flex-1 w-full relative">
-            <img
-              src="/image.jpg"
-              alt="Athlete with sports watch"
-              className="w-full h-[500px] object-cover rounded-3xl"
-            />
-            <div className="absolute inset-0 rounded-3xl ring-1 ring-red-600/20 pointer-events-none" />
-          </div>
-        </div>
+      {/* ===== HEADER ===== */}
+      <section className="max-w-3xl mx-auto px-6 pt-24 pb-12 text-center">
+        <span className="text-xs font-bold uppercase tracking-widest text-red-500">
+          Got Questions?
+        </span>
+        <h1 className="text-5xl font-black uppercase mt-3 mb-4">
+          Frequently Asked Questions
+        </h1>
+        <p className="text-zinc-400 text-lg">
+          Everything you need to know about Pulse Gear, our products, and how we work.
+        </p>
       </section>
 
-      {/* ===== FEATURED PRODUCTS ===== */}
-      <section className="w-full py-20 px-6 bg-zinc-950">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-3xl font-black text-white uppercase">
-              Hand-Picked For You
+      {/* ===== FAQ SECTIONS ===== */}
+      <section className="max-w-3xl mx-auto px-6 pb-20 flex flex-col gap-16">
+        {faqs.map((section) => (
+          <div key={section.section}>
+
+            {/* Section Title */}
+            <h2 className="text-xs font-bold uppercase tracking-widest text-red-500 mb-6">
+              {section.section}
             </h2>
-            <Link
-              href="/products"
-              className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200 uppercase tracking-wide"
-            >
-              View All →
-            </Link>
-          </div>
-          <ProductGrid limit={3} />
-        </div>
-      </section>
 
-      {/* ===== WHY PULSE GEAR ===== */}
-      <section className="w-full bg-zinc-950 py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col items-center gap-2 mb-14 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
-              Our Promise
-            </span>
-            <h2 className="text-3xl font-black text-white uppercase">
-              Why Pulse Gear?
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                icon: "🌍",
-                title: "Globally Sourced",
-                desc: "We bring you the best running gear from top international brands.",
-              },
-              {
-                icon: "🚀",
-                title: "Fast Delivery",
-                desc: "Quick and reliable shipping straight to your door across Egypt.",
-              },
-              {
-                icon: "💬",
-                title: "Expert Support",
-                desc: "Not sure what to get? We help you find the perfect gear for your goals.",
-              },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-red-600 transition-colors duration-300"
-              >
-                <span className="text-4xl">{item.icon}</span>
-                <h3 className="text-lg font-bold text-white uppercase">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== REQUEST A PRODUCT ===== */}
-      <section className="w-full bg-zinc-950 text-white py-20 px-6 border-t border-zinc-800">
-        <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
-          <h2 className="text-4xl font-black uppercase leading-tight">
-            Can't Find What You're Looking For?
-          </h2>
-          <p className="text-zinc-400 text-lg">
-            Submit a product request and we'll source it for you.
-          </p>
-          <Link
-            href="/request-product"
-            className="self-center bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-          >
-            Request a Product
-          </Link>
-        </div>
-      </section>
-
-      {/* ===== GET IN TOUCH — FAQ + CONTACT FORM ===== */}
-      <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
-        <div className="max-w-6xl mx-auto">
-
-          {/* Section Header */}
-          <div className="flex flex-col items-center gap-2 mb-14 text-center">
-            <span className="text-xs font-bold uppercase tracking-widest text-red-500">
-              Get In Touch
-            </span>
-            <h2 className="text-3xl font-black text-white uppercase">
-              We're Here To Help
-            </h2>
-            <p className="text-zinc-400 text-sm max-w-md">
-              Browse our most common questions or send us a message directly.
-            </p>
-          </div>
-
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-
-            {/* LEFT — FAQ */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-black text-white uppercase">
-                  Quick Answers
-                </h3>
-                <Link
-                  href="/faq"
-                  className="text-xs font-semibold text-red-500 hover:text-red-400 uppercase tracking-wide transition-colors duration-200"
+            {/* Questions */}
+            <div className="flex flex-col gap-px">
+              {section.questions.map((item, i) => (
+                <details
+                  key={i}
+                  className="group border-t border-zinc-800 last:border-b last:border-zinc-800"
                 >
-                  View All FAQs →
-                </Link>
-              </div>
+                  <summary className="flex items-center justify-between gap-4 py-5 cursor-pointer list-none">
+                    <span className="text-base font-semibold text-white group-open:text-red-400 transition-colors duration-200">
+                      {item.q}
+                    </span>
+                    <span className="text-zinc-500 group-open:text-red-500 transition-colors duration-200 text-xl shrink-0">
+                      +
+                    </span>
+                  </summary>
 
-              {/* FAQ Items using same <details> style as FAQ page */}
-              <div className="flex flex-col gap-px">
-                {homeFaqs.map((faq, i) => (
-                  <details
-                    key={i}
-                    className="group border-t border-zinc-800 last:border-b last:border-zinc-800"
-                  >
-                    <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none">
-                      <span className="text-sm font-semibold text-white group-open:text-red-400 transition-colors duration-200">
-                        {faq.q}
-                      </span>
-                      <span className="text-zinc-500 group-open:text-red-500 transition-colors duration-200 text-xl shrink-0">
-                        +
-                      </span>
-                    </summary>
-                    <div className="pb-4 text-zinc-400 text-sm leading-relaxed">
-                      {faq.a}
-                    </div>
-                  </details>
-                ))}
-              </div>
+                  <div className="pb-6">
+                    {/* ✅ Conditions — Rich Layout */}
+                    {item.type === "conditions" ? (
+                      <div className="flex flex-col gap-3">
+                        {conditions.map((c) => (
+                          <div
+                            key={c.label}
+                            className="flex gap-3 items-start bg-zinc-800/50 rounded-xl px-4 py-3 border border-zinc-700/50"
+                          >
+                            <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
+                            <div className="flex flex-col gap-0.5">
+                              <span className={`text-sm font-bold ${c.color}`}>
+                                {c.label}
+                              </span>
+                              <span className="text-xs text-zinc-400 leading-relaxed">
+                                {c.desc}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      // ✅ Regular Text
+                      <div className="text-zinc-400 text-sm leading-relaxed whitespace-pre-line">
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+
+                </details>
+              ))}
             </div>
 
-            {/* RIGHT — Contact Form */}
-            <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
-              <ContactForm />
-            </div>
+          </div>
+        ))}
+      </section>
 
+      {/* ===== CTA SECTION ===== */}
+      <section className="border-t border-zinc-800 py-20 px-6">
+        <div className="max-w-2xl mx-auto text-center flex flex-col gap-5">
+          <h2 className="text-3xl font-black uppercase">
+            Don't See Your Question?
+          </h2>
+          <p className="text-zinc-400 text-base leading-relaxed">
+            Our goal is to make buying running gear simple and hassle-free. If you couldn't find the answer you're looking for, send us a message on WhatsApp or Instagram — we'll be happy to help you find the right product or source equipment that isn't currently listed on the website.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 mt-2">
+            <a
+              href="https://wa.me/+201205322444"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+            >
+              WhatsApp Us
+            </a>
+            <a
+              href="https://instagram.com/pulsegear_egypt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+            >
+              Instagram
+            </a>
           </div>
         </div>
       </section>

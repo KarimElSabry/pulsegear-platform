@@ -1,3 +1,5 @@
+// src/app/admin/page.tsx
+
 import { addProduct } from './actions'
 
 export default function AdminPage() {
@@ -96,11 +98,12 @@ export default function AdminPage() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               >
                 <option value="">Select...</option>
-                <option value="new_with_tags">New with Tags</option>
-                <option value="new_without_tags">New without Tags</option>
-                <option value="very_good">Very Good</option>
-                <option value="good">Good</option>
-                <option value="satisfactory">Satisfactory</option>
+                {/* ✅ Values now match the filter strings exactly */}
+                <option value="New with tags">New with tags</option>
+                <option value="New without tags">New without tags</option>
+                <option value="Very good">Very good</option>
+                <option value="Good">Good</option>
+                <option value="Satisfactory">Satisfactory</option>
               </select>
             </div>
             <div className="space-y-1">
@@ -110,12 +113,13 @@ export default function AdminPage() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               >
                 <option value="">Select...</option>
-                <option value="fitness_watches">Fitness Watches</option>
-                <option value="heart_rate_straps">Heart Rate Straps</option>
-                <option value="replacement_straps">Replacement Straps</option>
-                <option value="running_accessories">Running Accessories</option>
-                <option value="cycling_accessories">Cycling Accessories</option>
-                <option value="other">Other</option>
+                {/* ✅ Values now match the filter strings exactly */}
+                <option value="Fitness Watches">Fitness Watches</option>
+                <option value="Heart Rate Straps">Heart Rate Straps</option>
+                <option value="Replacement Straps">Replacement Straps</option>
+                <option value="Running Accessories">Running Accessories</option>
+                <option value="Cycling Accessories">Cycling Accessories</option>
+                <option value="Other">Other</option>
               </select>
             </div>
           </div>

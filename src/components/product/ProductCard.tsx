@@ -1,3 +1,5 @@
+// src/components/product/ProductCard.tsx
+
 'use client'
 
 import Link from 'next/link'
@@ -10,14 +12,32 @@ type Props = {
   product: Product
 }
 
+// ✅ Condition color map — all lowercase keys for case-insensitive matching
+const conditionStyles: Record<string, { text: string; bg: string }> = {
+  'new with tags': { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  'new':           { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  'new without tags': { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  'like new':      { text: 'text-green-400',   bg: 'bg-green-400/10'   },
+  'very good':     { text: 'text-blue-400',    bg: 'bg-blue-400/10'    },
+  'good':          { text: 'text-yellow-400',  bg: 'bg-yellow-400/10'  },
+  'satisfactory':  { text: 'text-orange-400',  bg: 'bg-orange-400/10'  },
+}
+
 export default function ProductCard({ product }: Props) {
   const { isLoved, toggleLove } = useWishlist()
-  const { likes, loading, addLike, liked, isSold } = useLikes(product.id!, product.status) // ✅ بعت الـ status
+  const { likes, loading, addLike, liked, isSold } = useLikes(product.id!, product.status)
 
   const primaryImage =
     product.images?.find((img) => img.is_primary)?.image_url ??
     product.images?.[0]?.image_url ??
     null
+
+  // ✅ Lowercase match — handles "Very good", "VERY GOOD", "very good" etc.
+  const condition = product.condition ?? '—'
+  const condStyle = conditionStyles[condition.toLowerCase()] ?? {
+    text: 'text-zinc-400',
+    bg: 'bg-zinc-800',
+  }
 
   return (
     <Link href={`/products/${product.slug ?? product.id}`}>
@@ -72,7 +92,7 @@ export default function ProductCard({ product }: Props) {
             </span>
           </button>
 
-          {/* 👍 Likes Button — ✅ مخفي لو sold */}
+          {/* 👍 Likes Button */}
           {!isSold && (
             <button
               onClick={(e) => {
@@ -105,8 +125,10 @@ export default function ProductCard({ product }: Props) {
             <span className="text-xs text-red-500 font-semibold uppercase tracking-wide">
               {product.brand ?? '—'}
             </span>
-            <span className="text-xs text-zinc-500 bg-zinc-800 px-2 py-0.5 rounded-full">
-              {product.condition ?? '—'}
+
+            {/* ✅ Colored condition badge */}
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${condStyle.text} ${condStyle.bg}`}>
+              {condition}
             </span>
           </div>
 

@@ -1,3 +1,4 @@
+// src/components/product/ProductGrid.tsx
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
@@ -10,6 +11,7 @@ type Props = {
   filterBrand?: string
   filterCondition?: string
   filterAvailability?: string
+  filterCategory?: string // ✅ NEW
 }
 
 export default function ProductGrid({
@@ -17,6 +19,7 @@ export default function ProductGrid({
   filterBrand,
   filterCondition,
   filterAvailability,
+  filterCategory, // ✅ NEW
 }: Props) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,18 +30,13 @@ export default function ProductGrid({
       .select(`*, images:product_images(*)`)
       .order('created_at', { ascending: false })
 
-    // ✅ جيب كل الـ products (available + sold) عشان الـ filter يشتغل صح
-    // لو مفيش filter أو 'All' → جيب الكل
-    // لو 'In Stock' → جيب available بس
-    // لو 'Sold' → جيب sold بس
     if (filterAvailability === 'In Stock') {
       query = query.eq('status', 'available')
     } else if (filterAvailability === 'Sold') {
       query = query.eq('status', 'sold')
-    }  else if (filterAvailability === 'Reserved') {
-       query = query.eq('status', 'reserved')
+    } else if (filterAvailability === 'Reserved') {
+      query = query.eq('status', 'reserved')
     }
-    // 'All' → مفيش filter → بيجيب الكل ✅
 
     const { data, error } = await query
 
@@ -50,7 +48,7 @@ export default function ProductGrid({
 
     setProducts(data as Product[])
     setLoading(false)
-  }, [filterAvailability]) // ✅ بيتحدث لما الـ filter يتغير
+  }, [filterAvailability])
 
   useEffect(() => {
     fetchProducts()
@@ -60,15 +58,11 @@ export default function ProductGrid({
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'products' },
-        () => {
-          fetchProducts()
-        }
+        () => { fetchProducts() }
       )
       .subscribe()
 
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return () => { supabase.removeChannel(channel) }
   }, [fetchProducts])
 
   // ─── Apply Filters ────────────────────────────────────
@@ -82,6 +76,13 @@ export default function ProductGrid({
 
   if (filterCondition && filterCondition !== 'All') {
     displayed = displayed.filter((p) => p.condition === filterCondition)
+  }
+
+  // ✅ NEW — Category Filter
+  if (filterCategory && filterCategory !== 'All') {
+    displayed = displayed.filter(
+      (p) => p.category?.toLowerCase().replace(/ /g, '_') === filterCategory.toLowerCase().replace(/ /g, '_')
+    )
   }
 
   if (limit) {

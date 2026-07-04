@@ -1,3 +1,5 @@
+// src/components/products/ProductsContent.tsx
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,16 +10,23 @@ const conditions = [
   'All', 'New with tags', 'New without tags',
   'Very good', 'Good', 'Satisfactory',
 ]
+
 const availabilities = ['All', 'In Stock', 'Sold']
 
-// ✅ بياخد الـ brands جاهزة من الـ Server
+// ✅ Updated to match Admin form values exactly
+const categories = [
+  'All', 'Fitness Watches', 'Heart Rate Straps',
+  'Replacement Straps', 'Running Accessories',
+  'Cycling Accessories', 'Other',
+]
+
 export default function ProductsContent({ initialBrands }: { initialBrands: string[] }) {
   const searchParams = useSearchParams()
-  const [brand, setBrand] = useState('All')
-  const [condition, setCondition] = useState('All')
+  const [brand, setBrand]               = useState('All')
+  const [condition, setCondition]       = useState('All')
   const [availability, setAvailability] = useState('All')
+  const [category, setCategory]         = useState('All') // ✅ NEW
 
-  // ✅ مفيش useEffect يجيب data — الـ brands جاية جاهزة!
   const brands = ['All', ...initialBrands]
 
   useEffect(() => {
@@ -76,6 +85,20 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
           </select>
         </div>
 
+        {/* ✅ Category */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-zinc-500 uppercase tracking-wide">Category</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="bg-zinc-800 text-white text-sm px-4 py-2 rounded-full border border-zinc-700 focus:outline-none focus:border-red-500"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Reset */}
         <div className="flex flex-col justify-end">
           <button
@@ -83,12 +106,14 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
               setBrand('All')
               setCondition('All')
               setAvailability('All')
+              setCategory('All') // ✅ Reset category too
             }}
             className="text-sm text-zinc-400 hover:text-red-500 transition-colors px-4 py-2 rounded-full border border-zinc-700 hover:border-red-500"
           >
             Reset Filters
           </button>
         </div>
+
       </div>
 
       {/* Grid */}
@@ -96,7 +121,9 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
         filterBrand={brand}
         filterCondition={condition}
         filterAvailability={availability}
+        filterCategory={category} // ✅ NEW
       />
+
     </main>
   )
 }
