@@ -1,3 +1,5 @@
+// src/app/admin/products/page.tsx
+
 import { ProductService } from '@/services/productService'
 import type { Product } from '@/types/product'
 import ManageProductsClient from './ManageProductsClient'

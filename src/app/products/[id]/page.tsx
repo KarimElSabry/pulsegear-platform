@@ -1,3 +1,5 @@
+// src/app/products/[id]/page.tsx
+
 import { ProductService } from '@/services/productService'
 import { notFound } from 'next/navigation'
 import ProductImageGallery from '@/components/ProductImageGallery'

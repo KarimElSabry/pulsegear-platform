@@ -1,3 +1,5 @@
+// src/lib/products.ts
+
 import { createServerClient } from './supabase'
 import { Product, ProductImage } from '../types/product'
 

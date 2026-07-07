@@ -1,3 +1,5 @@
+// src/components/product/SoldProductCard.tsx
+
 'use client'
 
 import Image from 'next/image'

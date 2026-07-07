@@ -1,3 +1,5 @@
+// src/app/sold/page.tsx
+
 import { ProductService } from '@/services/productService'
 import Image from 'next/image'
 

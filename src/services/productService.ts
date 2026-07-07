@@ -1,3 +1,5 @@
+// src/services/productServices.ts
+
 import { createServerClient } from '@/lib/supabase'
 import type {
   Product,

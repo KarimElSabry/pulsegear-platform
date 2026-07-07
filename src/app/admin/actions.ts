@@ -1,3 +1,5 @@
+// src/app/admin/actions.ts
+
 'use server'
 
 import { revalidatePath } from 'next/cache'
@@ -34,7 +36,13 @@ export async function updateProductStatus(
   status: 'available' | 'sold' | 'reserved'
 ): Promise<void> {
   await ProductService.updateStatus(id, status)
+
+  // ✅ Revalidate everything that shows product status
   revalidatePath('/admin/products')
+  revalidatePath('/products')
+  revalidatePath('/sold')
+  revalidatePath(`/products/${id}`)
+  revalidatePath('/', 'layout') // ✅ يشمل كل الـ nested pages
 }
 
 // ─── Trigger Vinted Sync ──────────────────────────────────────────────────────

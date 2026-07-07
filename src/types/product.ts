@@ -1,3 +1,5 @@
+// src/types/prodcuts.ts
+
 // ─── Enums / Unions ───────────────────────────────────────────────────────────
 
 export type ProductCondition =
