@@ -11,7 +11,8 @@ type Props = {
   filterBrand?: string
   filterCondition?: string
   filterAvailability?: string
-  filterCategory?: string // ✅ NEW
+  filterCategory?: string
+  randomize?: boolean // ✅ NEW
 }
 
 export default function ProductGrid({
@@ -19,7 +20,8 @@ export default function ProductGrid({
   filterBrand,
   filterCondition,
   filterAvailability,
-  filterCategory, // ✅ NEW
+  filterCategory,
+  randomize, // ✅ NEW
 }: Props) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -78,11 +80,16 @@ export default function ProductGrid({
     displayed = displayed.filter((p) => p.condition === filterCondition)
   }
 
-  // ✅ NEW — Category Filter
+  // ✅ Category Filter
   if (filterCategory && filterCategory !== 'All') {
     displayed = displayed.filter(
       (p) => p.category?.toLowerCase().replace(/ /g, '_') === filterCategory.toLowerCase().replace(/ /g, '_')
     )
+  }
+
+  // ✅ NEW — Randomize before slicing
+  if (randomize) {
+    displayed = displayed.sort(() => Math.random() - 0.5)
   }
 
   if (limit) {

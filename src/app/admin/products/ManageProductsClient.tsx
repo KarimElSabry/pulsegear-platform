@@ -1,3 +1,5 @@
+// src/app/admin/products/ManageProductsClient.tsx
+
 'use client'
 
 import { useState } from 'react'
@@ -31,7 +33,12 @@ function EditProductModal({
     'Satisfactory',
   ]
 
-  const statuses: ProductStatus[] = ['available', 'sold', 'reserved']
+  const statuses: { value: ProductStatus; label: string }[] = [
+    { value: 'available',    label: 'Available' },
+    { value: 'out_of_stock', label: 'Out of Stock' },
+    { value: 'sold',         label: 'Sold' },
+    { value: 'reserved',     label: 'Reserved' },
+  ]
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -56,14 +63,14 @@ function EditProductModal({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: form.title,
-          brand: form.brand,
-          category: form.category,
-          condition: form.condition,
-          price_egp: form.price_egp,
+          title:       form.title,
+          brand:       form.brand,
+          category:    form.category,
+          condition:   form.condition,
+          price_egp:   form.price_egp,
           description: form.description,
-          status: form.status,
-          featured: form.featured,
+          status:      form.status,
+          featured:    form.featured,
         }),
       })
 
@@ -90,15 +97,11 @@ function EditProductModal({
       >
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-white text-xl font-bold">✏️ Edit Product</h2>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-white text-2xl leading-none"
-          >
-            ×
-          </button>
+          <button onClick={onClose} className="text-zinc-400 hover:text-white text-2xl leading-none">×</button>
         </div>
 
         <div className="space-y-4">
+
           {/* Title */}
           <div>
             <label className="text-zinc-400 text-sm mb-1 block">Title</label>
@@ -169,7 +172,7 @@ function EditProductModal({
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
               >
                 {statuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
             </div>
@@ -197,9 +200,7 @@ function EditProductModal({
               onChange={handleChange}
               className="w-4 h-4 accent-blue-500"
             />
-            <label htmlFor="featured" className="text-zinc-400 text-sm">
-              Featured Product
-            </label>
+            <label htmlFor="featured" className="text-zinc-400 text-sm">Featured Product</label>
           </div>
 
           {/* Error */}
@@ -225,6 +226,7 @@ function EditProductModal({
               {loading ? 'Saving...' : '💾 Save Changes'}
             </button>
           </div>
+
         </div>
       </div>
     </div>
@@ -248,12 +250,10 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
-  const handleStatusChange = async (id: number, status: 'available' | 'sold') => {
+  const handleStatusChange = async (id: number, status: 'available' | 'sold' | 'out_of_stock') => {
     try {
       await updateProductStatus(id, status)
-      setProducts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, status } : p))
-      )
+      setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, status } : p)))
       router.refresh()
     } catch (error) {
       console.error('Failed to update status:', error)
@@ -272,13 +272,11 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
   }
 
   const handleSave = (updated: Product) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
-    )
+    setProducts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)))
     router.refresh()
   }
 
-  // ✅ NEW — Toggle is_reservable
+  // ── Toggle is_reservable ───────────────────────────────────────────────────
   const handleToggleReservable = async (id: number, current: boolean) => {
     try {
       const res = await fetch(`/api/products/${id}`, {
@@ -287,7 +285,6 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
         body: JSON.stringify({ is_reservable: !current }),
       })
       if (!res.ok) throw new Error('Failed to update')
-
       setProducts((prev) =>
         prev.map((p) => (p.id === id ? { ...p, is_reservable: !current } : p))
       )
@@ -296,18 +293,47 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
     }
   }
 
+  // ── Toggle featured ────────────────────────────────────────────────────────
+  const handleToggleFeatured = async (id: number, current: boolean) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured: !current }),
+      })
+      if (!res.ok) throw new Error('Failed to update')
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, featured: !current } : p))
+      )
+    } catch (error) {
+      console.error('Failed to toggle featured:', error)
+    }
+  }
+
+  // ── Toggle is_deal ─────────────────────────────────────────────────────────
+  const handleToggleDeal = async (id: number, current: boolean) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_deal: !current }),
+      })
+      if (!res.ok) throw new Error('Failed to update')
+      setProducts((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, is_deal: !current } : p))
+      )
+    } catch (error) {
+      console.error('Failed to toggle deal:', error)
+    }
+  }
+
   const handleVintedSync = async () => {
     setSyncing(true)
     setSyncResult(null)
     setSyncError(null)
-
     try {
       const data = await triggerVintedSync()
-      setSyncResult({
-        checked: data.checked,
-        sold: data.sold,
-        errors: data.errors,
-      })
+      setSyncResult({ checked: data.checked, sold: data.sold, errors: data.errors })
       router.refresh()
     } catch (err: any) {
       setSyncError(err.message || 'Sync failed')
@@ -325,7 +351,6 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <h1 className="text-2xl font-bold text-white">Products Management</h1>
 
-        {/* 🔄 Vinted Sync */}
         <div className="flex items-center gap-4 flex-wrap">
           <button
             onClick={handleVintedSync}
@@ -335,16 +360,12 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                        rounded-xl text-sm font-bold transition"
           >
             {syncing ? (
-              <>
-                <span className="animate-spin inline-block">⏳</span>
-                Syncing...
-              </>
+              <><span className="animate-spin inline-block">⏳</span> Syncing...</>
             ) : (
               '🔄 Sync Vinted Now'
             )}
           </button>
 
-          {/* ✅ Success Result */}
           {syncResult && (
             <div className="text-sm bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-2 text-zinc-300">
               ✅ Checked: <strong className="text-white">{syncResult.checked}</strong>
@@ -355,7 +376,6 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
             </div>
           )}
 
-          {/* ❌ Error */}
           {syncError && (
             <div className="text-sm bg-red-900/20 border border-red-800 rounded-xl px-4 py-2 text-red-400">
               ❌ {syncError}
@@ -371,19 +391,18 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
         <div className="overflow-x-auto rounded-2xl border border-zinc-700">
           <table className="w-full border-collapse">
 
-            {/* Headers */}
             <thead>
               <tr className="bg-zinc-800 border-b border-zinc-700">
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Product</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Status</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Price</th>
-                {/* ✅ NEW */}
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Reserve</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Featured</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">🔥 Deal</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Actions</th>
               </tr>
             </thead>
 
-            {/* Rows */}
             <tbody>
               {products.map((product, i) => (
                 <tr
@@ -397,45 +416,74 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
 
                   {/* Status Badge */}
                   <td className="p-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                        product.status === 'available'
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          : product.status === 'reserved'
-                          ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                      }`}
-                    >
-                      {product.status}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                      product.status === 'available'
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : product.status === 'reserved'
+                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                        : product.status === 'out_of_stock'
+                        ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {product.status === 'sold'
+                        ? 'Sold'
+                        : product.status === 'out_of_stock'
+                        ? 'Out of Stock'
+                        : product.status}
                     </span>
                   </td>
 
                   {/* Price */}
                   <td className="p-4 text-zinc-300 text-sm">{product.price_egp} EGP</td>
 
-                  {/* ✅ NEW — Reserve Toggle */}
+                  {/* Reserve Toggle */}
                   <td className="p-4">
                     <button
-                      onClick={() =>
-                        handleToggleReservable(product.id!, product.is_reservable ?? false)
-                      }
-                      title={product.is_reservable ? 'Click to disable reservation' : 'Click to enable reservation'}
+                      onClick={() => handleToggleReservable(product.id!, product.is_reservable ?? false)}
+                      title={product.is_reservable ? 'Disable reservation' : 'Enable reservation'}
                       className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
                         product.is_reservable ? 'bg-purple-600' : 'bg-zinc-600'
                       }`}
                     >
-                      <span
-                        className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
-                          product.is_reservable ? 'translate-x-7' : 'translate-x-1'
-                        }`}
-                      />
+                      <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+                        product.is_reservable ? 'translate-x-7' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </td>
+
+                  {/* Featured Toggle */}
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleToggleFeatured(product.id!, product.featured ?? false)}
+                      title={product.featured ? 'Unfeature' : 'Feature'}
+                      className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                        product.featured ? 'bg-amber-500' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+                        product.featured ? 'translate-x-7' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </td>
+
+                  {/* Deal Toggle */}
+                  <td className="p-4">
+                    <button
+                      onClick={() => handleToggleDeal(product.id!, product.is_deal ?? false)}
+                      title={product.is_deal ? 'Remove from deals' : 'Add to deals'}
+                      className={`relative inline-flex items-center w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${
+                        product.is_deal ? 'bg-orange-500' : 'bg-zinc-600'
+                      }`}
+                    >
+                      <span className={`inline-block w-4 h-4 bg-white rounded-full shadow transform transition-transform duration-300 ${
+                        product.is_deal ? 'translate-x-7' : 'translate-x-1'
+                      }`} />
                     </button>
                   </td>
 
                   {/* Actions */}
                   <td className="p-4">
                     <div className="flex gap-2 flex-wrap">
-                      {/* ✏️ Edit */}
                       <button
                         onClick={() => setEditingProduct(product)}
                         className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
@@ -443,32 +491,39 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                         ✏️ Edit
                       </button>
 
-                      {/* Mark as Sold / Available */}
                       {product.status === 'available' ? (
-                        <button
-                          onClick={() => handleStatusChange(product.id!, 'sold')}
-                          className="bg-yellow-500 hover:bg-yellow-400 text-black px-3 py-1 rounded-lg text-xs font-bold transition"
-                        >
-                          Mark as Sold
-                        </button>
+                        <>
+                          <button
+                            onClick={() => handleStatusChange(product.id!, 'out_of_stock')}
+                            className="bg-orange-500 hover:bg-orange-400 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
+                          >
+                            📦 Out of Stock
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(product.id!, 'sold')}
+                            className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
+                          >
+                            💰 Mark as Sold
+                          </button>
+                        </>
                       ) : (
                         <button
                           onClick={() => handleStatusChange(product.id!, 'available')}
                           className="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
                         >
-                          Mark as Available
+                          ✅ Mark as Available
                         </button>
                       )}
 
-                      {/* 🗑️ Delete */}
                       <button
                         onClick={() => handleDelete(product.id!)}
                         className="bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
                       >
-                        Delete
+                        🗑️ Delete
                       </button>
                     </div>
                   </td>
+
                 </tr>
               ))}
             </tbody>

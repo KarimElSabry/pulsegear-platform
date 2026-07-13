@@ -33,16 +33,15 @@ export async function deleteProduct(id: number): Promise<void> {
 
 export async function updateProductStatus(
   id: number,
-  status: 'available' | 'sold' | 'reserved'
+  status: 'available' | 'sold' | 'reserved' | 'out_of_stock'
 ): Promise<void> {
   await ProductService.updateStatus(id, status)
 
-  // ✅ Revalidate everything that shows product status
   revalidatePath('/admin/products')
   revalidatePath('/products')
   revalidatePath('/sold')
   revalidatePath(`/products/${id}`)
-  revalidatePath('/', 'layout') // ✅ يشمل كل الـ nested pages
+  revalidatePath('/', 'layout')
 }
 
 // ─── Trigger Vinted Sync ──────────────────────────────────────────────────────
@@ -85,18 +84,20 @@ export async function addProduct(formData: FormData): Promise<void> {
 
   const sourceUrl = (formData.get('source_url') as string) || undefined
 
-  const conditionMap: Record<string, ProductCondition> = {
-    new_with_tags:    'New with tags',
-    new_without_tags: 'New without tags',
-    very_good:        'Very good',
-    good:             'Good',
-    satisfactory:     'Satisfactory',
-  }
+  // ✅ FIX: مباشرة بنتحقق من القيمة اللي بتيجي من الـ form بدل الـ conditionMap
+  const validConditions: ProductCondition[] = [
+    'New with tags',
+    'New without tags',
+    'Very good',
+    'Good',
+    'Satisfactory',
+  ]
 
   const conditionRaw = formData.get('condition') as string
-  const condition = conditionMap[conditionRaw]
+  const condition = validConditions.includes(conditionRaw as ProductCondition)
+    ? (conditionRaw as ProductCondition)
+    : undefined
 
-  // ✅ اقرأ is_reservable من الـ form
   const isReservable = formData.get('is_reservable') === 'true'
 
   await ProductService.createProduct(
@@ -114,7 +115,7 @@ export async function addProduct(formData: FormData): Promise<void> {
       source:         sourceUrl?.includes('vinted') ? 'vinted' : 'manual',
       source_url:     sourceUrl,
       status:         'available',
-      is_reservable:  isReservable,   // ✅ بيتبعت للـ DB
+      is_reservable:  isReservable,
     },
     imageUrls
   )

@@ -1,5 +1,3 @@
-// src/components/layout/Header.tsx
-
 "use client";
 
 import Image from "next/image";
@@ -7,12 +5,13 @@ import Link from "next/link";
 import { useState } from "react";
 
 const navLinks = [
-  { label: "Products", href: "/products" },
-  { label: "Brands", href: "/brands" },
-  { label: "Sold", href: "/sold" },          // 🆕 ضفناها هنا
+  { label: "Products",        href: "/products" },
+  { label: "Brands",          href: "/brands" },
+  { label: "HOT Deals 🔥 ",        href: "/deals" },        // ✅ NEW
+  { label: "Sold",            href: "/sold" },
   { label: "Request Product", href: "/request-product" },
-  { label: "Wishlist", href: "/wishlist" },
-  { label: "FAQ", href: "/faq" },
+  { label: "Wishlist",        href: "/wishlist" },
+  { label: "FAQ",             href: "/faq" },
 ];
 
 export default function Header() {
@@ -40,7 +39,11 @@ export default function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-lg font-medium text-gray-300 hover:text-white transition-colors duration-200"
+              className={`text-lg font-medium transition-colors duration-200 ${
+                link.href === '/deals'
+                  ? 'text-orange-400 hover:text-orange-300 font-bold'
+                  : 'text-gray-300 hover:text-white'
+              }`}
             >
               {link.label}
             </Link>
@@ -66,7 +69,11 @@ export default function Header() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-lg font-medium text-gray-300 hover:text-white transition-colors duration-200"
+              className={`text-lg font-medium transition-colors duration-200 ${
+                link.href === '/deals'
+                  ? 'text-orange-400 hover:text-orange-300 font-bold'
+                  : 'text-gray-300 hover:text-white'
+              }`}
               onClick={() => setMenuOpen(false)}
             >
               {link.label}

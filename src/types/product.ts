@@ -10,7 +10,7 @@ export type ProductCondition =
   | 'Satisfactory'
 
 export type ProductSource   = 'vinted' | 'amazon' | 'manual'
-export type ProductStatus   = 'available' | 'sold' | 'reserved'
+export type ProductStatus   = 'available' | 'sold' | 'reserved' | 'out_of_stock'
 export type ProductPlatform = 'vinted' | 'ebay' | 'amazon' | 'manual' | 'other'
 
 // ─── Product Image ────────────────────────────────────────────────────────────
@@ -49,6 +49,9 @@ export interface Product {
   status?:           ProductStatus
   featured?:         boolean
 
+  // 🔥 Deals
+  is_deal?:          boolean            // ✅ NEW
+
   // 🔗 Source
   source?:           ProductSource
   source_url?:       string
@@ -79,6 +82,7 @@ export interface ProductFilters {
   category?:  string
   status?:    ProductStatus
   featured?:  boolean
+  is_deal?:   boolean                   // ✅ NEW
   search?:    string
   page?:      number
   limit?:     number

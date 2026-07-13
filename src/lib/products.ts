@@ -18,7 +18,7 @@ export const ProductService = {
   },
 
   // ✅ جيب منتجات بفلتر 🆕
-  async getProducts(filters?: { status?: 'available' | 'sold' | 'reserved' }): Promise<Product[]> {
+  async getProducts(filters?: { status?: 'available' | 'sold' | 'reserved' | 'out_of_stock' }): Promise<Product[]> {
     const supabase = createServerClient()
 
     let query = supabase

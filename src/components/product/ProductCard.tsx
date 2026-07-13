@@ -14,13 +14,13 @@ type Props = {
 
 // ✅ Condition color map — all lowercase keys for case-insensitive matching
 const conditionStyles: Record<string, { text: string; bg: string }> = {
-  'new with tags': { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  'new':           { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  'new with tags':    { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  'new':              { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
   'new without tags': { text: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  'like new':      { text: 'text-green-400',   bg: 'bg-green-400/10'   },
-  'very good':     { text: 'text-blue-400',    bg: 'bg-blue-400/10'    },
-  'good':          { text: 'text-yellow-400',  bg: 'bg-yellow-400/10'  },
-  'satisfactory':  { text: 'text-orange-400',  bg: 'bg-orange-400/10'  },
+  'like new':         { text: 'text-green-400',   bg: 'bg-green-400/10'   },
+  'very good':        { text: 'text-blue-400',    bg: 'bg-blue-400/10'    },
+  'good':             { text: 'text-yellow-400',  bg: 'bg-yellow-400/10'  },
+  'satisfactory':     { text: 'text-orange-400',  bg: 'bg-orange-400/10'  },
 }
 
 export default function ProductCard({ product }: Props) {
@@ -137,9 +137,9 @@ export default function ProductCard({ product }: Props) {
             {product.title}
           </h2>
 
-          {/* Price */}
+          {/* ✅ Price — fixed locale to avoid SSR/client hydration mismatch */}
           <p className="text-white font-black text-lg mt-2">
-            {(product.price_egp ?? 0).toLocaleString()}{' '}
+            {(product.price_egp ?? 0).toLocaleString('en-US')}{' '}
             <span className="text-zinc-400 text-sm font-normal">EGP</span>
           </p>
 
