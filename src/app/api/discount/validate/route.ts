@@ -1,4 +1,4 @@
-// src/app/api/discount-codes/route.ts
+// src/app/api/discount/validate/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
@@ -16,10 +16,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code is required' }, { status: 400 })
     }
 
-    // ── Find the code (case-insensitive) ──
     const { data, error } = await supabase
       .from('discount_codes')
-      .select('id, code, discount_percent, is_active, usage_count')
+      .select('id, code, discount_percent, is_active')
       .ilike('code', code.trim())
       .single()
 
@@ -34,12 +33,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── Increment usage_count ──  ✅ fixed parentheses
-    await supabase
-      .from('discount_codes')
-      .update({ usage_count: (data.usage_count ?? 0) + 1 })
-      .eq('id', data.id)
-
+    // ✅ مش بنزود usage_count هنا — بيتزود بس لما الحجز يتأكد
     return NextResponse.json({
       success: true,
       code: data.code,

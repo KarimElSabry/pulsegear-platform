@@ -1,3 +1,5 @@
+// src/app/admin/reservations/page.tsx
+
 import { ReservationService } from '@/services/reservationService'
 import ReservationsClient from './ReservationsClient'
 

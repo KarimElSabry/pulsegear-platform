@@ -1,3 +1,5 @@
+// src/components/PriceSection.tsx
+
 'use client'
 
 import { useState } from 'react'
@@ -23,8 +25,8 @@ export default function PriceSection({
   const [finalPrice, setFinalPrice] = useState(originalPrice)
   const [discountPercent, setDiscountPercent] = useState<number | null>(null)
   const [discountCode, setDiscountCode] = useState<string | null>(null)
+  const [igCopied, setIgCopied] = useState(false)
 
-  // ✅ بعتنا status للـ useLikes عشان يوقف الـ polling لو sold
   const { likes, loading, addLike, liked, isSold } = useLikes(productId, status)
 
   const handleDiscountApplied = (
@@ -43,9 +45,20 @@ export default function PriceSection({
     setDiscountCode(null)
   }
 
+  // ✅ WhatsApp & Instagram messages — فيهم الكود لو موجود
   const waMessage = discountCode
     ? `I'm interested in: ${productTitle}\n🏷️ Discount Code: ${discountCode} (${discountPercent}% off)\n💰 My Price: ${finalPrice.toLocaleString()} EGP`
     : `I'm interested in: ${productTitle}`
+
+  const igMessage = discountCode
+    ? `I'm interested in: ${productTitle}\n🏷️ Discount Code: ${discountCode} (${discountPercent}% off)\n💰 My Price: ${finalPrice.toLocaleString()} EGP`
+    : `I'm interested in: ${productTitle}`
+
+  const handleInstagramClick = () => {
+    navigator.clipboard.writeText(igMessage)
+    setIgCopied(true)
+    setTimeout(() => setIgCopied(false), 3000)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -112,6 +125,8 @@ export default function PriceSection({
 
       {/* CTA Buttons */}
       <div className="flex flex-col gap-3">
+
+        {/* WhatsApp — message فيها الكود ✅ */}
         <a
           href={`https://wa.me/+201205322444?text=${encodeURIComponent(waMessage)}`}
           target="_blank"
@@ -120,14 +135,29 @@ export default function PriceSection({
         >
           📲 Reserve via WhatsApp
         </a>
+
+        {/* Instagram — copy message to clipboard ✅ */}
         <a
           href="https://instagram.com/pulsegear_egypt"
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleInstagramClick}
           className="bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 hover:opacity-90 text-white font-black text-lg py-4 px-8 rounded-full text-center transition-all duration-200 uppercase tracking-wide"
         >
-          📸 Reserve via Instagram
+          {igCopied ? '✅ Message Copied! Opening Instagram...' : '📸 Reserve via Instagram'}
         </a>
+
+        {/* ✅ Hint لما يكون فيه discount code */}
+        {discountCode && (
+          <p className="text-xs text-zinc-400 text-center">
+            💡 Your discount code{' '}
+            <span className="text-green-400 font-bold uppercase">{discountCode}</span>{' '}
+            {igCopied
+              ? 'has been copied! Paste it in your Instagram message 📋'
+              : 'will be included in your WhatsApp message automatically ✅'}
+          </p>
+        )}
+
       </div>
     </div>
   )

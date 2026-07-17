@@ -1,3 +1,5 @@
+// src/components/ReservationModal.tsx
+
 'use client'
 
 import { useState } from 'react'

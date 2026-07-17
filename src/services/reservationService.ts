@@ -1,3 +1,5 @@
+// src/services/reservationService.ts
+
 import { createClient } from '@supabase/supabase-js'
 import { Reservation } from '@/types/reservation'
 
@@ -12,6 +14,7 @@ export const ReservationService = {
       .from('reservations')
       .select(`
         id, name, phone, note, status, created_at,
+        discount_code, discounted_price,
         product:products(id, title, status)
       `)
       .order('created_at', { ascending: false })
@@ -20,11 +23,14 @@ export const ReservationService = {
     return data as unknown as Reservation[]
   },
 
+  // ✅ بيقبل discount_code و discounted_price دلوقتي
   async createReservation(data: {
     product_id: number
     name: string
     phone: string
     note?: string
+    discount_code?: string | null
+    discounted_price?: number | null
   }) {
     const { data: result, error } = await supabase
       .from('reservations')
