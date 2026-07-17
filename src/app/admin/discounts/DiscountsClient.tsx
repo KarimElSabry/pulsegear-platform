@@ -1,3 +1,5 @@
+// src/app/admin/discounts/DiscountsClient.tsx
+
 'use client'
 
 import { useState } from 'react'

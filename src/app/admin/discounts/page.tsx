@@ -1,5 +1,10 @@
+// src/app/admin/discounts/page.tsx
+
 import { createClient } from '@supabase/supabase-js'
 import DiscountsClient from './DiscountsClient'
+
+
+export const dynamic = 'force-dynamic'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
