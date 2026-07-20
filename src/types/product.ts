@@ -1,4 +1,4 @@
-// src/types/prodcuts.ts
+// src/types/product.ts
 
 // ─── Enums / Unions ───────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export interface Product {
   size?:             string | null
 
   // 🔖 Reservation
-  is_reservable:     boolean             // ✅ من الـ DB — true أو false
+  is_reservable:     boolean
 
   // 💰 Pricing
   price_egp:         number
@@ -50,12 +50,15 @@ export interface Product {
   featured?:         boolean
 
   // 🔥 Deals
-  is_deal?:          boolean            // ✅ NEW
+  is_deal?:          boolean
 
   // 🔗 Source
   source?:           ProductSource
   source_url?:       string
   source_platform?:  ProductPlatform
+
+  // ✅ NEW — Vinted Item ID
+  vinted_id?:        string
 
   // 🕐 Timestamps
   created_at?:       string
@@ -82,7 +85,7 @@ export interface ProductFilters {
   category?:  string
   status?:    ProductStatus
   featured?:  boolean
-  is_deal?:   boolean                   // ✅ NEW
+  is_deal?:   boolean
   search?:    string
   page?:      number
   limit?:     number

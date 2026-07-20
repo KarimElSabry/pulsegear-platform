@@ -203,6 +203,14 @@ function EditProductModal({
             <label htmlFor="featured" className="text-zinc-400 text-sm">Featured Product</label>
           </div>
 
+          {/* ✅ NEW — Vinted ID display (read-only in modal) */}
+          {product.vinted_id && (
+            <div className="bg-zinc-800/60 border border-zinc-700 rounded-xl px-4 py-3">
+              <p className="text-zinc-500 text-xs mb-1">Vinted ID</p>
+              <p className="text-violet-400 text-sm font-mono">{product.vinted_id}</p>
+            </div>
+          )}
+
           {/* Error */}
           {error && (
             <p className="text-red-400 text-sm bg-red-900/20 border border-red-800 rounded-xl px-4 py-2">
@@ -411,8 +419,15 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                     i % 2 === 0 ? 'bg-zinc-900' : 'bg-zinc-900/60'
                   }`}
                 >
-                  {/* Title */}
-                  <td className="p-4 text-white text-sm font-medium">{product.title}</td>
+                  {/* ✅ Title + Vinted ID subtle reference */}
+                  <td className="p-4">
+                    <p className="text-white text-sm font-medium">{product.title}</p>
+                    {product.vinted_id && (
+                      <p className="text-violet-500 text-xs font-mono mt-0.5">
+                        ID: {product.vinted_id}
+                      </p>
+                    )}
+                  </td>
 
                   {/* Status Badge */}
                   <td className="p-4">
@@ -490,6 +505,18 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                       >
                         ✏️ Edit
                       </button>
+
+                      {/* ✅ NEW — View on Vinted button */}
+                      {product.source_url && (
+                        <a
+                          href={product.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-violet-600 hover:bg-violet-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition"
+                        >
+                          🔗 Vinted
+                        </a>
+                      )}
 
                       {product.status === 'available' ? (
                         <>

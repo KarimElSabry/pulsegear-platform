@@ -15,6 +15,22 @@ export default function AdminPage() {
 
         <form action={addProduct} className="space-y-6">
 
+          {/* ✅ Vinted Item ID — NEW FIELD */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-200">
+              Vinted Item ID <span className="text-purple-400">*</span>
+            </label>
+            <input
+              name="vinted_id"
+              required
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition font-mono tracking-widest"
+              placeholder="e.g. 9221330612"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              📌 The numeric ID from the Vinted URL — used to identify this exact listing
+            </p>
+          </div>
+
           {/* Title */}
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
@@ -98,7 +114,6 @@ export default function AdminPage() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               >
                 <option value="">Select...</option>
-                {/* ✅ Values now match the filter strings exactly */}
                 <option value="New with tags">New with tags</option>
                 <option value="New without tags">New without tags</option>
                 <option value="Very good">Very good</option>
@@ -113,7 +128,6 @@ export default function AdminPage() {
                 className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
               >
                 <option value="">Select...</option>
-                {/* ✅ Values now match the filter strings exactly */}
                 <option value="Fitness Watches">Fitness Watches</option>
                 <option value="Heart Rate Straps">Heart Rate Straps</option>
                 <option value="Replacement Straps">Replacement Straps</option>
@@ -124,7 +138,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* ✅ Allow Reservation */}
+          {/* Allow Reservation */}
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
               Allow Reservation? <span className="text-purple-400">*</span>

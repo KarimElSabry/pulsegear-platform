@@ -1,4 +1,4 @@
-// src/services/productServices.ts
+// src/services/productService.ts
 
 import { createServerClient } from '@/lib/supabase'
 import type {
@@ -202,7 +202,7 @@ export class ProductService {
     }
   }
 
-  // ✅ Create Product — Fixed Explicit INSERT
+  // ✅ Create Product
   static async createProduct(
     product: Omit<Product, 'id' | 'created_at'>,
     imageUrls: string[]
@@ -211,7 +211,6 @@ export class ProductService {
 
     const slug = await generateUniqueSlug(supabase, product.title)
 
-    // ✅ Explicit INSERT — no extra fields leaked from the Product object
     const { data, error } = await supabase
       .from('products')
       .insert({
@@ -230,6 +229,7 @@ export class ProductService {
         source_url:      product.source_url      ?? null,
         source_platform: product.source_platform ?? null,
         is_reservable:   product.is_reservable   ?? false,
+        vinted_id:       product.vinted_id       ?? null, // ✅ NEW
       })
       .select()
       .single()
@@ -274,7 +274,10 @@ export class ProductService {
     const supabase = this.getClient()
     const { error } = await supabase
       .from('products')
-      .update({ status, sold_at: status === 'sold' ? new Date().toISOString() : null })
+      .update({
+        status,
+        sold_at: status === 'sold' ? new Date().toISOString() : null
+      })
       .eq('id', id)
 
     if (error) {

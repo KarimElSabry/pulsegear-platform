@@ -84,7 +84,6 @@ export async function addProduct(formData: FormData): Promise<void> {
 
   const sourceUrl = (formData.get('source_url') as string) || undefined
 
-  // ✅ FIX: مباشرة بنتحقق من القيمة اللي بتيجي من الـ form بدل الـ conditionMap
   const validConditions: ProductCondition[] = [
     'New with tags',
     'New without tags',
@@ -99,6 +98,9 @@ export async function addProduct(formData: FormData): Promise<void> {
     : undefined
 
   const isReservable = formData.get('is_reservable') === 'true'
+
+  // ✅ NEW — بناخد الـ vinted_id من الـ form
+  const vintedId = (formData.get('vinted_id') as string) || undefined
 
   await ProductService.createProduct(
     {
@@ -116,6 +118,7 @@ export async function addProduct(formData: FormData): Promise<void> {
       source_url:     sourceUrl,
       status:         'available',
       is_reservable:  isReservable,
+      vinted_id:      vintedId, // ✅ NEW
     },
     imageUrls
   )
