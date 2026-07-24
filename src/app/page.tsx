@@ -5,6 +5,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import ContactForm from "@/components/ContactForm";
 import HeroCarousel from "@/components/HeroCarousel";
 import ScrollReveal from "@/components/ScrollReveal";
+import StatsBar from "@/components/StatsBar";
 
 const homeFaqs = [
   {
@@ -76,6 +77,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===== STATS BAR ===== */}
+      <StatsBar />
+
       {/* ===== FEATURED PRODUCTS ===== */}
       <ScrollReveal>
         <section className="w-full py-20 px-6 bg-zinc-950">
@@ -94,7 +98,7 @@ export default function HomePage() {
         </section>
       </ScrollReveal>
 
-      {/* ===== 🔥 HOT DEALS BANNER ===== NEW */}
+      {/* ===== 🔥 HOT DEALS BANNER ===== */}
       <ScrollReveal delay={0.1}>
         <section className="w-full bg-gradient-to-r from-orange-600/10 via-zinc-900 to-zinc-900 py-14 px-6 border-t border-orange-500/20">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">

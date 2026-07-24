@@ -1,3 +1,5 @@
+// src/app/components/HeroCarousel.tsx
+
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
