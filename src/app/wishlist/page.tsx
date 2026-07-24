@@ -1,11 +1,13 @@
+// src/app/wishlist/page.tsx
+
 "use client";
 
 import { useWishlist } from "@/hooks/useWishlist";
-import ProductCard from "@/components/product/ProductCard"; // ✅ غيرت المسار هنا
+import ProductCard from "@/components/product/ProductCard";
 import Link from "next/link";
 
 export default function WishlistPage() {
-  const { wishlist } = useWishlist();
+  const { wishlist, loading } = useWishlist();
 
   return (
     <main className="max-w-6xl mx-auto px-4 py-10">
@@ -14,7 +16,14 @@ export default function WishlistPage() {
         {wishlist.length} {wishlist.length === 1 ? "item" : "items"} saved
       </p>
 
-      {wishlist.length === 0 ? (
+      {/* ✅ Loading State */}
+      {loading ? (
+        <div className="text-center py-20">
+          <p className="text-4xl mb-4 animate-pulse">❤️</p>
+          <p className="text-gray-500">Loading your wishlist...</p>
+        </div>
+
+      ) : wishlist.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-6xl mb-4">🤍</p>
           <p className="text-gray-500 text-lg mb-6">
@@ -27,6 +36,7 @@ export default function WishlistPage() {
             Browse Products
           </Link>
         </div>
+
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {wishlist.map((product) => (

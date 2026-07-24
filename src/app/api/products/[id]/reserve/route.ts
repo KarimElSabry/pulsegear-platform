@@ -4,7 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { ProductCondition } from '@/types/product'
 
-// ✅ Conditions that are allowed to be reserved
 const RESERVABLE_CONDITIONS: ProductCondition[] = [
   'Very good',
   'Good',
@@ -26,7 +25,6 @@ export async function POST(
     const product_id = parseInt(rawId)
     const { name, phone, note, discount_code, discounted_price } = await req.json()
 
-    // ✅ Validate inputs
     if (!name || !phone) {
       return NextResponse.json(
         { error: 'Name and phone are required' },
@@ -34,7 +32,7 @@ export async function POST(
       )
     }
 
-    // ✅ Fetch product to check condition
+    // ── Fetch product ──
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('id, condition, status')
@@ -42,13 +40,9 @@ export async function POST(
       .single()
 
     if (productError || !product) {
-      return NextResponse.json(
-        { error: 'Product not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    // ✅ Block if condition is not allowed
     if (!RESERVABLE_CONDITIONS.includes(product.condition)) {
       return NextResponse.json(
         { error: 'This product condition is not eligible for reservation' },
@@ -56,7 +50,6 @@ export async function POST(
       )
     }
 
-    // ✅ Block if product is not available
     if (product.status !== 'available') {
       return NextResponse.json(
         { error: 'This product is no longer available' },
@@ -64,11 +57,42 @@ export async function POST(
       )
     }
 
+    // ── ✅ Validate & lock discount code if provided ──
+    let resolvedDiscountCode: string | null = null
+    let resolvedDiscountedPrice: number | null = null
+
+    if (discount_code) {
+      const { data: codeData, error: codeError } = await supabase
+        .from('discount_codes')
+        .select('id, code, discount_percent, is_active, usage_count')
+        .ilike('code', discount_code.trim())
+        .single()
+
+      if (codeError || !codeData || !codeData.is_active) {
+        return NextResponse.json(
+          { error: 'Discount code is invalid or no longer active' },
+          { status: 400 }
+        )
+      }
+
+      // ✅ Increment usage_count هنا — بعد الحجز الفعلي
+      await supabase
+        .from('discount_codes')
+        .update({ usage_count: (codeData.usage_count ?? 0) + 1 })
+        .eq('id', codeData.id)
+
+      resolvedDiscountCode = codeData.code
+      resolvedDiscountedPrice = discounted_price ?? null
+    }
+
+    // ── ✅ Create reservation with discount info ──
     const reservation = await ReservationService.createReservation({
       product_id,
       name,
       phone,
       note,
+      discount_code: resolvedDiscountCode,
+      discounted_price: resolvedDiscountedPrice,
     })
 
     revalidatePath('/', 'layout')

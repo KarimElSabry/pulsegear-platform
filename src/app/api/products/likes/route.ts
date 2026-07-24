@@ -1,3 +1,5 @@
+// src/app/api/products/likes/route.ts
+
 import { createServerClient } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 

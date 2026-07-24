@@ -1,3 +1,5 @@
+// src/app/api/products/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -6,62 +8,62 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// GET /api/products/likes?product_id=10
+// GET /api/products?ids=1&ids=2&ids=3
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const product_id = searchParams.get('product_id')
 
-  if (!product_id) {
-    return NextResponse.json({ error: 'product_id is required' }, { status: 400 })
+  // ✅ Wishlist fetch — by IDs
+  const ids = searchParams.getAll('ids').map(Number).filter(Boolean)
+
+  if (ids.length > 0) {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*, images:product_images(*)')
+      .in('id', ids)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(data)
   }
 
-  const { count, error } = await supabase
-    .from('product_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('product_id', Number(product_id))
+  // ✅ General fetch — all products with filters
+  const brand    = searchParams.get('brand')
+  const category = searchParams.get('category')
+  const status   = searchParams.get('status')
+  const featured = searchParams.get('featured')
+  const is_deal  = searchParams.get('is_deal')
+  const search   = searchParams.get('search')
+  const page     = Number(searchParams.get('page')  ?? 1)
+  const limit    = Number(searchParams.get('limit') ?? 12)
+  const from     = (page - 1) * limit
+  const to       = from + limit - 1
+
+  let query = supabase
+    .from('products')
+    .select('*, images:product_images(*)', { count: 'exact' })
+
+  if (brand)    query = query.eq('brand',    brand)
+  if (category) query = query.eq('category', category)
+  if (status)   query = query.eq('status',   status)
+  if (featured) query = query.eq('featured', featured === 'true')
+  if (is_deal)  query = query.eq('is_deal',  is_deal  === 'true')
+  if (search)   query = query.ilike('title', `%${search}%`)
+
+  query = query.order('created_at', { ascending: false }).range(from, to)
+
+  const { data, count, error } = await query
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ likes: count ?? 0 })
-}
-
-// POST /api/products/likes
-export async function POST(req: NextRequest) {
-  const body = await req.json()
-  const { product_id, user_identifier } = body
-
-  if (!product_id || !user_identifier) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-  }
-
-  // Check if already liked
-  const { data: existing } = await supabase
-    .from('product_likes')
-    .select('id')
-    .eq('product_id', product_id)
-    .eq('user_identifier', user_identifier)
-    .single()
-
-  if (existing) {
-    return NextResponse.json({ error: 'Already liked' }, { status: 403 })
-  }
-
-  // Insert like
-  const { error } = await supabase
-    .from('product_likes')
-    .insert({ product_id, user_identifier })
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
-  // Return updated count
-  const { count } = await supabase
-    .from('product_likes')
-    .select('*', { count: 'exact', head: true })
-    .eq('product_id', product_id)
-
-  return NextResponse.json({ likes: count ?? 0 })
+  return NextResponse.json({
+    data,
+    total:   count ?? 0,
+    page,
+    limit,
+    hasMore: to < (count ?? 0) - 1,
+  })
 }

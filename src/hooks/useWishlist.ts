@@ -1,3 +1,5 @@
+// src/hooks/useWishlist.ts
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,31 +8,59 @@ import { Product } from "@/types/product";
 const WISHLIST_KEY = "pulsegear_wishlist";
 
 export function useWishlist() {
+  const [wishlistIds, setWishlistIds] = useState<number[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // تحميل الـ wishlist من Local Storage
+  // ✅ Load IDs from Local Storage
   useEffect(() => {
     const stored = localStorage.getItem(WISHLIST_KEY);
     if (stored) {
-      setWishlist(JSON.parse(stored));
+      setWishlistIds(JSON.parse(stored));
     }
   }, []);
 
-  // حفظ في Local Storage كل ما تتغير
+  // ✅ Save IDs to Local Storage whenever they change
   useEffect(() => {
-    localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
-  }, [wishlist]);
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlistIds));
+  }, [wishlistIds]);
 
-  const isLoved = (id: number) => wishlist.some((p) => p.id === id);
+  // ✅ Fetch fresh product data whenever IDs change
+  useEffect(() => {
+    if (wishlistIds.length === 0) {
+      setWishlist([]);
+      return;
+    }
+
+    const fetchWishlistProducts = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        wishlistIds.forEach((id) => params.append("ids", String(id)));
+
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const data = await res.json();
+        setWishlist(data.data ?? data);
+      } catch (err) {
+        console.error("Failed to fetch wishlist products:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWishlistProducts();
+  }, [wishlistIds]);
+
+  const isLoved = (id: number) => wishlistIds.includes(id);
 
   const toggleLove = (product: Product) => {
     if (!product.id) return;
-    setWishlist((prev) =>
+    setWishlistIds((prev) =>
       isLoved(product.id!)
-        ? prev.filter((p) => p.id !== product.id) // 💔 Unlove
-        : [...prev, product]                       // ❤️ Love
+        ? prev.filter((id) => id !== product.id) // 💔 Remove
+        : [...prev, product.id!]                  // ❤️ Add
     );
   };
 
-  return { wishlist, isLoved, toggleLove };
+  return { wishlist, wishlistIds, isLoved, toggleLove, loading };
 }
