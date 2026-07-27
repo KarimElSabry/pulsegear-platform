@@ -1,3 +1,5 @@
+// src/app/admin/page.tsx
+
 'use client'
 
 import { useState } from 'react'
@@ -97,7 +99,7 @@ export default function AdminPage() {
           {/* Title */}
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
-              Title <span className="text-purple-400">*</span>
+              Seller Description <span className="text-purple-400">*</span>
             </label>
             <input
               name="title"
