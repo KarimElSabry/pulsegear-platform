@@ -51,7 +51,6 @@ export default function AdminPage() {
 
   // ─── Form Submit ───────────────────────────────────────────────────────────
   async function handleSubmit(formData: FormData) {
-    // Combine uploaded URLs + manual URLs
     const manualList = manualUrls
       .split('\n')
       .map((u) => u.trim())
@@ -61,6 +60,10 @@ export default function AdminPage() {
     formData.set('images', allImages.join('\n'))
 
     await addProduct(formData)
+
+    // ─── Reset after submit ────────────────────────────────────────────────
+    setImageUrls([])
+    setManualUrls('')
   }
 
   return (
