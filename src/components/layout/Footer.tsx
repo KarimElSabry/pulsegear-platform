@@ -6,6 +6,7 @@ const navLinks = [
   { label: "Brands", href: "/brands" },
   { label: "Request Product", href: "/request-product" },
   { label: "Wishlist", href: "/wishlist" },
+  { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "/faq" },
 ];
 

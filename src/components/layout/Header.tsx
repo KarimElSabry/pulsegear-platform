@@ -8,6 +8,7 @@ const navLinks = [
   { label: "Products",        href: "/products" },
   { label: "Brands",          href: "/brands" },
   { label: "HOT Deals 🔥 ",        href: "/deals" },        // ✅ NEW
+  { label: "Blog",            href: "/blog" },
   { label: "Sold",            href: "/sold" },
   { label: "Request Product", href: "/request-product" },
   { label: "Wishlist",        href: "/wishlist" },

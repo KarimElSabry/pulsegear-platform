@@ -24,16 +24,25 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ likes: count ?? 0 })
 }
 
-// ✅ POST — with sold lock
+// ✅ POST — with IP-based deduplication
 export async function POST(req: NextRequest) {
   const supabase = createServerClient()
   const { product_id, user_identifier } = await req.json()
 
-  if (!product_id) {
-    return NextResponse.json({ error: 'product_id is required' }, { status: 400 })
+  if (!product_id || !user_identifier) {
+    return NextResponse.json(
+      { error: 'product_id and user_identifier are required' },
+      { status: 400 }
+    )
   }
 
-  // 🔒 Check if product is sold — block likes if so
+  // ✅ Extract IP
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    req.headers.get('x-real-ip') ??
+    'unknown'
+
+  // 🔒 Check if product is sold
   const { data: product, error: productError } = await supabase
     .from('products')
     .select('status')
@@ -45,7 +54,6 @@ export async function POST(req: NextRequest) {
   }
 
   if (product.status === 'sold') {
-    // ✅ Still return the current likes count so UI stays accurate
     const { count } = await supabase
       .from('product_likes')
       .select('*', { count: 'exact', head: true })
@@ -57,28 +65,52 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // ✅ Check if already liked
-  const { data: existing } = await supabase
+  // ✅ Check by BOTH user_identifier AND ip_address
+  const { data: existing, error: checkError } = await supabase
     .from('product_likes')
     .select('id')
     .eq('product_id', product_id)
-    .eq('user_identifier', user_identifier)
-    .single()
+    .or(`user_identifier.eq.${user_identifier},ip_address.eq.${ip}`)
+    .maybeSingle()
+
+  if (checkError) {
+    return NextResponse.json({ error: checkError.message }, { status: 500 })
+  }
 
   if (existing) {
-    return NextResponse.json({ error: 'Already liked' }, { status: 409 })
+    const { count } = await supabase
+      .from('product_likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('product_id', product_id)
+
+    return NextResponse.json(
+      { error: 'Already liked', likes: count ?? 0 },
+      { status: 409 }
+    )
   }
 
-  // ✅ Insert like
-  const { error } = await supabase
+  // ✅ Insert with ip_address
+  const { error: insertError } = await supabase
     .from('product_likes')
-    .insert({ product_id, user_identifier })
+    .insert({ product_id, user_identifier, ip_address: ip })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  if (insertError) {
+    // ✅ Handle race condition — UNIQUE constraint violation
+    if (insertError.code === '23505') {
+      const { count } = await supabase
+        .from('product_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('product_id', product_id)
+
+      return NextResponse.json(
+        { error: 'Already liked', likes: count ?? 0 },
+        { status: 409 }
+      )
+    }
+    return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
-  // ✅ Return new count
+  // ✅ Return real count
   const { count } = await supabase
     .from('product_likes')
     .select('*', { count: 'exact', head: true })

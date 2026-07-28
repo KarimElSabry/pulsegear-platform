@@ -34,6 +34,33 @@ const homeFaqs = [
   },
 ];
 
+const latestPosts = [
+  {
+    slug: "heart-rate-zones",
+    emoji: "📊",
+    tag: "Training Guide",
+    title: "Heart Rate Zones: Train Smart, Not Hard",
+    desc: "Learn how the 5 heart rate zones work and how to use them to maximize every training session.",
+    readTime: "5 min read",
+  },
+  {
+    slug: "zone-2-training",
+    emoji: "🫀",
+    tag: "Training Guide",
+    title: "Zone 2 Training: The Secret of Elite Athletes",
+    desc: "Why elite athletes spend 80% of their training in Zone 2 — and how you can do the same.",
+    readTime: "6 min read",
+  },
+  {
+    slug: "heart-rate-strap-vs-optical",
+    emoji: "⚡",
+    tag: "Gear Review",
+    title: "Heart Rate Strap vs Optical: Which Is More Accurate?",
+    desc: "A detailed comparison between chest straps and optical sensors — accuracy, comfort, and price.",
+    readTime: "5 min read",
+  },
+];
+
 export default function HomePage() {
   return (
     <main className="w-full">
@@ -126,6 +153,72 @@ export default function HomePage() {
               <span className="text-xs text-zinc-500">
                 Limited time — grab yours before it's gone!
               </span>
+            </div>
+
+          </div>
+        </section>
+      </ScrollReveal>
+
+      {/* ===== 📚 BLOG PREVIEW ===== */}
+      <ScrollReveal delay={0.1}>
+        <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
+          <div className="max-w-6xl mx-auto">
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-10">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-bold uppercase tracking-widest text-red-500">
+                  From The Blog
+                </span>
+                <h2 className="text-3xl font-black text-white uppercase">
+                  Train Smarter 📚
+                </h2>
+              </div>
+              <Link
+                href="/blog"
+                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200 uppercase tracking-wide"
+              >
+                View All Articles →
+              </Link>
+            </div>
+
+            {/* Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {latestPosts.map((post, i) => (
+                <ScrollReveal key={post.slug} delay={i * 0.1}>
+                  <Link
+                    href={`/blog/${post.slug}`}
+                    className="group flex flex-col gap-4 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-6 transition-all duration-300 h-full"
+                  >
+                    {/* Emoji */}
+                    <span className="text-4xl">{post.emoji}</span>
+
+                    {/* Tag + Read Time */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
+                        {post.tag}
+                      </span>
+                      <span className="text-xs text-zinc-500">{post.readTime}</span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg font-black text-white uppercase leading-tight group-hover:text-red-400 transition-colors duration-200">
+                      {post.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm text-zinc-400 leading-relaxed flex-1">
+                      {post.desc}
+                    </p>
+
+                    {/* CTA */}
+                    <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200">
+                      <span>Read Article</span>
+                      <span>→</span>
+                    </div>
+                  </Link>
+                </ScrollReveal>
+              ))}
             </div>
 
           </div>
