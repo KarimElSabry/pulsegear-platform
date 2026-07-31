@@ -6,323 +6,333 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Beginner's Gear Guide 2026 | Pulse Gear Egypt Blog",
   description:
-    "دليل المبتدئين الشامل لاختيار أول Gear تدريبي ليك، متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري.",
+    "دليل المبتدئين للجري: إيه اللي تحتاجه فعلًا، إمتى تحتاج Heart Rate Strap، وإمتى تستثمر في GPS Watch، بدون ما تشتري Gear مش محتاجه.",
+  keywords: [
+    "beginner running gear",
+    "running gear Egypt",
+    "heart rate strap Egypt",
+    "GPS watch Egypt",
+    "Polar H9",
+    "Polar H10",
+    "running accessories",
+    "Pulse Gear Egypt",
+  ],
   openGraph: {
     title: "Beginner's Gear Guide 2026 | Pulse Gear Egypt",
     description:
-      "دليل المبتدئين الشامل لاختيار أول Gear تدريبي ليك.",
+      "إبدأ الجري صح من غير ما تشتري Gear مش محتاجه.",
     type: "article",
   },
 };
 
-/* ─────────────────────────────────────────────
+/* =========================================================
    DATA
-───────────────────────────────────────────── */
+========================================================= */
 
-const starterPacks = [
+const setupStages = [
   {
-    tier: "الـ Absolute Beginner",
+    title: "المرحلة الأولى: ابدأ بالجري نفسه",
     icon: "🌱",
-    tagline: "ابدأ بأقل تكلفة ممكنة",
     color: "border-green-500/30 bg-green-500/5",
     titleColor: "text-green-400",
-    total: "~3,500 EGP",
+    description:
+      "لو أنت لسه بتبدأ، مش محتاج تعمل Setup كامل. أهم حاجة تبدأ بشكل منتظم، تفهم جسمك، وتبني عادة الجري.",
     items: [
       {
-        name: "Polar H9",
-        role: "Chest Strap HR Monitor",
-        price: "~3,000 EGP",
-        why: "أرخص Chest Strap بدقة عالية، أفضل بكتير من الـ Optical HR في الموبايل.",
+        name: "Running Shoes",
+        role: "الأساس",
+        why: "اختيار حذاء مناسب لنوع جريك وراحتك أهم من شراء مجموعة أجهزة من أول يوم.",
       },
       {
-        name: "Foam Roller",
-        role: "Recovery Tool",
-        price: "~500 EGP",
-        why: "أهم Recovery Tool وأرخصه، استخدمه يومياً بعد التمرين.",
-      },
-      {
-        name: "Polar Beat App",
-        role: "Training App",
-        price: "مجاناً",
-        why: "بيشتغل مع الـ H9 مباشرة، بيديك HR Zones وCalories وWorkout Summary.",
+        name: "Your Existing Watch / Phone",
+        role: "اختياري",
+        why: "لو عندك بالفعل ساعة أو موبايل بتستخدمه في متابعة التمرين، ابدأ بيه بدل ما تشتري جهاز جديد بدون احتياج واضح.",
       },
     ],
   },
   {
-    tier: "الـ Serious Beginner",
-    icon: "💪",
-    tagline: "جاهز تاخد التدريب بجدية",
+    title: "المرحلة الثانية: ابدأ تتدرب بالـ Heart Rate",
+    icon: "❤️",
+    color: "border-red-500/30 bg-red-500/5",
+    titleColor: "text-red-400",
+    description:
+      "لو بدأت تهتم بالـ Heart Rate Zones أو بتحس إن الـ easy runs بتاعتك أسرع من اللازم، هنا الـ Chest Strap ممكن يكون أول Upgrade منطقي.",
+    items: [
+      {
+        name: "Heart Rate Chest Strap",
+        role: "أول Upgrade",
+        why: "الـ Chest Strap بيوفر قراءة أكثر استجابة للـ Heart Rate أثناء تغير شدة التمرين.",
+      },
+      {
+        name: "Training App",
+        role: "اختياري",
+        why: "ممكن تستخدم تطبيق متوافق عشان تتابع الـ Heart Rate والـ Training Zones أثناء التمرين.",
+      },
+    ],
+  },
+  {
+    title: "المرحلة الثالثة: طوّر الـ Training Setup",
+    icon: "📈",
     color: "border-blue-500/30 bg-blue-500/5",
     titleColor: "text-blue-400",
-    total: "~15,000 EGP",
+    description:
+      "بعد ما تعرف احتياجاتك وتبدأ تتدرب بشكل منتظم، ممكن يكون الـ GPS Watch هو الخطوة التالية.",
     items: [
       {
-        name: "Polar H10",
-        role: "Chest Strap HR Monitor",
-        price: "~4,500 EGP",
-        why: "الأدق في السوق مع ذاكرة داخلية وHRV Tracking.",
+        name: "GPS Watch",
+        role: "Performance Upgrade",
+        why: "مفيد لما تحتاج تتبع أدق للـ Pace والـ Distance والـ Training Data.",
       },
       {
-        name: "Coros Pace 3",
-        role: "GPS Watch",
-        price: "~11,500 EGP",
-        why: "أفضل GPS Watch بسعر معقول، Dual-Frequency GPS وBattery 38 ساعة.",
-      },
-      {
-        name: "Foam Roller",
-        role: "Recovery Tool",
-        price: "~500 EGP",
-        why: "Recovery أساسي، لازم يبقى عندك من اليوم الأول.",
-      },
-      {
-        name: "Resistance Bands",
-        role: "Warm-Up & Activation",
-        price: "~500 EGP",
-        why: "للـ Warm-Up والـ Activation قبل التمرين، بيقلل الإصابات.",
+        name: "Recovery Tools",
+        role: "اختياري",
+        why: "أدوات الـ Recovery ممكن تساعدك تضيف روتين للاستشفاء حسب احتياجك.",
       },
     ],
   },
+];
+
+const reasonsToUpgrade = [
   {
-    tier: "الـ Dedicated Athlete",
-    icon: "🏆",
-    tagline: "جاهز للمستوى الجاي",
-    color: "border-yellow-500/30 bg-yellow-500/5",
-    titleColor: "text-yellow-400",
-    total: "~50,000 EGP",
-    items: [
-      {
-        name: "Polar H10",
-        role: "Chest Strap HR Monitor",
-        price: "~4,500 EGP",
-        why: "الأدق في السوق، أساسي في أي Setup جاد.",
-      },
-      {
-        name: "Garmin Forerunner 965",
-        role: "GPS Watch",
-        price: "~30,000 EGP",
-        why: "أفضل Running Watch، Training Readiness وHRV وOnboard Maps.",
-      },
-      {
-        name: "Theragun Mini 2.0",
-        role: "Percussive Recovery",
-        price: "~10,000 EGP",
-        why: "بيسرع الـ Recovery بشكل ملحوظ، مناسب بعد كل Session شديدة.",
-      },
-      {
-        name: "Resistance Bands",
-        role: "Warm-Up & Activation",
-        price: "~500 EGP",
-        why: "للـ Activation قبل التمرين، مهم جداً للـ Injury Prevention.",
-      },
-      {
-        name: "Foam Roller",
-        role: "Daily Recovery",
-        price: "~500 EGP",
-        why: "استخدمه يومياً، أرخص Recovery Tool وأكتر فائدة.",
-      },
-    ],
+    icon: "🏃",
+    title: "بتتمرن بانتظام",
+    description:
+      "لما التمرين يبقى جزء ثابت من أسبوعك، البيانات الإضافية ممكن تساعدك تفهم التدريب بشكل أفضل.",
+  },
+  {
+    icon: "❤️",
+    title: "عايز تتحكم في الـ Heart Rate",
+    description:
+      "لو بدأت تستخدم Heart Rate Zones في التدريب، دقة البيانات واستجابتها تصبح أكثر أهمية.",
+  },
+  {
+    icon: "📊",
+    title: "عايز بيانات أكثر",
+    description:
+      "لو محتاج تتبع Pace وDistance وTraining Data بشكل أكثر تفصيلًا، هنا الـ GPS Watch ممكن يكون Upgrade منطقي.",
   },
 ];
 
 const commonMistakes = [
   {
-    icon: "❌",
-    mistake: "شراء الـ GPS Watch الأول قبل الـ Chest Strap",
-    fix: "ابدأ بـ Polar H9 (~3,000 EGP)، أدق وأرخص. الـ Watch جاي بعدين.",
+    icon: "🛒",
+    mistake: "شراء كل الـ Gear من أول يوم",
+    solution:
+      "ابدأ بالأساسيات. اشتري القطعة اللي عندك احتياج واضح ليها، وبعدها طوّر الـ Setup تدريجيًا.",
   },
   {
-    icon: "❌",
-    mistake: "الاعتماد على الـ Optical HR في الـ HIIT",
-    fix: "الـ Optical HR بيتأخر في التمارين الشديدة، الـ Chest Strap هو الحل الوحيد للدقة.",
+    icon: "💰",
+    mistake: "اختيار المنتج بناءً على السعر فقط",
+    solution:
+      "السعر مهم، لكن لازم تشوف الـ Compatibility والاحتياجات الفعلية وطريقة استخدامك للجهاز.",
   },
   {
-    icon: "❌",
-    mistake: "إهمال الـ Recovery Tools",
-    fix: "الـ Recovery بنفس أهمية التمرين، Foam Roller بـ ~500 EGP يفرق فرق كبير.",
+    icon: "⌚",
+    mistake: "افتراض إن الـ GPS Watch هي أول حاجة تحتاجها",
+    solution:
+      "لو هدفك الأساسي هو فهم الـ Heart Rate Zones، ممكن يكون الـ Heart Rate Strap هو الـ Upgrade الأكثر منطقية.",
   },
   {
-    icon: "❌",
-    mistake: "شراء أغلى جهاز من أول يوم",
-    fix: "ابدأ بالـ Starter Pack وترقي بالراحة، الـ Gear الغالي مش هيعوض التدريب الغلط.",
-  },
-  {
-    icon: "❌",
-    mistake: "تجاهل الـ HR Zones",
-    fix: "اتعلم الـ 5 Zones الأول، ده أهم من أي Gear. Zone 2 هو أساس الـ Aerobic Fitness.",
-  },
-  {
-    icon: "❌",
-    mistake: "التمرين كل يوم بدون Rest Days",
-    fix: "الجسم بيتحسن في الـ Recovery مش في التمرين، Rest Days مش كسل ده جزء من البرنامج.",
-  },
-];
-
-const firstWeekPlan = [
-  {
-    day: "اليوم 1",
-    icon: "🎯",
-    color: "border-red-500/30 bg-red-500/5",
-    title: "Setup الـ Gear",
-    tasks: [
-      "حمّل Polar Beat أو Garmin Connect على موبايلك",
-      "وصّل الـ Chest Strap بالـ App",
-      "اعمل Resting HR Test الصبح بعد الاستيقاظ",
-      "احسب الـ Max HR: 220 ناقص عمرك",
-    ],
-  },
-  {
-    day: "اليوم 2",
-    icon: "🏃",
-    color: "border-green-500/30 bg-green-500/5",
-    title: "أول Easy Run",
-    tasks: [
-      "البس الـ Chest Strap وابلله قبل اللبس",
-      "ابدأ بـ 20-30 دقيقة في Zone 2 (60-70% Max HR)",
-      "لو الـ HR طلع من Zone 2، امشي لحد ما يرجع",
-      "بعد التمرين: Foam Roller على الـ Calves والـ Quads، 10 دقائق",
-    ],
-  },
-  {
-    day: "اليوم 3",
-    icon: "😴",
-    color: "border-purple-500/30 bg-purple-500/5",
-    title: "Rest Day",
-    tasks: [
-      "راجع الـ Data من التمرين الأمبارح",
-      "شوف الـ Average HR والـ Time in Zones",
-      "Foam Roller خفيف، 10 دقائق",
-      "نوم 8 ساعات على الأقل",
-    ],
-  },
-  {
-    day: "اليوم 4",
-    icon: "⚡",
-    color: "border-orange-500/30 bg-orange-500/5",
-    title: "Interval Session خفيفة",
-    tasks: [
-      "Warm-Up: 10 دقائق في Zone 1-2",
-      "4 × 1 دقيقة في Zone 4 مع 2 دقيقة راحة",
-      "Cool-Down: 10 دقائق في Zone 1",
-      "لاحظ الفرق في الـ HR بين الـ Intervals والـ Recovery",
-    ],
-  },
-  {
-    day: "اليوم 5",
-    icon: "🌿",
-    color: "border-green-500/30 bg-green-500/5",
-    title: "Easy Recovery Run",
-    tasks: [
-      "20 دقيقة في Zone 1-2 بس، مش أكتر",
-      "لو الـ HR مش راجع للـ Zone 1 في الـ Recovery، ده علامة على Fatigue",
-      "Foam Roller بعد التمرين",
-    ],
-  },
-  {
-    day: "اليوم 6",
-    icon: "🏋️",
-    color: "border-blue-500/30 bg-blue-500/5",
-    title: "Strength Session",
-    tasks: [
-      "Resistance Bands Activation: Glutes وHip Flexors، 10 دقائق",
-      "Bodyweight Exercises: Squats والـ Lunges والـ Push-Ups",
-      "راقب الـ HR، محاولش تعدي Zone 3",
-      "Theragun أو Foam Roller بعد التمرين",
-    ],
-  },
-  {
-    day: "اليوم 7",
-    icon: "🌙",
-    color: "border-zinc-700/30 bg-zinc-800/30",
-    title: "Complete Rest",
-    tasks: [
-      "راجع الـ Weekly Data كلها",
-      "شوف الـ Resting HR، هل اتغير؟",
-      "خطط للأسبوع الجاي",
-      "نوم 8+ ساعات، أهم Recovery Tool",
-    ],
+    icon: "📈",
+    mistake: "التركيز على البيانات بدل التدريب",
+    solution:
+      "الـ Gear وسيلة تساعدك تتدرب بشكل أذكى، مش بديل عن التدريب المنتظم.",
   },
 ];
 
 const keyTerms = [
-  { term: "HR Zones", def: "5 مناطق لضربات القلب، Zone 1 (راحة) لـ Zone 5 (أقصى جهد). كل Zone ليه هدف تدريبي مختلف." },
-  { term: "HRV", def: "Heart Rate Variability، الفرق الزمني بين الضربات. أهم مؤشر للـ Recovery والـ Readiness." },
-  { term: "Resting HR", def: "ضربات القلب في الراحة التامة، قيسه الصبح قبل ما تقوم. الـ Athletes عادةً 40-60 BPM." },
-  { term: "Zone 2", def: "60-70% من الـ Max HR، أساس الـ Aerobic Fitness. 80% من تدريبك المفروض يكون هنا." },
-  { term: "Chest Strap", def: "جهاز قياس HR بيتلبس على الصدر، أدق بكتير من الـ Optical HR في الساعة." },
-  { term: "Optical HR", def: "قياس HR عن طريق الضوء في الساعة، مناسب للـ Easy Sessions ومش دقيق في الـ HIIT." },
-  { term: "Recovery", def: "فترة الراحة بين التمارين، الجسم بيتحسن هنا مش في التمرين نفسه." },
-  { term: "Training Load", def: "مجموع الضغط التدريبي على جسمك، مهم تتابعه عشان متعملش Overtraining." },
+  {
+    term: "Heart Rate",
+    def: "عدد ضربات القلب في الدقيقة أثناء الراحة أو التمرين.",
+  },
+  {
+    term: "Heart Rate Zones",
+    def: "مستويات مختلفة من شدة التمرين يتم تحديدها بناءً على معدل ضربات القلب.",
+  },
+  {
+    term: "Zone 2",
+    def: "شدة تدريب منخفضة نسبيًا تُستخدم كثيرًا في بناء القدرة الهوائية والتحمل.",
+  },
+  {
+    term: "Recovery",
+    def: "فترة الراحة بين التمارين، وفيها الجسم يستعيد قدرته ويتكيف مع التدريب.",
+  },
+  {
+    term: "Training Load",
+    def: "مجموع الضغط التدريبي على جسمك، ومتابعته تساعدك على تجنب زيادة الحمل التدريبي بشكل غير مناسب.",
+  },
+];
+
+const firstWeek = [
+  {
+    day: "Day 1",
+    icon: "🏃",
+    title: "Easy Run",
+    tasks: [
+      "ابدأ بجلسة جري سهلة.",
+      "ركز على المجهود بدل محاولة الجري بأقصى سرعة.",
+    ],
+  },
+  {
+    day: "Day 2",
+    icon: "🚶",
+    title: "Recovery",
+    tasks: [
+      "راحة أو نشاط خفيف.",
+      "لاحظ إحساس جسمك بعد أول Session.",
+    ],
+  },
+  {
+    day: "Day 3",
+    icon: "🏃",
+    title: "Run Again",
+    tasks: [
+      "كرر جري سهل.",
+      "حاول تخلي المجهود Controlled بدل ما تجري بأقصى سرعة.",
+    ],
+  },
+  {
+    day: "Day 4",
+    icon: "🧘",
+    title: "Rest",
+    tasks: [
+      "راحة.",
+      "ركز على النوم والاستشفاء.",
+    ],
+  },
+  {
+    day: "Day 5",
+    icon: "❤️",
+    title: "Learn Your Data",
+    tasks: [
+      "لو عندك HR Monitor، راقب Heart Rate أثناء التمرين.",
+      "ابدأ تفهم العلاقة بين المجهود والـ Heart Rate بدل مطاردة الأرقام فقط.",
+    ],
+  },
+  {
+    day: "Day 6",
+    icon: "🏃",
+    title: "Easy Run",
+    tasks: [
+      "جلسة جري سهلة.",
+      "ركز على الـ Consistency أكثر من الـ Pace.",
+    ],
+  },
+  {
+    day: "Day 7",
+    icon: "🔄",
+    title: "Review",
+    tasks: [
+      "راجع الأسبوع.",
+      "حدد إيه اللي كان ناقصك فعلًا قبل ما تشتري أي Gear جديد.",
+    ],
+  },
 ];
 
 const faqs = [
   {
     q: "أبدأ بـ Chest Strap ولا GPS Watch؟",
-    a: "Chest Strap أول، أرخص وأدق. Polar H9 بـ ~3,000 EGP هو أفضل بداية. الـ GPS Watch جاي بعدين لما تعرف إيه اللي محتاجه.",
+    a: "لو هدفك الأساسي هو التدريب باستخدام Heart Rate Zones، فالـ Chest Strap ممكن يكون بداية منطقية. الـ GPS Watch ييجي بعدين لما تعرف إيه البيانات اللي محتاج تتابعها.",
   },
   {
-    q: "الـ Foam Roller مهم فعلاً؟",
-    a: "أيوه، من أهم الـ Recovery Tools وأرخصها. بيقلل الـ DOMS (وجع العضلات بعد التمرين) ويحسن الـ Flexibility. استخدمه يومياً.",
+    q: "الـ Foam Roller مهم فعلًا؟",
+    a: "ممكن يكون مفيد كجزء من روتين الـ Recovery، لكن مش لازم يكون أول قطعة Gear تشتريها. ابدأ بالأساسيات وشوف احتياجاتك الفعلية.",
   },
   {
     q: "إزاي أعرف الـ Max HR بتاعي؟",
-    a: "الفورمولا البسيطة: 220 ناقص عمرك. لكن الأدق هو الـ Max HR Test، ابقى اتكلم معانا في Pulse Gear Egypt وهنشرحلك إزاي.",
+    a: "في طرق مختلفة لتقدير الـ Max HR، لكن التقدير البسيط مش دايمًا بيعكس الرقم الحقيقي لكل شخص. لو محتاج تستخدم Heart Rate Zones بشكل جاد، الأفضل تعتمد على طريقة مناسبة لمستواك وتدريبك.",
   },
   {
     q: "كام مرة في الأسبوع المفروض أتمرن؟",
-    a: "للمبتدئ: 3-4 مرات في الأسبوع مع Rest Days بينهم. الـ Consistency أهم من الـ Frequency، 3 أيام منتظمين أحسن من 6 أيام متقطعين.",
+    a: "للمبتدئ، المهم تبدأ بحجم تدريب تقدر تحافظ عليه باستمرار مع أيام للراحة والاستشفاء. الـ Consistency أهم من محاولة زيادة عدد أيام التدريب بسرعة.",
   },
   {
     q: "فين أقدر أشتري الـ Gear ده في مصر؟",
-    a: "كل الـ Gear ده متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري، تواصل معانا وهنساعدك تختار الصح لمستواك وميزانيتك.",
+    a: "تقدر تشوف المنتجات المتاحة حاليًا على Pulse Gear Egypt، ولو المنتج اللي محتاجه مش موجود، تقدر تستخدم Request a Product ونشوف إمكانية توفيره.",
   },
 ];
 
-/* ─────────────────────────────────────────────
+/* =========================================================
    COMPONENT
-───────────────────────────────────────────── */
+========================================================= */
 
 export default function BeginnersGuide() {
   return (
     <main className="w-full bg-zinc-950 min-h-screen text-white">
-
-      {/* ══════════════════════════════════════
+      {/* =====================================================
           HERO
-      ══════════════════════════════════════ */}
+      ===================================================== */}
       <section className="w-full border-b border-zinc-800 py-20 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
-
+        <div className="max-w-4xl mx-auto flex flex-col gap-6">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wide flex-wrap">
-            <Link href="/" className="hover:text-white transition-colors duration-200">Home</Link>
+          <div
+            className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wide flex-wrap"
+            dir="ltr"
+          >
+            <Link
+              href="/"
+              className="hover:text-white transition-colors duration-200"
+            >
+              Home
+            </Link>
+
             <span>/</span>
-            <Link href="/blog" className="hover:text-white transition-colors duration-200">Blog</Link>
+
+            <Link
+              href="/blog"
+              className="hover:text-white transition-colors duration-200"
+            >
+              Blog
+            </Link>
+
             <span>/</span>
-            <Link href="/blog/gear-guide" className="hover:text-white transition-colors duration-200">Gear Guide</Link>
+
+            <Link
+              href="/blog/gear-guide"
+              className="hover:text-white transition-colors duration-200"
+            >
+              Gear Guide
+            </Link>
+
             <span>/</span>
+
             <span className="text-zinc-400">Beginner's Guide</span>
           </div>
 
-          <span className="self-start text-xs font-bold uppercase tracking-wide text-green-500 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full">
+          <span
+            className="self-start text-xs font-bold uppercase tracking-wide text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full"
+            dir="ltr"
+          >
             Beginner's Guide 2026
           </span>
 
-          {/* ✅ Title split — English line + Arabic line */}
-          <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
+          <h1
+            className="text-4xl md:text-6xl font-black uppercase leading-tight"
+            dir="ltr"
+          >
             Beginner's Gear Guide 🌱
             <br />
-            <span className="text-red-500">ابدأ صح من أول يوم</span>
+            <span
+              className="text-red-500"
+              dir="rtl"
+            >
+              ابدأ صح من أول يوم
+            </span>
           </h1>
 
-          {/* ✅ dir="rtl" + no dashes */}
-          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
-            مش محتاج تشتري كل حاجة من أول يوم، دليل المبتدئين
-            بيوضحلك إيه اللي محتاجه فعلاً وإزاي تبدأ وإزاي تترقى
-            بالراحة. كل الـ Gear متاح في{" "}
-            <span className="text-white font-bold">Pulse Gear Egypt</span>{" "}
-            بأسعار مناسبة بالجنيه المصري. 🇪🇬
+          <p
+            className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-3xl"
+            dir="rtl"
+          >
+            مش محتاج تشتري كل حاجة من أول يوم. الهدف من الدليل ده إنك
+            تعرف إيه اللي محتاجه فعلًا، وإمتى الـ Gear ممكن يساعدك تتدرب
+            بشكل أذكى، وإمتى الأفضل إنك توفر فلوسك.
           </p>
 
-          <div className="flex items-center gap-4 text-xs text-zinc-500 flex-wrap">
+          <div
+            className="flex items-center gap-4 text-xs text-zinc-500 flex-wrap"
+            dir="ltr"
+          >
             <span>⏱ 10 min read</span>
             <span>•</span>
             <span>🌱 Beginner Friendly</span>
@@ -330,36 +340,61 @@ export default function BeginnersGuide() {
             <span>Updated 2026</span>
           </div>
 
-          {/* Pulse Gear Egypt Banner */}
-          <div className="bg-red-600/10 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
+          <div className="bg-red-600/10 border border-red-500/20 rounded-2xl p-5 flex items-start gap-4">
             <span className="text-2xl shrink-0">🇪🇬</span>
+
             <div className="flex flex-col gap-1">
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-white" dir="rtl">
                 متاح في Pulse Gear Egypt
               </p>
-              <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
-                كل الـ Gear في المقال ده بتقدر تطلبه عن طريق Pulse Gear Egypt
-                بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو الوسطاء.
+
+              <p
+                className="text-xs text-zinc-400 leading-relaxed"
+                dir="rtl"
+              >
+                تقدر تطلب الـ Gear المناسب ليك من خلال Pulse Gear Egypt،
+                ولو المنتج اللي محتاجه مش موجود على الموقع، تقدر تطلبه من
+                خلال Request a Product.
               </p>
             </div>
           </div>
 
           {/* Table of Contents */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+            <p
+              className="text-xs font-bold uppercase tracking-wide text-zinc-400"
+              dir="ltr"
+            >
               📋 Table of Contents
             </p>
+
             {[
-              { href: "#starter-packs", label: "الـ Starter Packs حسب المستوى" },
-              { href: "#first-week", label: "خطة أول أسبوع" },
-              { href: "#common-mistakes", label: "أكتر الأخطاء شيوعاً" },
-              { href: "#key-terms", label: "المصطلحات الأساسية" },
-              { href: "#faq", label: "الأسئلة الشائعة" },
+              {
+                href: "#setup-stages",
+                label: "مراحل بناء الـ Training Setup",
+              },
+              {
+                href: "#first-week",
+                label: "خطة أول أسبوع",
+              },
+              {
+                href: "#common-mistakes",
+                label: "أكتر الأخطاء شيوعًا",
+              },
+              {
+                href: "#key-terms",
+                label: "المصطلحات الأساسية",
+              },
+              {
+                href: "#faq",
+                label: "الأسئلة الشائعة",
+              },
             ].map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors duration-200 group"
+                dir="rtl"
               >
                 <span className="w-1 h-1 rounded-full bg-zinc-600 group-hover:bg-red-500 transition-colors duration-200 shrink-0" />
                 {item.label}
@@ -369,62 +404,84 @@ export default function BeginnersGuide() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════
-          ARTICLE BODY
-      ══════════════════════════════════════ */}
-      <article className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-20">
-
-        {/* ─── STARTER PACKS ─── */}
-        <section id="starter-packs" className="flex flex-col gap-8">
+      {/* =====================================================
+          ARTICLE
+      ===================================================== */}
+      <article className="max-w-4xl mx-auto px-6 py-16 flex flex-col gap-16">
+        {/* SETUP STAGES */}
+        <section
+          id="setup-stages"
+          className="flex flex-col gap-8"
+        >
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
-              الـ Starter Packs حسب المستوى 🎒
+            <h2
+              className="text-3xl font-black uppercase"
+              dir="rtl"
+            >
+              إيه الـ Gear اللي تحتاجه فعلًا؟
             </h2>
-            <p className="text-sm text-zinc-500" dir="rtl">
-              اختار الـ Pack المناسب لمستواك، وترقي بالراحة
+
+            <p
+              className="text-zinc-500 text-sm leading-relaxed"
+              dir="rtl"
+            >
+              بدل ما تشتري كل حاجة مرة واحدة، ابنِ الـ Training Setup
+              خطوة بخطوة حسب احتياجاتك.
             </p>
           </div>
 
-          <div className="flex flex-col gap-6">
-            {starterPacks.map((pack) => (
+          <div className="grid md:grid-cols-3 gap-5">
+            {setupStages.map((stage) => (
               <div
-                key={pack.tier}
-                className={`border rounded-2xl overflow-hidden ${pack.color}`}
+                key={stage.title}
+                className={`${stage.color} border rounded-2xl p-5 flex flex-col gap-5`}
               >
-                {/* Pack Header */}
-                <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-800 flex-wrap gap-3">
-                  <div className="flex items-center gap-4">
-                    <span className="text-3xl">{pack.icon}</span>
-                    <div>
-                      <p className={`font-black uppercase text-lg ${pack.titleColor}`} dir="rtl">
-                        {pack.tier}
-                      </p>
-                      <p className="text-xs text-zinc-500" dir="rtl">{pack.tagline}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-black text-white">{pack.total}</p>
-                    <p className="text-xs text-zinc-500" dir="rtl">إجمالي الـ Pack</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-3xl mb-3">{stage.icon}</p>
+
+                    <h3
+                      className={`font-black text-lg ${stage.titleColor}`}
+                      dir="rtl"
+                    >
+                      {stage.title}
+                    </h3>
                   </div>
                 </div>
 
-                {/* Items */}
-                <div className="flex flex-col divide-y divide-zinc-800">
-                  {pack.items.map((item) => (
-                    <div key={item.name} className="p-5 flex flex-col gap-2">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="font-bold text-white text-sm">{item.name}</p>
-                          <p className="text-xs text-zinc-500 uppercase tracking-wide">
-                            {item.role}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-black text-red-400">{item.price}</p>
-                          <p className="text-xs text-zinc-600" dir="rtl">عبر Pulse Gear Egypt</p>
-                        </div>
+                <p
+                  className="text-sm text-zinc-400 leading-relaxed"
+                  dir="rtl"
+                >
+                  {stage.description}
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  {stage.items.map((item) => (
+                    <div
+                      key={item.name}
+                      className="bg-zinc-950/40 border border-zinc-800/60 rounded-xl p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p
+                          className="font-bold text-white text-sm"
+                          dir="ltr"
+                        >
+                          {item.name}
+                        </p>
+
+                        <span
+                          className="text-[10px] text-zinc-500 uppercase tracking-wide shrink-0"
+                          dir="ltr"
+                        >
+                          {item.role}
+                        </span>
                       </div>
-                      <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+
+                      <p
+                        className="text-xs text-zinc-500 leading-relaxed mt-2"
+                        dir="rtl"
+                      >
                         {item.why}
                       </p>
                     </div>
@@ -435,39 +492,187 @@ export default function BeginnersGuide() {
           </div>
         </section>
 
-        {/* ─── FIRST WEEK PLAN ─── */}
-        <section id="first-week" className="flex flex-col gap-8">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
-              خطة أول أسبوع 📅
+        {/* HEART RATE */}
+        <section className="flex flex-col gap-8">
+          <div>
+            <h2
+              className="text-3xl font-black uppercase"
+              dir="rtl"
+            >
+              إمتى يكون الـ Heart Rate Strap مفيد؟
             </h2>
-            <p className="text-sm text-zinc-500" dir="rtl">
-              خطوة خطوة، من أول يوم لآخر يوم في الأسبوع
+
+            <p
+              className="text-sm text-zinc-500 mt-2 leading-relaxed"
+              dir="rtl"
+            >
+              لو هدفك التدريب باستخدام Heart Rate Zones، الـ Chest Strap
+              ممكن يكون Upgrade مهم لأنه بيوفر قراءة أكثر استجابة أثناء
+              تغير شدة التمرين.
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
-            {firstWeekPlan.map((day) => (
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+              <p
+                className="font-bold text-white mb-3"
+                dir="ltr"
+              >
+                Optical Heart Rate
+              </p>
+
+              <p
+                className="text-sm text-zinc-400 leading-relaxed"
+                dir="rtl"
+              >
+                الساعات الذكية تستخدم Optical Sensors لقياس التغيرات
+                المرتبطة بتدفق الدم. ده ممكن يكون كافي في مواقف كثيرة،
+                خصوصًا أثناء النشاط المستقر.
+              </p>
+            </div>
+
+            <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
+              <p
+                className="font-bold text-white mb-3"
+                dir="ltr"
+              >
+                Chest Strap
+              </p>
+
+              <p
+                className="text-sm text-zinc-400 leading-relaxed"
+                dir="rtl"
+              >
+                الـ Chest Strap يقيس الإشارة الكهربائية للقلب، لذلك يكون
+                مفيدًا عندما تحتاج Heart Rate Data أكثر استجابة أثناء
+                تغير شدة التمرين.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/products"
+            className="self-start bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors"
+            dir="ltr"
+          >
+            Explore Heart Rate Gear →
+          </Link>
+        </section>
+
+        {/* GPS WATCH */}
+        <section className="flex flex-col gap-8">
+          <div>
+            <h2
+              className="text-3xl font-black uppercase"
+              dir="rtl"
+            >
+              إمتى تشتري GPS Watch؟
+            </h2>
+
+            <p
+              className="text-sm text-zinc-500 mt-2"
+              dir="rtl"
+            >
+              مش لازم تكون أول قطعة Gear تشتريها.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {reasonsToUpgrade.map((reason) => (
+              <div
+                key={reason.title}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4"
+              >
+                <span className="text-3xl">{reason.icon}</span>
+
+                <h3
+                  className="font-bold text-white"
+                  dir="rtl"
+                >
+                  {reason.title}
+                </h3>
+
+                <p
+                  className="text-sm text-zinc-500 leading-relaxed"
+                  dir="rtl"
+                >
+                  {reason.description}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            href="/products"
+            className="self-start border border-zinc-700 hover:border-white text-zinc-300 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all"
+            dir="ltr"
+          >
+            Explore GPS Watches →
+          </Link>
+        </section>
+
+        {/* FIRST WEEK */}
+        <section
+          id="first-week"
+          className="flex flex-col gap-8"
+        >
+          <div>
+            <h2
+              className="text-3xl font-black uppercase"
+              dir="rtl"
+            >
+              خطة أول أسبوع للمبتدئ 🗓️
+            </h2>
+
+            <p
+              className="text-sm text-zinc-500 mt-2"
+              dir="rtl"
+            >
+              الهدف من أول أسبوع مش إنك تجمع أكبر عدد من الـ Kilometers.
+              الهدف إنك تبدأ وتعرف جسمك.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {firstWeek.map((day) => (
               <div
                 key={day.day}
-                className={`border rounded-2xl overflow-hidden ${day.color}`}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4"
               >
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800">
-                  <span className="text-xl">{day.icon}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{day.icon}</span>
+
                   <div>
-                    <p className="font-black text-white" dir="rtl">{day.day}</p>
-                    <p className="text-xs text-zinc-500 uppercase tracking-wide">
-                      {day.title}
+                    <p
+                      className="text-xs text-red-400 font-bold uppercase tracking-wide"
+                      dir="ltr"
+                    >
+                      {day.day}
                     </p>
+
+                    <h3
+                      className="font-bold text-white"
+                      dir="ltr"
+                    >
+                      {day.title}
+                    </h3>
                   </div>
                 </div>
-                <div className="p-5 flex flex-col gap-2">
+
+                <div className="flex flex-col gap-2">
                   {day.tasks.map((task, i) => (
-                    <div key={i} className="flex items-start gap-3">
+                    <div
+                      key={i}
+                      className="flex items-start gap-3"
+                    >
                       <span className="text-red-400 text-xs shrink-0 mt-0.5 font-bold">
                         {i + 1}.
                       </span>
-                      <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+
+                      <p
+                        className="text-xs text-zinc-400 leading-relaxed"
+                        dir="rtl"
+                      >
                         {task}
                       </p>
                     </div>
@@ -478,14 +683,24 @@ export default function BeginnersGuide() {
           </div>
         </section>
 
-        {/* ─── COMMON MISTAKES ─── */}
-        <section id="common-mistakes" className="flex flex-col gap-6">
+        {/* COMMON MISTAKES */}
+        <section
+          id="common-mistakes"
+          className="flex flex-col gap-6"
+        >
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
-              أكتر الأخطاء شيوعاً ⚠️
+            <h2
+              className="text-2xl font-black uppercase text-white"
+              dir="rtl"
+            >
+              أكتر الأخطاء شيوعًا ⚠️
             </h2>
-            <p className="text-sm text-zinc-500" dir="rtl">
-              اتعلم من غلطات الناس التانية، متعملهاش أنت
+
+            <p
+              className="text-sm text-zinc-500"
+              dir="rtl"
+            >
+              اتعلم من غلطات الناس التانية ومتعملهاش أنت.
             </p>
           </div>
 
@@ -496,15 +711,31 @@ export default function BeginnersGuide() {
                 className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
               >
                 <div className="flex items-start gap-3">
-                  <span className="text-xl shrink-0">{item.icon}</span>
-                  <p className="font-bold text-white text-sm" dir="rtl">
+                  <span className="text-xl shrink-0">
+                    {item.icon}
+                  </span>
+
+                  <p
+                    className="font-bold text-white text-sm"
+                    dir="rtl"
+                  >
                     {item.mistake}
                   </p>
                 </div>
+
                 <div className="flex items-start gap-3 bg-green-500/5 border border-green-500/20 rounded-xl p-3">
-                  <span className="text-green-400 text-xs font-bold shrink-0 mt-0.5">✅ الحل:</span>
-                  <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
-                    {item.fix}
+                  <span
+                    className="text-green-400 text-xs font-bold shrink-0 mt-0.5"
+                    dir="rtl"
+                  >
+                    الحل:
+                  </span>
+
+                  <p
+                    className="text-xs text-zinc-400 leading-relaxed"
+                    dir="rtl"
+                  >
+                    {item.solution}
                   </p>
                 </div>
               </div>
@@ -512,27 +743,45 @@ export default function BeginnersGuide() {
           </div>
         </section>
 
-        {/* ─── KEY TERMS ─── */}
-        <section id="key-terms" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
-              المصطلحات الأساسية 📖
+        {/* KEY TERMS */}
+        <section
+          id="key-terms"
+          className="flex flex-col gap-6"
+        >
+          <div>
+            <h2
+              className="text-2xl font-black uppercase"
+              dir="rtl"
+            >
+              المصطلحات الأساسية 📚
             </h2>
-            <p className="text-sm text-zinc-500" dir="rtl">
-              المصطلحات اللي هتسمعها كتير، افهمها من الأول
+
+            <p
+              className="text-sm text-zinc-500 mt-2"
+              dir="rtl"
+            >
+              أهم المصطلحات اللي هتقابلها وأنت بتتعلم عن الـ Running
+              وTraining Data.
             </p>
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            {keyTerms.map((item, i) => (
+          <div className="grid md:grid-cols-2 gap-4">
+            {keyTerms.map((item) => (
               <div
-                key={i}
-                className="flex flex-col md:flex-row gap-2 md:gap-6 px-5 py-4 border-b border-zinc-800 last:border-0 hover:bg-zinc-800/50 transition-colors"
+                key={item.term}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5"
               >
-                <p className="text-sm font-black text-red-400 shrink-0 md:w-32">
+                <p
+                  className="font-bold text-red-400 mb-2"
+                  dir="ltr"
+                >
                   {item.term}
                 </p>
-                <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+
+                <p
+                  className="text-sm text-zinc-400 leading-relaxed"
+                  dir="rtl"
+                >
                   {item.def}
                 </p>
               </div>
@@ -540,80 +789,138 @@ export default function BeginnersGuide() {
           </div>
         </section>
 
-        {/* ─── FAQ ─── */}
-        <section id="faq" className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            الأسئلة الشائعة ❓
-          </h2>
-          <div className="flex flex-col gap-4">
-            {faqs.map((faq, i) => (
-              <div
-                key={i}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
+        {/* FAQ */}
+        <section
+          id="faq"
+          className="flex flex-col gap-6"
+        >
+          <div>
+            <h2
+              className="text-2xl font-black uppercase"
+              dir="rtl"
+            >
+              الأسئلة الشائعة ❓
+            </h2>
+
+            <p
+              className="text-sm text-zinc-500 mt-2"
+              dir="rtl"
+            >
+              لو لسه محتار تبدأ منين، دي أهم الأسئلة اللي ممكن تساعدك.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {faqs.map((faq) => (
+              <details
+                key={faq.q}
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 group"
               >
-                <p className="font-bold text-white text-sm" dir="rtl">
-                  س: {faq.q}
-                </p>
-                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3" dir="rtl">
-                  <span className="text-red-400 font-bold">ج: </span>
+                <summary
+                  className="cursor-pointer font-bold text-white list-none flex items-center justify-between gap-4"
+                  dir="rtl"
+                >
+                  <span>{faq.q}</span>
+
+                  <span className="text-zinc-500 group-open:text-red-400 transition-colors">
+                    +
+                  </span>
+                </summary>
+
+                <p
+                  className="text-sm text-zinc-400 leading-relaxed mt-4 pt-4 border-t border-zinc-800"
+                  dir="rtl"
+                >
                   {faq.a}
                 </p>
-              </div>
+              </details>
             ))}
           </div>
         </section>
 
-        {/* ─── PULSE GEAR EGYPT CTA ─── */}
-        <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-5 items-center text-center">
-          <div className="flex items-center gap-3">
-            <span className="text-4xl">🇪🇬</span>
-            <span className="text-4xl">🛒</span>
-          </div>
-          <h3 className="text-xl font-black uppercase text-white">
-            Pulse Gear Egypt — وصّلك الـ Gear الصح
-          </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
-            في Pulse Gear Egypt، بنوفرلك أفضل أجهزة التدريب العالمية
-            بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو
-            الوسطاء. تواصل معانا وهنساعدك تختار الـ Starter Pack
-            المناسب لمستواك وميزانيتك. 💪
+        {/* FINAL CTA */}
+        <section className="bg-gradient-to-b from-red-600/10 to-transparent border border-red-500/20 rounded-3xl p-8 md:p-12 flex flex-col items-center text-center gap-5">
+          <span className="text-4xl">🇪🇬</span>
+
+          <h2
+            className="text-3xl md:text-4xl font-black text-white"
+            dir="rtl"
+          >
+            محتار تبدأ بإيه؟
+          </h2>
+
+          <p
+            className="text-zinc-400 text-sm max-w-md leading-relaxed"
+            dir="rtl"
+          >
+            في Pulse Gear Egypt، بنوفرلك أجهزة ومعدات تدريب مناسبة
+            لمستويات مختلفة. تقدر تشوف المنتجات المتاحة حاليًا، أو تطلب
+            منتج مش موجود على الموقع من خلال Request a Product.
           </p>
+
           <div className="flex flex-wrap gap-3 justify-center">
             <Link
               href="/products"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors"
+              dir="ltr"
             >
               Browse Products
             </Link>
+
             <Link
               href="/request-product"
-              className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+              className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors"
+              dir="ltr"
             >
               Request a Product
             </Link>
           </div>
         </section>
 
-        {/* Related Articles */}
+        {/* RELATED ARTICLES */}
         <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
+          <h2
+            className="text-2xl font-black uppercase text-white"
+            dir="rtl"
+          >
             اقرأ كمان 📚
           </h2>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { href: "/blog/best-heart-rate-monitors", icon: "🫀", tag: "Gear Guide", title: "Best Heart Rate Monitors 2026" },
-              { href: "/blog/gear-guide/budget-vs-premium", icon: "💰", tag: "Comparison", title: "Budget vs Premium Gear" },
-              { href: "/blog/complete-training-setup", icon: "🔧", tag: "Complete Guide", title: "Complete Training Setup" },
+              {
+                href: "/blog/gear-guide/best-heart-rate-monitors",
+                icon: "❤️",
+                tag: "Gear Guide",
+                title: "Best Heart Rate Monitors 2026",
+              },
+              {
+                href: "/blog/gear-guide/budget-vs-premium",
+                icon: "💰",
+                tag: "Comparison",
+                title: "Budget vs Premium Gear",
+              },
+              {
+                href: "/blog/training-guide/complete-training-setup",
+                icon: "🔧",
+                tag: "Training Guide",
+                title: "Complete Training Setup",
+              },
             ].map((article) => (
               <Link
                 key={article.href}
                 href={article.href}
                 className="bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-2xl p-5 flex flex-col gap-3 transition-colors duration-200 group"
+                dir="ltr"
               >
-                <span className="text-2xl">{article.icon}</span>
+                <span className="text-2xl">
+                  {article.icon}
+                </span>
+
                 <p className="text-xs font-bold uppercase tracking-wide text-red-400">
                   {article.tag}
                 </p>
+
                 <p className="font-bold text-white text-sm group-hover:text-red-400 transition-colors duration-200">
                   {article.title}
                 </p>
@@ -622,16 +929,16 @@ export default function BeginnersGuide() {
           </div>
         </section>
 
-        {/* Back */}
+        {/* BACK */}
         <div className="flex justify-center pt-4">
           <Link
             href="/blog"
             className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
+            dir="ltr"
           >
             ← Back to Blog
           </Link>
         </div>
-
       </article>
     </main>
   );
