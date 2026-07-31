@@ -1,3 +1,5 @@
+// src/app/blog/best-heart-rate-monitors/page.tsx
+
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -300,7 +302,8 @@ export default function BestHeartRateMonitorsPage() {
             <span className="text-red-500">Top Picks for 2026</span>
           </h1>
 
-          <p className="text-lg text-zinc-400 leading-relaxed">
+          {/* ✅ dir="rtl" added */}
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
             اخترنا أفضل 8 أجهزة قياس ضربات القلب في 2026 —
             4 Chest Straps و4 GPS Watches — بناءً على الدقة والسعر
             والـ Features الحقيقية. كل الأجهزة دي متاحة في{" "}
@@ -323,7 +326,8 @@ export default function BestHeartRateMonitorsPage() {
               <p className="text-sm font-bold text-white">
                 متاح في Pulse Gear Egypt
               </p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              {/* ✅ dir="rtl" added */}
+              <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
                 كل الأجهزة في المقال ده بتقدر تطلبها عن طريق Pulse Gear Egypt
                 بأسعار مناسبة ومضمونة — بدون ما تدفع رسوم استيراد مرتفعة أو
                 تتعامل مع وسطاء.
@@ -367,7 +371,8 @@ export default function BestHeartRateMonitorsPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               🫀 Best Chest Straps
             </h2>
-            <p className="text-sm text-zinc-500">
+            {/* ✅ dir="rtl" added */}
+            <p className="text-sm text-zinc-500" dir="rtl">
               للـ Serious Athletes اللي بيدوا الأولوية للدقة
             </p>
           </div>
@@ -395,7 +400,8 @@ export default function BestHeartRateMonitorsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-white">{strap.price}</p>
-                    <p className="text-xs text-zinc-500">عبر Pulse Gear Egypt</p>
+                    {/* ✅ dir="rtl" added */}
+                    <p className="text-xs text-zinc-500" dir="rtl">عبر Pulse Gear Egypt</p>
                   </div>
                 </div>
 
@@ -427,7 +433,8 @@ export default function BestHeartRateMonitorsPage() {
                     {strap.pros.map((pro, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-green-400 text-xs shrink-0 mt-0.5">+</span>
-                        <p className="text-xs text-zinc-400 leading-relaxed">{pro}</p>
+                        {/* ✅ dir="rtl" added */}
+                        <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">{pro}</p>
                       </div>
                     ))}
                   </div>
@@ -438,7 +445,8 @@ export default function BestHeartRateMonitorsPage() {
                     {strap.cons.map((con, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-red-400 text-xs shrink-0 mt-0.5">−</span>
-                        <p className="text-xs text-zinc-400 leading-relaxed">{con}</p>
+                        {/* ✅ dir="rtl" added */}
+                        <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">{con}</p>
                       </div>
                     ))}
                   </div>
@@ -448,7 +456,8 @@ export default function BestHeartRateMonitorsPage() {
                 <div className="px-6 pb-6">
                   <div className="bg-zinc-900 rounded-xl p-4 flex items-start gap-3">
                     <span className="text-lg shrink-0">⚡</span>
-                    <p className="text-sm text-zinc-300 leading-relaxed">
+                    {/* ✅ dir="rtl" added */}
+                    <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
                       <span className="font-bold text-white">الحكم: </span>
                       {strap.verdict}
                     </p>
@@ -465,7 +474,8 @@ export default function BestHeartRateMonitorsPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               ⌚ Best GPS Watches
             </h2>
-            <p className="text-sm text-zinc-500">
+            {/* ✅ dir="rtl" added */}
+            <p className="text-sm text-zinc-500" dir="rtl">
               للـ Athletes اللي عايزين كل حاجة في جهاز واحد
             </p>
           </div>
@@ -493,7 +503,8 @@ export default function BestHeartRateMonitorsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-white">{watch.price}</p>
-                    <p className="text-xs text-zinc-500">عبر Pulse Gear Egypt</p>
+                    {/* ✅ dir="rtl" added */}
+                    <p className="text-xs text-zinc-500" dir="rtl">عبر Pulse Gear Egypt</p>
                   </div>
                 </div>
 
@@ -525,7 +536,8 @@ export default function BestHeartRateMonitorsPage() {
                     {watch.pros.map((pro, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-green-400 text-xs shrink-0 mt-0.5">+</span>
-                        <p className="text-xs text-zinc-400 leading-relaxed">{pro}</p>
+                        {/* ✅ dir="rtl" added */}
+                        <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">{pro}</p>
                       </div>
                     ))}
                   </div>
@@ -536,7 +548,8 @@ export default function BestHeartRateMonitorsPage() {
                     {watch.cons.map((con, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-red-400 text-xs shrink-0 mt-0.5">−</span>
-                        <p className="text-xs text-zinc-400 leading-relaxed">{con}</p>
+                        {/* ✅ dir="rtl" added */}
+                        <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">{con}</p>
                       </div>
                     ))}
                   </div>
@@ -546,7 +559,8 @@ export default function BestHeartRateMonitorsPage() {
                 <div className="px-6 pb-6">
                   <div className="bg-zinc-900 rounded-xl p-4 flex items-start gap-3">
                     <span className="text-lg shrink-0">⚡</span>
-                    <p className="text-sm text-zinc-300 leading-relaxed">
+                    {/* ✅ dir="rtl" added */}
+                    <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
                       <span className="font-bold text-white">الحكم: </span>
                       {watch.verdict}
                     </p>
@@ -573,7 +587,8 @@ export default function BestHeartRateMonitorsPage() {
                 key={i}
                 className="grid grid-cols-3 px-5 py-4 border-t border-zinc-800 hover:bg-zinc-800/50 transition-colors"
               >
-                <p className="text-sm text-zinc-400">{row.case}</p>
+                {/* ✅ dir="rtl" added */}
+                <p className="text-sm text-zinc-400" dir="rtl">{row.case}</p>
                 <p className="text-sm font-bold text-white">{row.pick}</p>
                 <p className="text-sm font-bold text-red-400">{row.price}</p>
               </div>
@@ -620,8 +635,9 @@ export default function BestHeartRateMonitorsPage() {
               >
                 <span className="text-2xl shrink-0">{item.icon}</span>
                 <div className="flex flex-col gap-1">
-                  <p className="font-bold text-white text-sm">{item.title}</p>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{item.body}</p>
+                  {/* ✅ dir="rtl" added */}
+                  <p className="font-bold text-white text-sm" dir="rtl">{item.title}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">{item.body}</p>
                 </div>
               </div>
             ))}
@@ -639,10 +655,11 @@ export default function BestHeartRateMonitorsPage() {
                 key={i}
                 className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
               >
-                <p className="font-bold text-white text-sm">
+                {/* ✅ dir="rtl" added */}
+                <p className="font-bold text-white text-sm" dir="rtl">
                   س: {faq.q}
                 </p>
-                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3">
+                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3" dir="rtl">
                   <span className="text-red-400 font-bold">ج: </span>
                   {faq.a}
                 </p>
@@ -660,7 +677,8 @@ export default function BestHeartRateMonitorsPage() {
           <h3 className="text-xl font-black uppercase text-white">
             Pulse Gear Egypt — وصّلك الـ Gear الصح
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+          {/* ✅ dir="rtl" added */}
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
             في Pulse Gear Egypt، بنوفرلك أفضل أجهزة التدريب العالمية
             بأسعار مناسبة بالجنيه المصري — بدون تعقيدات الاستيراد أو
             الوسطاء. تواصل معانا وهنساعدك تختار الـ Gear المناسب

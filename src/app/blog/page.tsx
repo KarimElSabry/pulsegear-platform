@@ -1,105 +1,269 @@
 // src/app/blog/page.tsx
+"use client";
 
-import type { Metadata } from "next";
+import { useState } from "react";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Blog | Pulse Gear Egypt",
-  description:
-    "مقالات عن الـ Running، الـ Training، والـ Gear — عشان تتدرب بذكاء وتؤدي أحسن.",
-  openGraph: {
-    title: "Blog | Pulse Gear Egypt",
-    description:
-      "مقالات عن الـ Running، الـ Training، والـ Gear — عشان تتدرب بذكاء وتؤدي أحسن.",
-    type: "website",
-  },
-};
+/* ─────────────────────────────────────────────
+   DATA — Paths مصلحة تتطابق مع الـ Folder Structure
+───────────────────────────────────────────── */
 
 const allPosts = [
+  // ── TRAINING GUIDE ──────────────────────────
   {
-    slug: "heart-rate-zones",
+    slug: "training-guide/heart-rate-zones",
     emoji: "📊",
     tag: "Training Guide",
-    title: "Heart Rate Zones: اتدرب بذكاء مش بتعب",
+    title: "اتدرب بذكاء مش بتعب: Heart Rate Zones",
     desc: "اعرف إزاي الـ 5 Heart Rate Zones بتشتغل وإزاي تستخدمهم عشان تستفيد من كل Training Session.",
     readTime: "5 min read",
     featured: true,
   },
   {
-    slug: "zone-2-training",
+    slug: "training-guide/zone-2-training",
     emoji: "🫀",
     tag: "Training Guide",
-    title: "Zone 2 Training: سر الـ Elite Athletes",
-    desc: "ليه الـ Elite Athletes بيقضوا 80% من تدريبهم في Zone 2 — وإزاي تعمل زيهم.",
+    title: "سر الـ Elite Athletes: Zone 2 Training",
+    desc: "ليه الـ Elite Athletes بيقضوا 80% من تدريبهم في Zone 2 وإزاي تعمل زيهم.",
     readTime: "6 min read",
     featured: false,
   },
   {
-    slug: "heart-rate-strap-vs-optical",
+    slug: "training-guide/sleep-recovery",
+    emoji: "😴",
+    tag: "Training Guide",
+    title: "الجزء اللي بتتجاهله في تدريبك — Sleep & Recovery",
+    desc: "ليه النوم والـ Recovery هم السر الحقيقي وراء كل Athlete ناجح.",
+    readTime: "8 min read",
+    featured: false,
+  },
+  {
+    slug: "training-guide/running-cadence",
+    emoji: "🏃",
+    tag: "Training Guide",
+    title: "ليه الـ 180 Steps/Min مهمة؟ — Running Cadence",
+    desc: "إزاي تحسن الـ Running Form بتاعك عن طريق الـ Cadence وتتجنب الإصابات.",
+    readTime: "6 min read",
+    featured: false,
+  },
+  {
+    slug: "training-guide/complete-training-setup",
+    emoji: "🔧",
+    tag: "Training Guide",
+    title: "Complete Training Setup — كل حاجة في مكان واحد",
+    desc: "من الـ HR Zones للـ Recovery للـ Gear — الدليل الشامل لبناء Training System كامل.",
+    readTime: "12 min read",
+    featured: false,
+  },
+
+  // ── GEAR GUIDE ──────────────────────────────
+  {
+    slug: "gear-guide/beginners-guide",
+    emoji: "🌱",
+    tag: "Gear Guide",
+    title: "Beginner's Gear Guide 2026",
+    desc: "مش محتاج تشتري كل حاجة من أول يوم. إيه اللي محتاجه فعلاً وإزاي تبدأ بأقل تكلفة.",
+    readTime: "10 min read",
+    featured: false,
+  },
+  {
+    slug: "gear-guide/best-heart-rate-monitors",
+    emoji: "🫀",
+    tag: "Gear Guide",
+    title: "Best Heart Rate Monitors 2026",
+    desc: "مقارنة شاملة بين أفضل Chest Straps والـ Optical HR Monitors في السوق.",
+    readTime: "8 min read",
+    featured: false,
+  },
+  {
+    slug: "gear-guide/best-gps-watches",
+    emoji: "⌚",
+    tag: "Gear Guide",
+    title: "Best GPS Watches 2026",
+    desc: "Garmin vs Coros vs Polar — أفضل GPS Watches لكل مستوى وميزانية.",
+    readTime: "9 min read",
+    featured: false,
+  },
+  {
+    slug: "gear-guide/best-chest-straps",
+    emoji: "📡",
+    tag: "Gear Guide",
+    title: "Best Chest Straps 2026",
+    desc: "Polar H10 vs H9 vs Garmin HRM-Pro — أدق Chest Straps في السوق.",
+    readTime: "7 min read",
+    featured: false,
+  },
+  {
+    slug: "gear-guide/budget-vs-premium",
+    emoji: "💰",
+    tag: "Gear Guide",
+    title: "Budget vs Premium Gear",
+    desc: "هل الـ Gear الغالي يستاهل فعلاً؟ مقارنة صريحة بين الـ Budget والـ Premium Options.",
+    readTime: "6 min read",
+    featured: false,
+  },
+
+  // ── GEAR REVIEW ─────────────────────────────
+  {
+    slug: "gear-review/heart-rate-strap-vs-optical",
     emoji: "⚡",
     tag: "Gear Review",
-    title: "Heart Rate Strap vs Optical: أيهما أدق؟",
-    desc: "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Sensor — الدقة، الراحة، والسعر.",
+    title: "أيهما أدق؟: Heart Rate Strap vs Optical",
+    desc: "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Sensor في الدقة والراحة والسعر.",
     readTime: "5 min read",
     featured: false,
   },
   {
-    slug: "garmin-vs-polar",
+    slug: "gear-review/garmin-vs-polar",
     emoji: "🥊",
     tag: "Gear Review",
-    title: "Garmin vs Polar: أنهي الأحسن ليك؟",
-    desc: "مقارنة شاملة بين Garmin و Polar — الـ GPS، الـ HR، الـ Battery، وأنهي يناسب تدريبك.",
+    title: "أنهي الأحسن ليك؟ Garmin vs Polar",
+    desc: "مقارنة شاملة بين Garmin وPolar في الـ GPS والـ HR والـ Battery وأنهي يناسب تدريبك.",
     readTime: "7 min read",
+    featured: false,
+  },
+  {
+    slug: "gear-review/running-shoes-guide",
+    emoji: "👟",
+    tag: "Gear Review",
+    title: "إزاي تختار الجزمة الصح؟ — Running Shoes Guide",
+    desc: "الدليل الشامل لاختيار Running Shoes بناءً على الـ Gait والـ Terrain والـ Training Type.",
+    readTime: "9 min read",
     featured: false,
   },
 ];
 
-const tags = ["All", "Training Guide", "Gear Review"];
+/* ─────────────────────────────────────────────
+   TAGS — لازم تتطابق بالظبط مع الـ tag في allPosts
+───────────────────────────────────────────── */
+
+const tags = ["All", "Training Guide", "Gear Guide", "Gear Review"];
+
+/* ─────────────────────────────────────────────
+   TAG STYLE HELPER
+───────────────────────────────────────────── */
+
+function tagStyle(tag: string) {
+  switch (tag) {
+    case "Training Guide":
+      return "text-purple-400 bg-purple-500/10 border border-purple-500/20";
+    case "Gear Guide":
+      return "text-green-400 bg-green-500/10 border border-green-500/20";
+    case "Gear Review":
+      return "text-orange-400 bg-orange-500/10 border border-orange-500/20";
+    default:
+      return "text-red-400 bg-red-500/10 border border-red-500/20";
+  }
+}
+
+/* ─────────────────────────────────────────────
+   COMPONENT
+───────────────────────────────────────────── */
 
 export default function BlogPage() {
-  const featuredPost = allPosts.find((p) => p.featured);
-  const restPosts = allPosts.filter((p) => !p.featured);
+  const [activeTag, setActiveTag] = useState("All");
+
+  const filteredPosts =
+    activeTag === "All"
+      ? allPosts
+      : allPosts.filter((p) => p.tag === activeTag);
+
+  const featuredPost = filteredPosts.find((p) => p.featured);
+  const restPosts = filteredPosts.filter((p) => !p.featured);
 
   return (
     <main className="w-full bg-zinc-950 min-h-screen text-white">
 
-      {/* ===== HERO ===== */}
+      {/* ══════════════════════════════════════
+          HERO
+      ══════════════════════════════════════ */}
       <section className="w-full border-b border-zinc-800 py-20 px-6">
         <div className="max-w-6xl mx-auto flex flex-col gap-4">
+
           <span className="text-sm font-bold uppercase tracking-widest text-red-500">
             Pulse Gear Blog
           </span>
+
           <h1 className="text-5xl md:text-6xl font-black uppercase leading-tight">
-            اتدرب بذكاء. 📚
-            <br />
-            <span className="text-red-500">Perform Better.</span>
+            <span className="block">Train Smarter. 📚</span>
+            <span className="block text-red-500">Perform Better.</span>
           </h1>
-          <p className="text-zinc-400 text-lg max-w-xl leading-relaxed">
-            مقالات عن الـ Running، الـ Training Science، والـ Gear —
-            كل حاجة محتاجها عشان توصل للـ Next Level.
+
+          <p className="text-zinc-400 text-lg max-w-xl leading-relaxed" dir="rtl">
+            مقالات عن الـ Running والـ Training Science والـ Gear،
+            كل حاجة محتاجها عشان توصل للـ Next Level
           </p>
 
-          {/* Tags Filter — Static UI, no JS filter needed for now */}
+          {/* ── Category Hub Links ── */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+            {[
+              {
+                href: "/blog/training-guide",
+                icon: "📊",
+                label: "Training Guide",
+                desc: "HR Zones · Zone 2 · Recovery",
+                color: "border-purple-500/30 hover:border-purple-500 text-purple-400",
+              },
+              {
+                href: "/blog/gear-guide",
+                icon: "🎒",
+                label: "Gear Guide",
+                desc: "GPS Watches · Chest Straps · Budget Picks",
+                color: "border-green-500/30 hover:border-green-500 text-green-400",
+              },
+              {
+                href: "/blog/gear-review",
+                icon: "⭐",
+                label: "Gear Review",
+                desc: "Garmin vs Polar · Shoes · Strap vs Optical",
+                color: "border-orange-500/30 hover:border-orange-500 text-orange-400",
+              },
+            ].map((cat) => (
+              <Link
+                key={cat.href}
+                href={cat.href}
+                className={`flex items-center gap-3 bg-zinc-900 border rounded-xl px-4 py-3 transition-colors duration-200 group ${cat.color}`}
+              >
+                <span className="text-xl shrink-0">{cat.icon}</span>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wide text-white group-hover:text-red-400 transition-colors duration-200">
+                    {cat.label}
+                  </p>
+                  <p className="text-xs text-zinc-500">{cat.desc}</p>
+                </div>
+                <span className="ml-auto text-zinc-600 group-hover:text-white transition-colors duration-200 text-xs">
+                  →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {/* ── Filter Tabs ── */}
           <div className="flex flex-wrap gap-2 mt-4">
             {tags.map((tag) => (
-              <span
+              <button
                 key={tag}
+                onClick={() => setActiveTag(tag)}
                 className={`text-xs font-bold uppercase tracking-wide px-4 py-2 rounded-full border transition-colors duration-200 cursor-pointer ${
-                  tag === "All"
+                  activeTag === tag
                     ? "bg-red-600 border-red-600 text-white"
                     : "border-zinc-700 text-zinc-400 hover:border-white hover:text-white"
                 }`}
               >
                 {tag}
-              </span>
+              </button>
             ))}
           </div>
+
         </div>
       </section>
 
+      {/* ══════════════════════════════════════
+          BODY
+      ══════════════════════════════════════ */}
       <div className="max-w-6xl mx-auto px-6 py-16 flex flex-col gap-16">
 
-        {/* ===== FEATURED POST ===== */}
+        {/* ── FEATURED POST ── */}
         {featuredPost && (
           <section className="flex flex-col gap-4">
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
@@ -109,25 +273,28 @@ export default function BlogPage() {
               href={`/blog/${featuredPost.slug}`}
               className="group grid grid-cols-1 md:grid-cols-2 gap-8 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-8 transition-all duration-300"
             >
-              {/* Left — Emoji Big */}
+              {/* Emoji Box */}
               <div className="flex items-center justify-center bg-zinc-800 rounded-xl min-h-[200px] text-8xl">
                 {featuredPost.emoji}
               </div>
 
-              {/* Right — Content */}
+              {/* Content */}
               <div className="flex flex-col gap-4 justify-center">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className={`text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full ${tagStyle(featuredPost.tag)}`}>
                     {featuredPost.tag}
                   </span>
                   <span className="text-xs text-zinc-500">{featuredPost.readTime}</span>
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black uppercase leading-tight text-white group-hover:text-red-400 transition-colors duration-200">
+
+                <h2 className="text-2xl md:text-3xl font-black uppercase leading-tight text-white group-hover:text-red-400 transition-colors duration-200" dir="rtl">
                   {featuredPost.title}
                 </h2>
-                <p className="text-zinc-400 leading-relaxed text-sm">
+
+                <p className="text-zinc-400 leading-relaxed text-sm" dir="rtl">
                   {featuredPost.desc}
                 </p>
+
                 <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200 mt-2">
                   <span>اقرأ المقال</span>
                   <span>→</span>
@@ -137,87 +304,64 @@ export default function BlogPage() {
           </section>
         )}
 
-        {/* ===== ALL POSTS GRID ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-black uppercase text-white">
-            كل المقالات 📖
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {restPosts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col gap-4 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-6 transition-all duration-300 h-full"
-              >
-                {/* Emoji */}
-                <span className="text-4xl">{post.emoji}</span>
+        {/* ── ALL POSTS GRID ── */}
+        {restPosts.length > 0 && (
+          <section className="flex flex-col gap-6">
+            <h2 className="text-xl font-black uppercase text-white" dir="rtl">
+              {activeTag === "All" ? "كل المقالات 📖" : `مقالات — ${activeTag}`}
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {restPosts.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="group flex flex-col gap-4 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-6 transition-all duration-300 h-full"
+                >
+                  <span className="text-4xl">{post.emoji}</span>
 
-                {/* Tag + Read Time */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
-                    {post.tag}
-                  </span>
-                  <span className="text-xs text-zinc-500">{post.readTime}</span>
-                </div>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className={`text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full ${tagStyle(post.tag)}`}>
+                      {post.tag}
+                    </span>
+                    <span className="text-xs text-zinc-500">{post.readTime}</span>
+                  </div>
 
-                {/* Title */}
-                <h3 className="text-lg font-black uppercase leading-tight text-white group-hover:text-red-400 transition-colors duration-200">
-                  {post.title}
-                </h3>
+                  <h3 className="text-lg font-black uppercase leading-tight text-white group-hover:text-red-400 transition-colors duration-200" dir="rtl">
+                    {post.title}
+                  </h3>
 
-                {/* Desc */}
-                <p className="text-sm text-zinc-400 leading-relaxed flex-1">
-                  {post.desc}
-                </p>
+                  <p className="text-sm text-zinc-400 leading-relaxed flex-1" dir="rtl">
+                    {post.desc}
+                  </p>
 
-                {/* CTA */}
-                <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200">
-                  <span>اقرأ المقال</span>
-                  <span>→</span>
-                </div>
-              </Link>
-            ))}
+                  <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200">
+                    <span>اقرأ المقال</span>
+                    <span>→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ── EMPTY STATE ── */}
+        {filteredPosts.length === 0 && (
+          <div className="flex flex-col items-center gap-4 py-20 text-center">
+            <span className="text-6xl">🔍</span>
+            <p className="text-zinc-400 text-sm" dir="rtl">
+              مفيش مقالات في الـ Category دي دلوقتي، هتتضاف قريباً!
+            </p>
           </div>
-        </section>
+        )}
 
-        {/* ===== COMING SOON ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-black uppercase text-white">
-            قريباً على الـ Blog 👀
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { emoji: "🏃", title: "Running Cadence: ليه الـ 180 Steps/Min مهمة؟", tag: "Training Guide" },
-              { emoji: "😴", title: "Sleep & Recovery: الجزء اللي بتتجاهله في تدريبك", tag: "Training Guide" },
-              { emoji: "👟", title: "Running Shoes Guide: إزاي تختار الجزمة الصح؟", tag: "Gear Review" },
-            ].map((post, i) => (
-              <div
-                key={i}
-                className="flex flex-col gap-4 bg-zinc-900/50 border border-zinc-800 border-dashed rounded-2xl p-6 opacity-60"
-              >
-                <span className="text-4xl">{post.emoji}</span>
-                <span className="text-xs font-bold uppercase tracking-wide text-zinc-500 bg-zinc-800 px-3 py-1 rounded-full self-start">
-                  {post.tag}
-                </span>
-                <h3 className="text-lg font-black uppercase leading-tight text-zinc-500">
-                  {post.title}
-                </h3>
-                <span className="text-xs font-bold uppercase tracking-wide text-zinc-600">
-                  🔒 Coming Soon
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== CTA ===== */}
+        {/* ── CTA ── */}
         <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-10 flex flex-col gap-4 items-center text-center">
           <span className="text-4xl">🏃</span>
-          <h3 className="text-2xl font-black uppercase text-white">
+          <h3 className="text-2xl font-black uppercase text-white" dir="rtl">
             جاهز تبدأ تتدرب صح؟
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-            الـ Knowledge مهم — بس الـ Gear الصح هو اللي بيخليك تطبق كل ده.
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
+            الـ Knowledge مهمة بس الـ Gear الصح هو اللي بيخليك تطبق كل ده.
             شوف مجموعتنا من الـ Running Watches والـ Heart Rate Monitors.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-2">

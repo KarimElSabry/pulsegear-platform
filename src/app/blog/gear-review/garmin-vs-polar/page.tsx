@@ -6,11 +6,11 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Garmin vs Polar: أنهي الأحسن ليك؟ | Pulse Gear Blog",
   description:
-    "مقارنة شاملة بين Garmin و Polar — الدقة، الـ Features، الـ Battery Life، وأنهي يناسب نوع تدريبك.",
+    "مقارنة شاملة بين Garmin و Polar في الدقة والـ Features والـ Battery Life وأنهي يناسب نوع تدريبك.",
   openGraph: {
     title: "Garmin vs Polar: أنهي الأحسن ليك؟",
     description:
-      "مقارنة شاملة بين Garmin و Polar — الدقة، الـ Features، وأنهي يناسب نوع تدريبك.",
+      "مقارنة شاملة بين Garmin و Polar في الدقة والـ Features وأنهي يناسب نوع تدريبك.",
     type: "article",
   },
 };
@@ -19,50 +19,50 @@ const comparisonRows = [
   {
     category: "GPS Accuracy",
     icon: "📡",
-    garmin: "Multi-Band GPS — الأدق في السوق، حتى في الأماكن المغلقة والمدن الكبيرة. بيـ Lock على الـ Signal بسرعة جداً.",
-    polar: "دقيق جداً وكويس، بس بياخد وقت أطول شوية في الـ Signal Lock مقارنةً بـ Garmin.",
+    garmin: "Multi-Band GPS، الأدق في السوق حتى في الأماكن المغلقة والمدن الكبيرة. بيـ Lock على الـ Signal بسرعة جداً.",
+    polar: "دقيق جداً وكويس بس بياخد وقت أطول شوية في الـ Signal Lock مقارنةً بـ Garmin.",
     winner: "garmin",
   },
   {
     category: "Heart Rate Accuracy",
     icon: "🫀",
-    garmin: "الـ Optical HR كويس جداً وموثوق، بس Polar لسه أدق منه في الـ Wrist-Based HR.",
-    polar: "الأفضل في الـ Optical HR على الـ Wrist — تقنية PrecisionPrime بتديك دقة قريبة من الـ Chest Strap.",
+    garmin: "الـ Optical HR كويس جداً وموثوق بس Polar لسه أدق منه في الـ Wrist-Based HR.",
+    polar: "الأفضل في الـ Optical HR على الـ Wrist، تقنية PrecisionPrime بتديك دقة قريبة من الـ Chest Strap.",
     winner: "polar",
   },
   {
     category: "Training Features",
     icon: "💪",
-    garmin: "Training Readiness، HRV Status، Race Predictor، Daily Suggested Workouts — أكتر Features في السوق بفرق كبير.",
-    polar: "Running Program، Nightly Recharge، FitSpark Workout Guidance — ممتازة ومفيدة، بس أقل عمقاً من Garmin.",
+    garmin: "Training Readiness والـ HRV Status والـ Race Predictor والـ Daily Suggested Workouts، أكتر Features في السوق بفرق كبير.",
+    polar: "Running Program والـ Nightly Recharge والـ FitSpark Workout Guidance، ممتازة ومفيدة بس أقل عمقاً من Garmin.",
     winner: "garmin",
   },
   {
     category: "Battery Life",
     icon: "🔋",
-    garmin: "الـ Battery Life من أحسن حاجة في Garmin — الـ GPS Mode بيديك من 20 لـ 150+ ساعة حسب الموديل.",
-    polar: "كويس ومحترم، بس مش بنفس مستوى Garmin في الـ High-End Models.",
+    garmin: "الـ Battery Life من أحسن حاجة في Garmin، الـ GPS Mode بيديك من 20 لـ 150 ساعة أو أكتر حسب الموديل.",
+    polar: "كويس ومحترم بس مش بنفس مستوى Garmin في الـ High-End Models.",
     winner: "garmin",
   },
   {
     category: "App & Ecosystem",
     icon: "📱",
-    garmin: "Garmin Connect — الأغنى في الـ Data والـ Analytics. Third-Party Integration ممتاز مع Strava وTrainingPeaks وغيرهم.",
-    polar: "Polar Flow — نظيفة وسهلة الاستخدام، بس الـ Data أقل عمقاً وتفصيلاً من Garmin Connect.",
+    garmin: "Garmin Connect، الأغنى في الـ Data والـ Analytics. Third-Party Integration ممتاز مع Strava وTrainingPeaks وغيرهم.",
+    polar: "Polar Flow، نظيفة وسهلة الاستخدام بس الـ Data أقل عمقاً وتفصيلاً من Garmin Connect.",
     winner: "garmin",
   },
   {
     category: "Design & Comfort",
     icon: "😌",
-    garmin: "تصميم رياضي قوي ومتين — بعض الـ High-End Models زي الـ Fenix تقيلة شوية على المعصم.",
-    polar: "أخف وأريح بشكل عام — مناسب للبس اليومي والتدريب بنفس الراحة.",
+    garmin: "تصميم رياضي قوي ومتين، بعض الـ High-End Models زي الـ Fenix تقيلة شوية على المعصم.",
+    polar: "أخف وأريح بشكل عام، مناسب للبس اليومي والتدريب بنفس الراحة.",
     winner: "polar",
   },
   {
     category: "Value for Money",
     icon: "💰",
-    garmin: "الـ Features اللي بتاخدها مقابل السعر ممتازة، خصوصاً في الـ Mid-Range Models زي الـ Forerunner Series.",
-    polar: "الـ Mid-Range Models بتديك HR دقيق جداً بسعر أقل — Value كويسة لو الـ HR هو أهم حاجة عندك.",
+    garmin: "الـ Features اللي بتاخدها مقابل السعر ممتازة خصوصاً في الـ Mid-Range Models زي الـ Forerunner Series.",
+    polar: "الـ Mid-Range Models بتديك HR دقيق جداً بسعر أقل، Value كويسة لو الـ HR هو أهم حاجة عندك.",
     winner: "tie",
   },
 ];
@@ -144,10 +144,10 @@ export default function GarminVsPolarPage() {
             <span className="text-red-500">أنهي الأحسن ليك؟</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            Garmin و Polar — الاتنين Brands عملاقة في عالم الـ Running Watches.
-            بس الفرق بينهم مش بس في الشكل أو السعر —
+          {/* ✅ dir="rtl" + no dashes */}
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
+            Garmin والـ Polar، الاتنين Brands عملاقة في عالم الـ Running Watches.
+            بس الفرق بينهم مش بس في الشكل أو السعر،
             كل واحد فيهم بيخدم نوع معين من الـ Runners.
             خليني أوريك الفرق الحقيقي عشان تختار صح. 🎯
           </p>
@@ -172,15 +172,16 @@ export default function GarminVsPolarPage() {
           <h2 className="text-2xl font-black uppercase text-white">
             الصراع الحقيقي 🥊
           </h2>
-          <p className="text-zinc-400 leading-relaxed">
-            لو بتدور على Running Watch وضيّعت ساعات في المقارنات على الإنترنت —
-            أنت مش لوحدك. Garmin و Polar من أكتر الـ Brands اللي بتتسأل عنهم،
+          <p className="text-zinc-400 leading-relaxed" dir="rtl">
+            لو بتدور على Running Watch وضيّعت ساعات في المقارنات على الإنترنت،
+            أنت مش لوحدك. Garmin والـ Polar من أكتر الـ Brands اللي بتتسأل عنهم
             وكلاهما بيستاهل كل جنيه فيه.
           </p>
-          <p className="text-zinc-400 leading-relaxed">
-            بس الحقيقة؟ مفيش واحد فيهم "أحسن" بشكل مطلق.
-            كل واحد فيهم بيتفوق في حاجات معينة —
-            والاختيار الصح بيعتمد على <span className="text-white font-semibold">أنت عايز إيه بالظبط</span>.
+          <p className="text-zinc-400 leading-relaxed" dir="rtl">
+            بس الحقيقة؟ مفيش واحد فيهم أحسن بشكل مطلق.
+            كل واحد فيهم بيتفوق في حاجات معينة،
+            والاختيار الصح بيعتمد على{" "}
+            <span className="text-white font-semibold">أنت عايز إيه بالظبط</span>.
           </p>
         </section>
 
@@ -189,8 +190,8 @@ export default function GarminVsPolarPage() {
           <h2 className="text-2xl font-black uppercase text-white">
             المقارنة التفصيلية 📊
           </h2>
-          <p className="text-zinc-400 leading-relaxed">
-            خلينا نقارن الاتنين في كل Category مهمة — وفي الآخر نشوف مين فاز. 👇
+          <p className="text-zinc-400 leading-relaxed" dir="rtl">
+            خلينا نقارن الاتنين في كل Category مهمة، وفي الآخر نشوف مين فاز. 👇
           </p>
 
           <div className="flex flex-col gap-4">
@@ -230,13 +231,17 @@ export default function GarminVsPolarPage() {
                     <span className="text-xs font-bold uppercase tracking-wide text-blue-400">
                       ⚡ Garmin
                     </span>
-                    <p className="text-sm text-zinc-300 leading-relaxed">{row.garmin}</p>
+                    <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
+                      {row.garmin}
+                    </p>
                   </div>
                   <div className={`rounded-xl p-4 flex flex-col gap-2 border ${row.winner === "polar" ? "border-red-500/30 bg-red-500/5" : "border-zinc-700 bg-zinc-800/50"}`}>
                     <span className="text-xs font-bold uppercase tracking-wide text-red-400">
                       🫀 Polar
                     </span>
-                    <p className="text-sm text-zinc-300 leading-relaxed">{row.polar}</p>
+                    <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
+                      {row.polar}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -284,9 +289,9 @@ export default function GarminVsPolarPage() {
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-3">
-            <p className="text-zinc-400 leading-relaxed text-sm">
+            <p className="text-zinc-400 leading-relaxed text-sm" dir="rtl">
               <span className="text-white font-bold">الـ Numbers مش بتحكي الحكاية كلها.</span>{" "}
-              Garmin فاز في عدد أكبر من الـ Categories —
+              Garmin فاز في عدد أكبر من الـ Categories،
               بس لو الـ Heart Rate Accuracy هي أهم حاجة عندك،
               Polar هيديك حاجة مش هتلاقيها في أي Watch تانية بنفس المستوى.
             </p>
@@ -313,7 +318,7 @@ export default function GarminVsPolarPage() {
                   <span className="text-3xl">{brand.emoji}</span>
                   <h3 className={`text-lg font-black uppercase ${
                     brand.color === "blue" ? "text-blue-400" : "text-red-400"
-                  }`}>
+                  }`} dir="rtl">
                     اشتري {brand.brand} لو...
                   </h3>
                 </div>
@@ -321,7 +326,9 @@ export default function GarminVsPolarPage() {
                   {brand.profiles.map((p, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <span className="text-lg shrink-0">{p.icon}</span>
-                      <p className="text-sm text-zinc-300 leading-relaxed">{p.text}</p>
+                      <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
+                        {p.text}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -336,20 +343,21 @@ export default function GarminVsPolarPage() {
             الكلام الأخير 🎤
           </h2>
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col gap-4">
-            <p className="text-zinc-300 leading-relaxed">
-              لو سألتني بصراحة؟ <span className="text-white font-bold">Garmin هو الـ Default Choice</span> لأغلب الـ Runners —
-              الـ Ecosystem الغني، الـ GPS الدقيق، والـ Training Features العميقة بتخليه الأنسب
-              لأي حد بيتدرب بجدية.
+            <p className="text-zinc-300 leading-relaxed" dir="rtl">
+              لو سألتني بصراحة؟{" "}
+              <span className="text-white font-bold">Garmin هو الـ Default Choice</span>{" "}
+              لأغلب الـ Runners، الـ Ecosystem الغني والـ GPS الدقيق والـ Training Features
+              العميقة بتخليه الأنسب لأي حد بيتدرب بجدية.
             </p>
-            <p className="text-zinc-300 leading-relaxed">
-              بس لو أنت شخص بيهتم بالـ Heart Rate فوق أي حاجة تانية —
-              أو عايز Watch خفيفة ومريحة في اليومي —
-              <span className="text-white font-bold"> Polar هيبهرك</span> بدقة الـ HR
-              وخفة الـ Design.
+            <p className="text-zinc-300 leading-relaxed" dir="rtl">
+              بس لو أنت شخص بيهتم بالـ Heart Rate فوق أي حاجة تانية،
+              أو عايز Watch خفيفة ومريحة في اليومي،{" "}
+              <span className="text-white font-bold">Polar هيبهرك</span>{" "}
+              بدقة الـ HR وخفة الـ Design.
             </p>
-            <p className="text-zinc-300 leading-relaxed">
-              في الآخر، الاتنين Watches عملاقة — والغلط الوحيد هو إنك تختار
-              بناءً على الـ Brand اسمه، مش على احتياجاتك الحقيقية. 🎯
+            <p className="text-zinc-300 leading-relaxed" dir="rtl">
+              في الآخر الاتنين Watches عملاقة، والغلط الوحيد هو إنك تختار
+              بناءً على الـ Brand اسمه مش على احتياجاتك الحقيقية. 🎯
             </p>
           </div>
         </section>
@@ -360,8 +368,8 @@ export default function GarminVsPolarPage() {
           <h3 className="text-xl font-black uppercase text-white">
             عايز Garmin أو Polar؟
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-            عندنا في Pulse Gear مجموعة مختارة من الـ Running Watches —
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
+            عندنا في Pulse Gear مجموعة مختارة من الـ Running Watches،
             كلها أصلية 100% ومتاحة للشحن لأي مكان في مصر.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-2">
@@ -396,10 +404,10 @@ export default function GarminVsPolarPage() {
                 <span className="text-xs font-bold uppercase tracking-wide text-red-500">
                   {post.tag}
                 </span>
-                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200">
+                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200" dir="rtl">
                   {post.title}
                 </h3>
-                <span className="text-xs text-red-500 font-semibold group-hover:gap-2 transition-all duration-200">
+                <span className="text-xs text-red-500 font-semibold" dir="auto">
                   اقرأ المقال →
                 </span>
               </Link>
@@ -413,7 +421,7 @@ export default function GarminVsPolarPage() {
             href="/blog"
             className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
           >
-            ← Back to Blog
+            → Back to Blog
           </Link>
         </div>
 

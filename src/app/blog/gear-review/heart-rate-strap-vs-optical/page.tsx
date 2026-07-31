@@ -6,7 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Heart Rate Strap vs Optical: أيهما أدق؟ | Pulse Gear Blog",
   description:
-    "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Heart Rate Monitor — الدقة، الراحة، وأيهما يناسبك.",
+    "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Heart Rate Monitor في الدقة والراحة وأيهما يناسبك.",
   openGraph: {
     title: "Heart Rate Strap vs Optical: أيهما أدق؟",
     description:
@@ -21,11 +21,11 @@ const comparisonData = [
     icon: "🎯",
     strap: {
       rating: 5,
-      note: "دقة طبية — بيقيس الـ Electrical Signal مباشرة من القلب. الأدق في السوق.",
+      note: "دقة طبية، بيقيس الـ Electrical Signal مباشرة من القلب. الأدق في السوق.",
     },
     optical: {
       rating: 3,
-      note: "كويس في الحالات العادية، بس بيغلط في الـ Intervals والـ Sprints.",
+      note: "كويس في الحالات العادية بس بيغلط في الـ Intervals والـ Sprints.",
     },
     winner: "strap",
   },
@@ -38,7 +38,7 @@ const comparisonData = [
     },
     optical: {
       rating: 5,
-      note: "زي الساعة العادية — مفيش إحساس بيه خالص طول اليوم.",
+      note: "زي الساعة العادية، مفيش إحساس بيه خالص طول اليوم.",
     },
     winner: "optical",
   },
@@ -47,11 +47,11 @@ const comparisonData = [
     icon: "⚡",
     strap: {
       rating: 5,
-      note: "ممتاز في الـ HIIT والـ Sprints — بيتابع التغييرات السريعة فوراً.",
+      note: "ممتاز في الـ HIIT والـ Sprints، بيتابع التغييرات السريعة فوراً.",
     },
     optical: {
       rating: 2,
-      note: "بيتأخر في التسجيل — الـ Lag ممكن يوصل لـ 10–15 ثانية.",
+      note: "بيتأخر في التسجيل، الـ Lag ممكن يوصل لـ 10–15 ثانية.",
     },
     winner: "strap",
   },
@@ -60,7 +60,7 @@ const comparisonData = [
     icon: "🔋",
     strap: {
       rating: 5,
-      note: "من 400 لـ 500 ساعة — بيستمر شهور من غير شحن.",
+      note: "من 400 لـ 500 ساعة، بيستمر شهور من غير شحن.",
     },
     optical: {
       rating: 3,
@@ -73,11 +73,11 @@ const comparisonData = [
     icon: "🔧",
     strap: {
       rating: 3,
-      note: "محتاج تربطه صح وتبلله — خطوة إضافية قبل كل تمرين.",
+      note: "محتاج تربطه صح وتبلله، خطوة إضافية قبل كل تمرين.",
     },
     optical: {
       rating: 5,
-      note: "البسه وروح — مفيش إعداد أو تحضير.",
+      note: "البسه وروح، مفيش إعداد أو تحضير.",
     },
     winner: "optical",
   },
@@ -86,11 +86,11 @@ const comparisonData = [
     icon: "📊",
     strap: {
       rating: 2,
-      note: "مش مناسب للبس طول اليوم — صُمّم للتمرين بس.",
+      note: "مش مناسب للبس طول اليوم، صُمّم للتمرين بس.",
     },
     optical: {
       rating: 5,
-      note: "ممتاز للـ 24/7 Tracking — HR، Sleep، HRV، وكل حاجة.",
+      note: "ممتاز للـ 24/7 Tracking، HR والـ Sleep والـ HRV وكل حاجة.",
     },
     winner: "optical",
   },
@@ -128,15 +128,15 @@ const useCases = [
 const verdicts = [
   {
     icon: "🎯",
-    text: "لو الدقة أهم حاجة ليك → Chest Strap بدون تفكير",
+    text: "لو الدقة أهم حاجة ليك، Chest Strap بدون تفكير",
   },
   {
     icon: "😌",
-    text: "لو الراحة والسهولة أهم → Optical Smartwatch",
+    text: "لو الراحة والسهولة أهم، Optical Smartwatch",
   },
   {
     icon: "💪",
-    text: "لو بتتدرب بجدية → Chest Strap للتمرين + Smartwatch لليوم كله",
+    text: "لو بتتدرب بجدية، Chest Strap للتمرين والـ Smartwatch لليوم كله",
   },
 ];
 
@@ -209,10 +209,10 @@ export default function HeartRateStrapVsOpticalPage() {
             <span className="text-red-500">أيهما أدق وأنسب ليك؟</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            الـ Chest Strap أدق، والـ Optical أسهل. بس الحقيقة مش بسيطة
-            كده — الاختيار الصح بيعتمد على نوع تدريبك وأسلوب حياتك. 🎯
+          {/* ✅ dir="rtl" + no dashes */}
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
+            الـ Chest Strap أدق والـ Optical أسهل. بس الحقيقة مش بسيطة
+            كده، الاختيار الصح بيعتمد على نوع تدريبك وأسلوب حياتك. 🎯
           </p>
 
           {/* Meta */}
@@ -239,7 +239,7 @@ export default function HeartRateStrapVsOpticalPage() {
             <div className="bg-zinc-900 rounded-xl p-3 w-full">
               <p className="text-xs text-zinc-500">بيقيس</p>
               <p className="text-sm font-bold text-white">Electrical Signal</p>
-              <p className="text-xs text-zinc-500">من القلب مباشرة</p>
+              <p className="text-xs text-zinc-500" dir="rtl">من القلب مباشرة</p>
             </div>
           </div>
           <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6 flex flex-col items-center gap-3 text-center">
@@ -249,7 +249,7 @@ export default function HeartRateStrapVsOpticalPage() {
             <div className="bg-zinc-900 rounded-xl p-3 w-full">
               <p className="text-xs text-zinc-500">بيقيس</p>
               <p className="text-sm font-bold text-white">Blood Flow</p>
-              <p className="text-xs text-zinc-500">من الـ Wrist بالـ LED</p>
+              <p className="text-xs text-zinc-500" dir="rtl">من الـ Wrist بالـ LED</p>
             </div>
           </div>
         </section>
@@ -269,10 +269,10 @@ export default function HeartRateStrapVsOpticalPage() {
                 <p className="text-xs text-zinc-500">ECG / Electrocardiography</p>
               </div>
             </div>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
               الـ Chest Strap بيقيس الـ{" "}
               <span className="text-white font-bold">Electrical Signals</span>{" "}
-              اللي القلب بيبعتها مع كل نبضة — نفس التقنية اللي بيستخدمها
+              اللي القلب بيبعتها مع كل نبضة، نفس التقنية اللي بيستخدمها
               الأطباء في الـ ECG. ده بيديه دقة عالية جداً حتى في التمارين
               الشديدة لأنه مش بيتأثر بالحركة أو العرق.
             </p>
@@ -287,7 +287,7 @@ export default function HeartRateStrapVsOpticalPage() {
                 <p className="text-xs text-zinc-500">PPG / Photoplethysmography</p>
               </div>
             </div>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
               الـ Optical Sensor بيستخدم{" "}
               <span className="text-white font-bold">LED Light</span>{" "}
               بيضيء على الجلد ويقيس التغيير في الـ Blood Flow مع كل نبضة.
@@ -340,7 +340,7 @@ export default function HeartRateStrapVsOpticalPage() {
                       🫀 Chest Strap
                     </p>
                     <RatingDots rating={row.strap.rating} color="bg-blue-500" />
-                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
                       {row.strap.note}
                     </p>
                   </div>
@@ -355,7 +355,7 @@ export default function HeartRateStrapVsOpticalPage() {
                       ⌚ Optical
                     </p>
                     <RatingDots rating={row.optical.rating} color="bg-purple-500" />
-                    <p className="text-sm text-zinc-400 leading-relaxed">
+                    <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
                       {row.optical.note}
                     </p>
                   </div>
@@ -387,8 +387,8 @@ export default function HeartRateStrapVsOpticalPage() {
                   style={{ width: "67%" }}
                 />
               </div>
-              <p className="text-xs text-zinc-500">
-                يكسب في: Accuracy، High Intensity، Battery Life، Price
+              <p className="text-xs text-zinc-500" dir="rtl">
+                يكسب في: Accuracy والـ High Intensity والـ Battery Life والـ Price
               </p>
             </div>
 
@@ -409,8 +409,8 @@ export default function HeartRateStrapVsOpticalPage() {
                   style={{ width: "33%" }}
                 />
               </div>
-              <p className="text-xs text-zinc-500">
-                يكسب في: Comfort، Ease of Use، All-Day Tracking
+              <p className="text-xs text-zinc-500" dir="rtl">
+                يكسب في: Comfort والـ Ease of Use والـ All-Day Tracking
               </p>
             </div>
 
@@ -430,7 +430,7 @@ export default function HeartRateStrapVsOpticalPage() {
               >
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{uc.icon}</span>
-                  <h3 className={`text-sm font-black uppercase ${uc.titleColor}`}>
+                  <h3 className={`text-sm font-black uppercase ${uc.titleColor}`} dir="rtl">
                     {uc.title}
                   </h3>
                 </div>
@@ -438,7 +438,7 @@ export default function HeartRateStrapVsOpticalPage() {
                   {uc.cases.map((c, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <span className="text-green-400 text-sm shrink-0 mt-0.5">✓</span>
-                      <p className="text-sm text-zinc-300 leading-relaxed">{c}</p>
+                      <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">{c}</p>
                     </div>
                   ))}
                 </div>
@@ -454,11 +454,11 @@ export default function HeartRateStrapVsOpticalPage() {
             <p className="font-black uppercase text-yellow-400 text-sm">
               Pro Tip: استخدم الاتنين مع بعض!
             </p>
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
               كتير من الـ Athletes المحترفين بيلبسوا الـ Chest Strap في
-              التمارين الشديدة للدقة، والـ Smartwatch في باقي اليوم لمتابعة
-              الـ HR والـ Recovery. الـ Garmin و Polar بيدعموا الاتنين مع
-              بعض في نفس الوقت — بيبعت الـ Chest Strap Data للـ Watch
+              التمارين الشديدة للدقة والـ Smartwatch في باقي اليوم لمتابعة
+              الـ HR والـ Recovery. الـ Garmin والـ Polar بيدعموا الاتنين مع
+              بعض في نفس الوقت، بيبعت الـ Chest Strap Data للـ Watch
               مباشرة عن طريق الـ Bluetooth.
             </p>
           </div>
@@ -476,7 +476,7 @@ export default function HeartRateStrapVsOpticalPage() {
                 className="flex items-start gap-4 border-b border-zinc-800 last:border-b-0 pb-4 last:pb-0"
               >
                 <span className="text-2xl shrink-0">{item.icon}</span>
-                <p className="text-zinc-300 leading-relaxed text-sm">{item.text}</p>
+                <p className="text-zinc-300 leading-relaxed text-sm" dir="rtl">{item.text}</p>
               </div>
             ))}
           </div>
@@ -485,11 +485,11 @@ export default function HeartRateStrapVsOpticalPage() {
         {/* ===== CTA ===== */}
         <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-4 items-center text-center">
           <span className="text-4xl">🛒</span>
-          <h3 className="text-xl font-black uppercase text-white">
+          <h3 className="text-xl font-black uppercase text-white" dir="auto">
             جاهز تختار الـ Monitor المناسب ليك؟
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-            شوف مجموعتنا الكاملة من الـ Chest Straps والـ GPS Watches —
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
+            شوف مجموعتنا الكاملة من الـ Chest Straps والـ GPS Watches،
             كلها مختارة بعناية للـ Serious Athletes في مصر.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
@@ -522,10 +522,10 @@ export default function HeartRateStrapVsOpticalPage() {
                 <span className="text-xs font-bold uppercase tracking-wide text-red-500">
                   {post.tag}
                 </span>
-                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200">
+                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200" dir="rtl">
                   {post.title}
                 </h3>
-                <span className="text-xs text-red-500 font-semibold">
+                <span className="text-xs text-red-500 font-semibold" dir="auto">
                   اقرأ المقال →
                 </span>
               </Link>
@@ -538,8 +538,8 @@ export default function HeartRateStrapVsOpticalPage() {
           <Link
             href="/blog"
             className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
-          >
-            ← Back to Blog
+          dir="auto">
+            → Back to Blog
           </Link>
         </div>
 

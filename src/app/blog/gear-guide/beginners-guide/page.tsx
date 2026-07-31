@@ -6,7 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Beginner's Gear Guide 2026 | Pulse Gear Egypt Blog",
   description:
-    "دليل المبتدئين الشامل لاختيار أول Gear تدريبي ليك — متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري.",
+    "دليل المبتدئين الشامل لاختيار أول Gear تدريبي ليك، متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري.",
   openGraph: {
     title: "Beginner's Gear Guide 2026 | Pulse Gear Egypt",
     description:
@@ -32,19 +32,19 @@ const starterPacks = [
         name: "Polar H9",
         role: "Chest Strap HR Monitor",
         price: "~3,000 EGP",
-        why: "أرخص Chest Strap بدقة عالية — أفضل بكتير من الـ Optical HR في الموبايل.",
+        why: "أرخص Chest Strap بدقة عالية، أفضل بكتير من الـ Optical HR في الموبايل.",
       },
       {
         name: "Foam Roller",
         role: "Recovery Tool",
         price: "~500 EGP",
-        why: "أهم Recovery Tool وأرخصه — استخدمه يومياً بعد التمرين.",
+        why: "أهم Recovery Tool وأرخصه، استخدمه يومياً بعد التمرين.",
       },
       {
         name: "Polar Beat App",
         role: "Training App",
         price: "مجاناً",
-        why: "بيشتغل مع الـ H9 مباشرة — بيديك HR Zones وCalories وWorkout Summary.",
+        why: "بيشتغل مع الـ H9 مباشرة، بيديك HR Zones وCalories وWorkout Summary.",
       },
     ],
   },
@@ -60,25 +60,25 @@ const starterPacks = [
         name: "Polar H10",
         role: "Chest Strap HR Monitor",
         price: "~4,500 EGP",
-        why: "الأدق في السوق — مع ذاكرة داخلية وHRV Tracking.",
+        why: "الأدق في السوق مع ذاكرة داخلية وHRV Tracking.",
       },
       {
         name: "Coros Pace 3",
         role: "GPS Watch",
         price: "~11,500 EGP",
-        why: "أفضل GPS Watch بسعر معقول — Dual-Frequency GPS وBattery 38 ساعة.",
+        why: "أفضل GPS Watch بسعر معقول، Dual-Frequency GPS وBattery 38 ساعة.",
       },
       {
         name: "Foam Roller",
         role: "Recovery Tool",
         price: "~500 EGP",
-        why: "Recovery أساسي — لازم يبقى عندك من اليوم الأول.",
+        why: "Recovery أساسي، لازم يبقى عندك من اليوم الأول.",
       },
       {
         name: "Resistance Bands",
         role: "Warm-Up & Activation",
         price: "~500 EGP",
-        why: "للـ Warm-Up والـ Activation قبل التمرين — بيقلل الإصابات.",
+        why: "للـ Warm-Up والـ Activation قبل التمرين، بيقلل الإصابات.",
       },
     ],
   },
@@ -94,31 +94,31 @@ const starterPacks = [
         name: "Polar H10",
         role: "Chest Strap HR Monitor",
         price: "~4,500 EGP",
-        why: "الأدق في السوق — أساسي في أي Setup جاد.",
+        why: "الأدق في السوق، أساسي في أي Setup جاد.",
       },
       {
         name: "Garmin Forerunner 965",
         role: "GPS Watch",
         price: "~30,000 EGP",
-        why: "أفضل Running Watch — Training Readiness وHRV وOnboard Maps.",
+        why: "أفضل Running Watch، Training Readiness وHRV وOnboard Maps.",
       },
       {
         name: "Theragun Mini 2.0",
         role: "Percussive Recovery",
         price: "~10,000 EGP",
-        why: "بيسرع الـ Recovery بشكل ملحوظ — مناسب بعد كل Session شديدة.",
+        why: "بيسرع الـ Recovery بشكل ملحوظ، مناسب بعد كل Session شديدة.",
       },
       {
         name: "Resistance Bands",
         role: "Warm-Up & Activation",
         price: "~500 EGP",
-        why: "للـ Activation قبل التمرين — مهم جداً للـ Injury Prevention.",
+        why: "للـ Activation قبل التمرين، مهم جداً للـ Injury Prevention.",
       },
       {
         name: "Foam Roller",
         role: "Daily Recovery",
         price: "~500 EGP",
-        why: "استخدمه يومياً — أرخص Recovery Tool وأكتر فائدة.",
+        why: "استخدمه يومياً، أرخص Recovery Tool وأكتر فائدة.",
       },
     ],
   },
@@ -128,32 +128,32 @@ const commonMistakes = [
   {
     icon: "❌",
     mistake: "شراء الـ GPS Watch الأول قبل الـ Chest Strap",
-    fix: "ابدأ بـ Polar H9 (~3,000 EGP) — أدق وأرخص. الـ Watch جاي بعدين.",
+    fix: "ابدأ بـ Polar H9 (~3,000 EGP)، أدق وأرخص. الـ Watch جاي بعدين.",
   },
   {
     icon: "❌",
     mistake: "الاعتماد على الـ Optical HR في الـ HIIT",
-    fix: "الـ Optical HR بيتأخر في التمارين الشديدة — الـ Chest Strap هو الحل الوحيد للدقة.",
+    fix: "الـ Optical HR بيتأخر في التمارين الشديدة، الـ Chest Strap هو الحل الوحيد للدقة.",
   },
   {
     icon: "❌",
     mistake: "إهمال الـ Recovery Tools",
-    fix: "الـ Recovery بنفس أهمية التمرين — Foam Roller بـ ~500 EGP يفرق فرق كبير.",
+    fix: "الـ Recovery بنفس أهمية التمرين، Foam Roller بـ ~500 EGP يفرق فرق كبير.",
   },
   {
     icon: "❌",
     mistake: "شراء أغلى جهاز من أول يوم",
-    fix: "ابدأ بالـ Starter Pack وترقي بالراحة — الـ Gear الغالي مش هيعوض التدريب الغلط.",
+    fix: "ابدأ بالـ Starter Pack وترقي بالراحة، الـ Gear الغالي مش هيعوض التدريب الغلط.",
   },
   {
     icon: "❌",
     mistake: "تجاهل الـ HR Zones",
-    fix: "اتعلم الـ 5 Zones الأول — ده أهم من أي Gear. Zone 2 هو أساس الـ Aerobic Fitness.",
+    fix: "اتعلم الـ 5 Zones الأول، ده أهم من أي Gear. Zone 2 هو أساس الـ Aerobic Fitness.",
   },
   {
     icon: "❌",
     mistake: "التمرين كل يوم بدون Rest Days",
-    fix: "الجسم بيتحسن في الـ Recovery مش في التمرين — Rest Days مش كسل، ده جزء من البرنامج.",
+    fix: "الجسم بيتحسن في الـ Recovery مش في التمرين، Rest Days مش كسل ده جزء من البرنامج.",
   },
 ];
 
@@ -167,7 +167,7 @@ const firstWeekPlan = [
       "حمّل Polar Beat أو Garmin Connect على موبايلك",
       "وصّل الـ Chest Strap بالـ App",
       "اعمل Resting HR Test الصبح بعد الاستيقاظ",
-      "احسب الـ Max HR: 220 − عمرك",
+      "احسب الـ Max HR: 220 ناقص عمرك",
     ],
   },
   {
@@ -179,7 +179,7 @@ const firstWeekPlan = [
       "البس الـ Chest Strap وابلله قبل اللبس",
       "ابدأ بـ 20-30 دقيقة في Zone 2 (60-70% Max HR)",
       "لو الـ HR طلع من Zone 2، امشي لحد ما يرجع",
-      "بعد التمرين: Foam Roller على الـ Calves والـ Quads — 10 دقائق",
+      "بعد التمرين: Foam Roller على الـ Calves والـ Quads، 10 دقائق",
     ],
   },
   {
@@ -190,7 +190,7 @@ const firstWeekPlan = [
     tasks: [
       "راجع الـ Data من التمرين الأمبارح",
       "شوف الـ Average HR والـ Time in Zones",
-      "Foam Roller خفيف — 10 دقائق",
+      "Foam Roller خفيف، 10 دقائق",
       "نوم 8 ساعات على الأقل",
     ],
   },
@@ -212,7 +212,7 @@ const firstWeekPlan = [
     color: "border-green-500/30 bg-green-500/5",
     title: "Easy Recovery Run",
     tasks: [
-      "20 دقيقة في Zone 1-2 بس — مش أكتر",
+      "20 دقيقة في Zone 1-2 بس، مش أكتر",
       "لو الـ HR مش راجع للـ Zone 1 في الـ Recovery، ده علامة على Fatigue",
       "Foam Roller بعد التمرين",
     ],
@@ -223,9 +223,9 @@ const firstWeekPlan = [
     color: "border-blue-500/30 bg-blue-500/5",
     title: "Strength Session",
     tasks: [
-      "Resistance Bands Activation: Glutes وHip Flexors — 10 دقائق",
-      "Bodyweight Exercises: Squats، Lunges، Push-Ups",
-      "راقب الـ HR — محاولش تعدي Zone 3",
+      "Resistance Bands Activation: Glutes وHip Flexors، 10 دقائق",
+      "Bodyweight Exercises: Squats والـ Lunges والـ Push-Ups",
+      "راقب الـ HR، محاولش تعدي Zone 3",
       "Theragun أو Foam Roller بعد التمرين",
     ],
   },
@@ -236,44 +236,44 @@ const firstWeekPlan = [
     title: "Complete Rest",
     tasks: [
       "راجع الـ Weekly Data كلها",
-      "شوف الـ Resting HR — هل اتغير؟",
+      "شوف الـ Resting HR، هل اتغير؟",
       "خطط للأسبوع الجاي",
-      "نوم 8+ ساعات — أهم Recovery Tool",
+      "نوم 8+ ساعات، أهم Recovery Tool",
     ],
   },
 ];
 
 const keyTerms = [
-  { term: "HR Zones", def: "5 مناطق لضربات القلب — Zone 1 (راحة) لـ Zone 5 (أقصى جهد). كل Zone ليه هدف تدريبي مختلف." },
-  { term: "HRV", def: "Heart Rate Variability — الفرق الزمني بين الضربات. أهم مؤشر للـ Recovery والـ Readiness." },
-  { term: "Resting HR", def: "ضربات القلب في الراحة التامة — قيسه الصبح قبل ما تقوم. الـ Athletes عادةً 40-60 BPM." },
-  { term: "Zone 2", def: "60-70% من الـ Max HR — أساس الـ Aerobic Fitness. 80% من تدريبك المفروض يكون هنا." },
-  { term: "Chest Strap", def: "جهاز قياس HR بيتلبس على الصدر — أدق بكتير من الـ Optical HR في الساعة." },
-  { term: "Optical HR", def: "قياس HR عن طريق الضوء في الساعة — مناسب للـ Easy Sessions، مش دقيق في الـ HIIT." },
-  { term: "Recovery", def: "فترة الراحة بين التمارين — الجسم بيتحسن هنا مش في التمرين نفسه." },
-  { term: "Training Load", def: "مجموع الضغط التدريبي على جسمك — مهم تتابعه عشان متعملش Overtraining." },
+  { term: "HR Zones", def: "5 مناطق لضربات القلب، Zone 1 (راحة) لـ Zone 5 (أقصى جهد). كل Zone ليه هدف تدريبي مختلف." },
+  { term: "HRV", def: "Heart Rate Variability، الفرق الزمني بين الضربات. أهم مؤشر للـ Recovery والـ Readiness." },
+  { term: "Resting HR", def: "ضربات القلب في الراحة التامة، قيسه الصبح قبل ما تقوم. الـ Athletes عادةً 40-60 BPM." },
+  { term: "Zone 2", def: "60-70% من الـ Max HR، أساس الـ Aerobic Fitness. 80% من تدريبك المفروض يكون هنا." },
+  { term: "Chest Strap", def: "جهاز قياس HR بيتلبس على الصدر، أدق بكتير من الـ Optical HR في الساعة." },
+  { term: "Optical HR", def: "قياس HR عن طريق الضوء في الساعة، مناسب للـ Easy Sessions ومش دقيق في الـ HIIT." },
+  { term: "Recovery", def: "فترة الراحة بين التمارين، الجسم بيتحسن هنا مش في التمرين نفسه." },
+  { term: "Training Load", def: "مجموع الضغط التدريبي على جسمك، مهم تتابعه عشان متعملش Overtraining." },
 ];
 
 const faqs = [
   {
     q: "أبدأ بـ Chest Strap ولا GPS Watch؟",
-    a: "Chest Strap أول — أرخص وأدق. Polar H9 بـ ~3,000 EGP هو أفضل بداية. الـ GPS Watch جاي بعدين لما تعرف إيه اللي محتاجه.",
+    a: "Chest Strap أول، أرخص وأدق. Polar H9 بـ ~3,000 EGP هو أفضل بداية. الـ GPS Watch جاي بعدين لما تعرف إيه اللي محتاجه.",
   },
   {
     q: "الـ Foam Roller مهم فعلاً؟",
-    a: "أيوه — من أهم الـ Recovery Tools وأرخصها. بيقلل الـ DOMS (وجع العضلات بعد التمرين) ويحسن الـ Flexibility. استخدمه يومياً.",
+    a: "أيوه، من أهم الـ Recovery Tools وأرخصها. بيقلل الـ DOMS (وجع العضلات بعد التمرين) ويحسن الـ Flexibility. استخدمه يومياً.",
   },
   {
     q: "إزاي أعرف الـ Max HR بتاعي؟",
-    a: "الفورمولا البسيطة: 220 − عمرك. لكن الأدق هو الـ Max HR Test — ابقى اتكلم معانا في Pulse Gear Egypt وهنشرحلك إزاي.",
+    a: "الفورمولا البسيطة: 220 ناقص عمرك. لكن الأدق هو الـ Max HR Test، ابقى اتكلم معانا في Pulse Gear Egypt وهنشرحلك إزاي.",
   },
   {
     q: "كام مرة في الأسبوع المفروض أتمرن؟",
-    a: "للمبتدئ: 3-4 مرات في الأسبوع مع Rest Days بينهم. الـ Consistency أهم من الـ Frequency — 3 أيام منتظمين أحسن من 6 أيام متقطعين.",
+    a: "للمبتدئ: 3-4 مرات في الأسبوع مع Rest Days بينهم. الـ Consistency أهم من الـ Frequency، 3 أيام منتظمين أحسن من 6 أيام متقطعين.",
   },
   {
     q: "فين أقدر أشتري الـ Gear ده في مصر؟",
-    a: "كل الـ Gear ده متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري — تواصل معانا وهنساعدك تختار الصح لمستواك وميزانيتك.",
+    a: "كل الـ Gear ده متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري، تواصل معانا وهنساعدك تختار الصح لمستواك وميزانيتك.",
   },
 ];
 
@@ -306,15 +306,17 @@ export default function BeginnersGuide() {
             Beginner's Guide 2026
           </span>
 
+          {/* ✅ Title split — English line + Arabic line */}
           <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
             Beginner's Gear Guide 🌱
             <br />
             <span className="text-red-500">ابدأ صح من أول يوم</span>
           </h1>
 
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            مش محتاج تشتري كل حاجة من أول يوم — دليل المبتدئين
-            بيوضحلك إيه اللي محتاجه فعلاً، إزاي تبدأ، وإزاي تترقى
+          {/* ✅ dir="rtl" + no dashes */}
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
+            مش محتاج تشتري كل حاجة من أول يوم، دليل المبتدئين
+            بيوضحلك إيه اللي محتاجه فعلاً وإزاي تبدأ وإزاي تترقى
             بالراحة. كل الـ Gear متاح في{" "}
             <span className="text-white font-bold">Pulse Gear Egypt</span>{" "}
             بأسعار مناسبة بالجنيه المصري. 🇪🇬
@@ -335,9 +337,9 @@ export default function BeginnersGuide() {
               <p className="text-sm font-bold text-white">
                 متاح في Pulse Gear Egypt
               </p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
                 كل الـ Gear في المقال ده بتقدر تطلبه عن طريق Pulse Gear Egypt
-                بأسعار مناسبة بالجنيه المصري — بدون تعقيدات الاستيراد أو الوسطاء.
+                بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو الوسطاء.
               </p>
             </div>
           </div>
@@ -378,8 +380,8 @@ export default function BeginnersGuide() {
             <h2 className="text-2xl font-black uppercase text-white">
               الـ Starter Packs حسب المستوى 🎒
             </h2>
-            <p className="text-sm text-zinc-500">
-              اختار الـ Pack المناسب لمستواك — وترقي بالراحة
+            <p className="text-sm text-zinc-500" dir="rtl">
+              اختار الـ Pack المناسب لمستواك، وترقي بالراحة
             </p>
           </div>
 
@@ -394,15 +396,15 @@ export default function BeginnersGuide() {
                   <div className="flex items-center gap-4">
                     <span className="text-3xl">{pack.icon}</span>
                     <div>
-                      <p className={`font-black uppercase text-lg ${pack.titleColor}`}>
+                      <p className={`font-black uppercase text-lg ${pack.titleColor}`} dir="rtl">
                         {pack.tier}
                       </p>
-                      <p className="text-xs text-zinc-500">{pack.tagline}</p>
+                      <p className="text-xs text-zinc-500" dir="rtl">{pack.tagline}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-white">{pack.total}</p>
-                    <p className="text-xs text-zinc-500">إجمالي الـ Pack</p>
+                    <p className="text-xs text-zinc-500" dir="rtl">إجمالي الـ Pack</p>
                   </div>
                 </div>
 
@@ -419,10 +421,12 @@ export default function BeginnersGuide() {
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-black text-red-400">{item.price}</p>
-                          <p className="text-xs text-zinc-600">عبر Pulse Gear Egypt</p>
+                          <p className="text-xs text-zinc-600" dir="rtl">عبر Pulse Gear Egypt</p>
                         </div>
                       </div>
-                      <p className="text-xs text-zinc-400 leading-relaxed">{item.why}</p>
+                      <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                        {item.why}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -437,8 +441,8 @@ export default function BeginnersGuide() {
             <h2 className="text-2xl font-black uppercase text-white">
               خطة أول أسبوع 📅
             </h2>
-            <p className="text-sm text-zinc-500">
-              خطوة خطوة — من أول يوم لآخر يوم في الأسبوع
+            <p className="text-sm text-zinc-500" dir="rtl">
+              خطوة خطوة، من أول يوم لآخر يوم في الأسبوع
             </p>
           </div>
 
@@ -451,7 +455,7 @@ export default function BeginnersGuide() {
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800">
                   <span className="text-xl">{day.icon}</span>
                   <div>
-                    <p className="font-black text-white">{day.day}</p>
+                    <p className="font-black text-white" dir="rtl">{day.day}</p>
                     <p className="text-xs text-zinc-500 uppercase tracking-wide">
                       {day.title}
                     </p>
@@ -463,7 +467,9 @@ export default function BeginnersGuide() {
                       <span className="text-red-400 text-xs shrink-0 mt-0.5 font-bold">
                         {i + 1}.
                       </span>
-                      <p className="text-xs text-zinc-400 leading-relaxed">{task}</p>
+                      <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                        {task}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -478,8 +484,8 @@ export default function BeginnersGuide() {
             <h2 className="text-2xl font-black uppercase text-white">
               أكتر الأخطاء شيوعاً ⚠️
             </h2>
-            <p className="text-sm text-zinc-500">
-              اتعلم من غلطات الناس التانية — متعملهاش أنت
+            <p className="text-sm text-zinc-500" dir="rtl">
+              اتعلم من غلطات الناس التانية، متعملهاش أنت
             </p>
           </div>
 
@@ -491,11 +497,15 @@ export default function BeginnersGuide() {
               >
                 <div className="flex items-start gap-3">
                   <span className="text-xl shrink-0">{item.icon}</span>
-                  <p className="font-bold text-white text-sm">{item.mistake}</p>
+                  <p className="font-bold text-white text-sm" dir="rtl">
+                    {item.mistake}
+                  </p>
                 </div>
                 <div className="flex items-start gap-3 bg-green-500/5 border border-green-500/20 rounded-xl p-3">
                   <span className="text-green-400 text-xs font-bold shrink-0 mt-0.5">✅ الحل:</span>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{item.fix}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                    {item.fix}
+                  </p>
                 </div>
               </div>
             ))}
@@ -508,8 +518,8 @@ export default function BeginnersGuide() {
             <h2 className="text-2xl font-black uppercase text-white">
               المصطلحات الأساسية 📖
             </h2>
-            <p className="text-sm text-zinc-500">
-              المصطلحات اللي هتسمعها كتير — افهمها من الأول
+            <p className="text-sm text-zinc-500" dir="rtl">
+              المصطلحات اللي هتسمعها كتير، افهمها من الأول
             </p>
           </div>
 
@@ -522,7 +532,9 @@ export default function BeginnersGuide() {
                 <p className="text-sm font-black text-red-400 shrink-0 md:w-32">
                   {item.term}
                 </p>
-                <p className="text-xs text-zinc-400 leading-relaxed">{item.def}</p>
+                <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                  {item.def}
+                </p>
               </div>
             ))}
           </div>
@@ -539,8 +551,10 @@ export default function BeginnersGuide() {
                 key={i}
                 className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
               >
-                <p className="font-bold text-white text-sm">س: {faq.q}</p>
-                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3">
+                <p className="font-bold text-white text-sm" dir="rtl">
+                  س: {faq.q}
+                </p>
+                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3" dir="rtl">
                   <span className="text-red-400 font-bold">ج: </span>
                   {faq.a}
                 </p>
@@ -558,9 +572,9 @@ export default function BeginnersGuide() {
           <h3 className="text-xl font-black uppercase text-white">
             Pulse Gear Egypt — وصّلك الـ Gear الصح
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
             في Pulse Gear Egypt، بنوفرلك أفضل أجهزة التدريب العالمية
-            بأسعار مناسبة بالجنيه المصري — بدون تعقيدات الاستيراد أو
+            بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو
             الوسطاء. تواصل معانا وهنساعدك تختار الـ Starter Pack
             المناسب لمستواك وميزانيتك. 💪
           </p>

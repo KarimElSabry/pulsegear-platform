@@ -6,7 +6,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Complete Training Setup 2026 | Pulse Gear Egypt Blog",
   description:
-    "الدليل الشامل لبناء أفضل Setup تدريبي في 2026 — من الـ Gear للـ Plan للـ Recovery. متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري.",
+    "الدليل الشامل لبناء أفضل Setup تدريبي في 2026 من الـ Gear للـ Plan للـ Recovery. متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري.",
   openGraph: {
     title: "Complete Training Setup 2026 | Pulse Gear Egypt",
     description:
@@ -33,29 +33,29 @@ const setupLevels = [
         role: "HR Monitor",
         price: "~3,000 EGP",
         essential: true,
-        why: "أساس أي Setup — بدونه مش هتعرف تتدرب بالـ Zones الصح.",
+        why: "أساس أي Setup، بدونه مش هتعرف تتدرب بالـ Zones الصح.",
       },
       {
         name: "Foam Roller",
         role: "Recovery",
         price: "~500 EGP",
         essential: true,
-        why: "أهم Recovery Tool وأرخصه — استخدمه يومياً بعد كل تمرين.",
+        why: "أهم Recovery Tool وأرخصه، استخدمه يومياً بعد كل تمرين.",
       },
       {
         name: "Polar Beat App",
         role: "Training App",
         price: "مجاناً",
         essential: true,
-        why: "بيشتغل مع الـ H9 مباشرة — HR Zones وCalories وWorkout Summary.",
+        why: "بيشتغل مع الـ H9 مباشرة، HR Zones وCalories وWorkout Summary.",
       },
     ],
     plan: [
-      "3 أيام تدريب في الأسبوع — مش أكتر",
+      "3 أيام تدريب في الأسبوع، مش أكتر",
       "80% من التمرين في Zone 2",
       "20% في Zone 4-5",
       "Rest Day بعد كل يوم تمرين",
-      "Foam Roller يومياً — 10 دقائق",
+      "Foam Roller يومياً، 10 دقائق",
     ],
   },
   {
@@ -71,37 +71,37 @@ const setupLevels = [
         role: "HR Monitor",
         price: "~4,500 EGP",
         essential: true,
-        why: "الأدق في السوق — مع HRV Tracking وذاكرة داخلية.",
+        why: "الأدق في السوق مع HRV Tracking وذاكرة داخلية.",
       },
       {
         name: "Coros Pace 3",
         role: "GPS Watch",
         price: "~11,500 EGP",
         essential: true,
-        why: "أفضل GPS Watch بسعر معقول — Dual GPS وBattery 38 ساعة.",
+        why: "أفضل GPS Watch بسعر معقول، Dual GPS وBattery 38 ساعة.",
       },
       {
         name: "Foam Roller",
         role: "Recovery",
         price: "~500 EGP",
         essential: true,
-        why: "Recovery أساسي — لازم يبقى في الـ Setup من اليوم الأول.",
+        why: "Recovery أساسي، لازم يبقى في الـ Setup من اليوم الأول.",
       },
       {
         name: "Resistance Bands",
         role: "Warm-Up & Activation",
         price: "~500 EGP",
         essential: false,
-        why: "للـ Activation قبل التمرين — بيقلل الإصابات بشكل ملحوظ.",
+        why: "للـ Activation قبل التمرين، بيقلل الإصابات بشكل ملحوظ.",
       },
     ],
     plan: [
       "4-5 أيام تدريب في الأسبوع",
-      "80/20 Rule — 80% Zone 2 و20% High Intensity",
-      "HRV Check كل صبح — لو نازل خفف التمرين",
+      "80/20 Rule، 80% Zone 2 و20% High Intensity",
+      "HRV Check كل صبح، لو نازل خفف التمرين",
       "Long Run أسبوعي في Zone 2",
       "Interval Session أسبوعية واحدة بس",
-      "Foam Roller يومياً + Resistance Bands قبل التمرين",
+      "Foam Roller يومياً والـ Resistance Bands قبل التمرين",
     ],
   },
   {
@@ -117,37 +117,37 @@ const setupLevels = [
         role: "HR Monitor",
         price: "~4,500 EGP",
         essential: true,
-        why: "الأدق في السوق — أساسي في أي Advanced Setup.",
+        why: "الأدق في السوق، أساسي في أي Advanced Setup.",
       },
       {
         name: "Garmin Forerunner 965",
         role: "GPS Watch",
         price: "~30,000 EGP",
         essential: true,
-        why: "أفضل Running Watch — Training Readiness وHRV وOnboard Maps.",
+        why: "أفضل Running Watch، Training Readiness وHRV وOnboard Maps.",
       },
       {
         name: "Foam Roller",
         role: "Daily Recovery",
         price: "~500 EGP",
         essential: true,
-        why: "Recovery يومي أساسي — مش اختياري.",
+        why: "Recovery يومي أساسي، مش اختياري.",
       },
       {
         name: "Resistance Bands",
         role: "Activation",
         price: "~500 EGP",
         essential: true,
-        why: "Activation قبل كل تمرين — مهم للـ Injury Prevention.",
+        why: "Activation قبل كل تمرين، مهم للـ Injury Prevention.",
       },
     ],
     plan: [
       "5-6 أيام تدريب في الأسبوع",
-      "Periodization — Base Phase وBuild Phase وPeak Phase",
-      "HRV + Resting HR كل صبح",
-      "Training Readiness من الـ Garmin — اتبعه",
-      "2 Quality Sessions في الأسبوع — مش أكتر",
-      "Long Run أسبوعي + Medium Long Run",
+      "Periodization، Base Phase وBuild Phase وPeak Phase",
+      "HRV والـ Resting HR كل صبح",
+      "Training Readiness من الـ Garmin، اتبعه",
+      "2 Quality Sessions في الأسبوع، مش أكتر",
+      "Long Run أسبوعي والـ Medium Long Run",
       "Recovery Week كل 3-4 أسابيع",
     ],
   },
@@ -164,44 +164,44 @@ const setupLevels = [
         role: "HR Monitor",
         price: "~4,500 EGP",
         essential: true,
-        why: "الأدق في السوق — أساسي في أي Pro Setup.",
+        why: "الأدق في السوق، أساسي في أي Pro Setup.",
       },
       {
         name: "Garmin Forerunner 965",
         role: "GPS Watch",
         price: "~30,000 EGP",
         essential: true,
-        why: "أفضل Running Watch في السوق — مفيش بديل على المستوى ده.",
+        why: "أفضل Running Watch في السوق، مفيش بديل على المستوى ده.",
       },
       {
         name: "Theragun Prime",
         role: "Percussive Recovery",
         price: "~12,000 EGP",
         essential: true,
-        why: "بيسرع الـ Recovery بشكل ملحوظ — ضروري في الـ High Volume Training.",
+        why: "بيسرع الـ Recovery بشكل ملحوظ، ضروري في الـ High Volume Training.",
       },
       {
         name: "Foam Roller",
         role: "Daily Recovery",
         price: "~500 EGP",
         essential: true,
-        why: "يكمّل الـ Theragun — استخدمه للـ Large Muscle Groups.",
+        why: "يكمّل الـ Theragun، استخدمه للـ Large Muscle Groups.",
       },
       {
         name: "Resistance Bands",
         role: "Activation",
         price: "~500 EGP",
         essential: true,
-        why: "Activation قبل كل تمرين — مش اختياري على المستوى ده.",
+        why: "Activation قبل كل تمرين، مش اختياري على المستوى ده.",
       },
     ],
     plan: [
       "6 أيام تدريب في الأسبوع",
       "Double Sessions بعض الأيام",
-      "HRV + Resting HR + Sleep Score كل يوم",
+      "HRV والـ Resting HR والـ Sleep Score كل يوم",
       "Theragun بعد كل Session شديدة",
       "Recovery Week كل 3 أسابيع",
-      "Periodization كاملة — Base وBuild وPeak وTaper",
+      "Periodization كاملة، Base وBuild وPeak وTaper",
       "Race-Specific Training في الـ Peak Phase",
     ],
   },
@@ -213,23 +213,23 @@ const trainingPrinciples = [
     title: "80/20 Rule",
     color: "border-blue-500/30 bg-blue-500/5",
     titleColor: "text-blue-400",
-    body: "80% من تمرينك في Zone 2 (سهل) و20% في Zone 4-5 (شديد). ده مش رأي — ده علم مثبت في الـ Elite Athletes.",
-    tip: "لو بتحس إن كل تمارينك صعبة — أنت بتعمل كتير أوي في الـ Middle Zones. خفف.",
+    body: "80% من تمرينك في Zone 2 (سهل) و20% في Zone 4-5 (شديد). ده مش رأي، ده علم مثبت في الـ Elite Athletes.",
+    tip: "لو بتحس إن كل تمارينك صعبة، أنت بتعمل كتير أوي في الـ Middle Zones. خفف.",
   },
   {
     icon: "💤",
     title: "Recovery = Training",
     color: "border-purple-500/30 bg-purple-500/5",
     titleColor: "text-purple-400",
-    body: "الجسم بيتحسن في الـ Recovery مش في التمرين. النوم 8 ساعات + الـ Foam Roller + الـ Rest Days جزء من البرنامج مش كسل.",
-    tip: "HRV نازل 3 أيام متتالية؟ خد Rest Day إجباري — جسمك بيقولك حاجة.",
+    body: "الجسم بيتحسن في الـ Recovery مش في التمرين. النوم 8 ساعات والـ Foam Roller والـ Rest Days جزء من البرنامج مش كسل.",
+    tip: "HRV نازل 3 أيام متتالية؟ خد Rest Day إجباري، جسمك بيقولك حاجة.",
   },
   {
     icon: "📈",
     title: "Progressive Overload",
     color: "border-green-500/30 bg-green-500/5",
     titleColor: "text-green-400",
-    body: "زود الـ Volume بـ 10% بس كل أسبوع — مش أكتر. الزيادة السريعة هي السبب الأول للإصابات.",
+    body: "زود الـ Volume بـ 10% بس كل أسبوع، مش أكتر. الزيادة السريعة هي السبب الأول للإصابات.",
     tip: "قاعدة الـ 10%: لو بتجري 30km في الأسبوع، الأسبوع الجاي 33km بس.",
   },
   {
@@ -237,16 +237,16 @@ const trainingPrinciples = [
     title: "Specificity",
     color: "border-orange-500/30 bg-orange-500/5",
     titleColor: "text-orange-400",
-    body: "اتدرب على اللي عايز تتحسن فيه. لو هدفك الـ 5K — معظم تمرينك يكون Running. الـ Cross Training مفيد لكن مش بديل.",
-    tip: "حدد هدفك الأول — Race؟ Weight Loss؟ General Fitness؟ — وبني التمرين حواليه.",
+    body: "اتدرب على اللي عايز تتحسن فيه. لو هدفك الـ 5K، معظم تمرينك يكون Running. الـ Cross Training مفيد لكن مش بديل.",
+    tip: "حدد هدفك الأول، Race أو Weight Loss أو General Fitness، وبني التمرين حواليه.",
   },
   {
     icon: "🔄",
     title: "Periodization",
     color: "border-red-500/30 bg-red-500/5",
     titleColor: "text-red-400",
-    body: "قسّم تدريبك في Phases — Base Phase (بناء الـ Aerobic Base) ثم Build Phase (زيادة الـ Intensity) ثم Peak Phase (قبل السباق).",
-    tip: "Recovery Week كل 3-4 أسابيع — خفف الـ Volume بـ 30-40% وخلي الـ Intensity.",
+    body: "قسّم تدريبك في Phases، Base Phase (بناء الـ Aerobic Base) ثم Build Phase (زيادة الـ Intensity) ثم Peak Phase (قبل السباق).",
+    tip: "Recovery Week كل 3-4 أسابيع، خفف الـ Volume بـ 30-40% وخلي الـ Intensity.",
   },
 ];
 
@@ -256,11 +256,11 @@ const weeklySchedules = [
     icon: "🌱",
     color: "border-green-500/30",
     days: [
-      { day: "الاثنين", session: "Easy Run — 30 دقيقة Zone 2", icon: "🏃" },
+      { day: "الاثنين", session: "Easy Run، 30 دقيقة Zone 2", icon: "🏃" },
       { day: "الثلاثاء", session: "Rest + Foam Roller", icon: "😴" },
-      { day: "الأربعاء", session: "Easy Run — 30 دقيقة Zone 2", icon: "🏃" },
+      { day: "الأربعاء", session: "Easy Run، 30 دقيقة Zone 2", icon: "🏃" },
       { day: "الخميس", session: "Rest + Foam Roller", icon: "😴" },
-      { day: "الجمعة", session: "Easy Run — 40 دقيقة Zone 2", icon: "🏃" },
+      { day: "الجمعة", session: "Easy Run، 40 دقيقة Zone 2", icon: "🏃" },
       { day: "السبت", session: "Rest + Foam Roller", icon: "😴" },
       { day: "الأحد", session: "Complete Rest", icon: "🌙" },
     ],
@@ -270,12 +270,12 @@ const weeklySchedules = [
     icon: "💪",
     color: "border-blue-500/30",
     days: [
-      { day: "الاثنين", session: "Easy Run — 45 دقيقة Zone 2", icon: "🏃" },
-      { day: "الثلاثاء", session: "Interval Session — 4×1km Zone 4", icon: "⚡" },
-      { day: "الأربعاء", session: "Recovery Run — 30 دقيقة Zone 1", icon: "🌿" },
+      { day: "الاثنين", session: "Easy Run، 45 دقيقة Zone 2", icon: "🏃" },
+      { day: "الثلاثاء", session: "Interval Session، 4×1km Zone 4", icon: "⚡" },
+      { day: "الأربعاء", session: "Recovery Run، 30 دقيقة Zone 1", icon: "🌿" },
       { day: "الخميس", session: "Strength + Resistance Bands", icon: "💪" },
       { day: "الجمعة", session: "Rest + Foam Roller", icon: "😴" },
-      { day: "السبت", session: "Long Run — 90 دقيقة Zone 2", icon: "🏃" },
+      { day: "السبت", session: "Long Run، 90 دقيقة Zone 2", icon: "🏃" },
       { day: "الأحد", session: "Complete Rest", icon: "🌙" },
     ],
   },
@@ -284,12 +284,12 @@ const weeklySchedules = [
     icon: "🏆",
     color: "border-yellow-500/30",
     days: [
-      { day: "الاثنين", session: "Easy Run — 60 دقيقة Zone 2", icon: "🏃" },
-      { day: "الثلاثاء", session: "Tempo Run — 20 دقيقة Zone 3-4", icon: "⚡" },
-      { day: "الأربعاء", session: "Medium Long Run — 75 دقيقة Zone 2", icon: "🏃" },
+      { day: "الاثنين", session: "Easy Run، 60 دقيقة Zone 2", icon: "🏃" },
+      { day: "الثلاثاء", session: "Tempo Run، 20 دقيقة Zone 3-4", icon: "⚡" },
+      { day: "الأربعاء", session: "Medium Long Run، 75 دقيقة Zone 2", icon: "🏃" },
       { day: "الخميس", session: "Strength + Activation", icon: "💪" },
-      { day: "الجمعة", session: "Interval Session — 6×800m Zone 5", icon: "🔥" },
-      { day: "السبت", session: "Long Run — 120 دقيقة Zone 2", icon: "🏃" },
+      { day: "الجمعة", session: "Interval Session، 6×800m Zone 5", icon: "🔥" },
+      { day: "السبت", session: "Long Run، 120 دقيقة Zone 2", icon: "🏃" },
       { day: "الأحد", session: "Complete Rest + Theragun", icon: "🌙" },
     ],
   },
@@ -337,27 +337,27 @@ const gearChecklist = [
 const faqs = [
   {
     q: "من فين أبدأ لو عندي ميزانية محدودة؟",
-    a: "Polar H9 + Foam Roller — ~3,500 EGP بس. ده كل اللي محتاجه للبداية الصح. الـ GPS Watch جاي بعدين لما تثبت الـ Consistency.",
+    a: "Polar H9 والـ Foam Roller، حوالي 3,500 EGP بس. ده كل اللي محتاجه للبداية الصح. الـ GPS Watch جاي بعدين لما تثبت الـ Consistency.",
   },
   {
     q: "الـ 80/20 Rule ده حقيقي؟",
-    a: "أيوه — مثبت علمياً في الـ Elite Athletes. معظم الناس بتتمرن كتير أوي في الـ Middle Zones (Zone 3) وده بيعمل Fatigue بدون Adaptation حقيقية.",
+    a: "أيوه، مثبت علمياً في الـ Elite Athletes. معظم الناس بتتمرن كتير أوي في الـ Middle Zones (Zone 3) وده بيعمل Fatigue بدون Adaptation حقيقية.",
   },
   {
     q: "كام أسبوع لحد ما أشوف نتيجة؟",
-    a: "الـ Aerobic Base بياخد 8-12 أسبوع تبدأ تحس بفرق حقيقي. الـ Consistency هي المفتاح — مش الـ Intensity.",
+    a: "الـ Aerobic Base بياخد 8-12 أسبوع تبدأ تحس بفرق حقيقي. الـ Consistency هي المفتاح، مش الـ Intensity.",
   },
   {
     q: "الـ Theragun يستحق فعلاً؟",
-    a: "لو بتتمرن 5+ أيام في الأسبوع — أيوه. لو أقل من كده، الـ Foam Roller كافي تماماً وأرخص بكتير.",
+    a: "لو بتتمرن 5 أيام أو أكتر في الأسبوع، أيوه. لو أقل من كده، الـ Foam Roller كافي تماماً وأرخص بكتير.",
   },
   {
     q: "Garmin ولا Coros للـ Beginner؟",
-    a: "Coros Pace 3 — أفضل قيمة بكتير للـ Beginner. Dual GPS وBattery أطول بسعر أقل. الـ Garmin لما تكون جاهز للـ Upgrade.",
+    a: "Coros Pace 3، أفضل قيمة بكتير للـ Beginner. Dual GPS وBattery أطول بسعر أقل. الـ Garmin لما تكون جاهز للـ Upgrade.",
   },
   {
     q: "فين أقدر أشتري الـ Gear ده في مصر؟",
-    a: "كل الـ Gear ده متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري — تواصل معانا وهنساعدك تبني الـ Setup المناسب لمستواك وميزانيتك.",
+    a: "كل الـ Gear ده متاح في Pulse Gear Egypt بأسعار مناسبة بالجنيه المصري، تواصل معانا وهنساعدك تبني الـ Setup المناسب لمستواك وميزانيتك.",
   },
 ];
 
@@ -388,14 +388,16 @@ export default function CompleteTrainingSetupPage() {
             Complete Guide 2026
           </span>
 
+          {/* ✅ Title split into two lines */}
           <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
             Complete Training Setup 🔧
             <br />
             <span className="text-red-500">من الصفر للـ Pro</span>
           </h1>
 
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            الدليل الشامل لبناء أفضل Setup تدريبي في 2026 — من اختيار
+          {/* ✅ dir="rtl" + no dashes */}
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
+            الدليل الشامل لبناء أفضل Setup تدريبي في 2026، من اختيار
             الـ Gear الصح للـ Training Plan للـ Recovery. كل حاجة محتاجها
             في مكان واحد. كل الـ Gear متاح في{" "}
             <span className="text-white font-bold">Pulse Gear Egypt</span>{" "}
@@ -415,9 +417,9 @@ export default function CompleteTrainingSetupPage() {
             <span className="text-2xl shrink-0">🇪🇬</span>
             <div className="flex flex-col gap-1">
               <p className="text-sm font-bold text-white">متاح في Pulse Gear Egypt</p>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
                 كل الـ Gear في المقال ده بتقدر تطلبه عن طريق Pulse Gear Egypt
-                بأسعار مناسبة بالجنيه المصري — بدون تعقيدات الاستيراد أو الوسطاء.
+                بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو الوسطاء.
               </p>
             </div>
           </div>
@@ -458,7 +460,7 @@ export default function CompleteTrainingSetupPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               الـ Setup Levels الأربعة 🎯
             </h2>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-500" dir="rtl">
               اختار الـ Level المناسب لمستواك وميزانيتك
             </p>
           </div>
@@ -477,12 +479,12 @@ export default function CompleteTrainingSetupPage() {
                       <p className={`font-black uppercase text-lg ${setup.titleColor}`}>
                         {setup.level}
                       </p>
-                      <p className="text-xs text-zinc-500">{setup.tagline}</p>
+                      <p className="text-xs text-zinc-500" dir="rtl">{setup.tagline}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-white">{setup.total}</p>
-                    <p className="text-xs text-zinc-500">إجمالي الـ Setup</p>
+                    <p className="text-xs text-zinc-500" dir="rtl">إجمالي الـ Setup</p>
                   </div>
                 </div>
 
@@ -501,13 +503,15 @@ export default function CompleteTrainingSetupPage() {
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-black text-red-400">{item.price}</p>
-                          <p className="text-xs text-zinc-600">عبر Pulse Gear Egypt</p>
+                          <p className="text-xs text-zinc-600" dir="rtl">عبر Pulse Gear Egypt</p>
                         </div>
                       </div>
                       <p className="text-xs text-zinc-500 uppercase tracking-wide">
                         {item.role}
                       </p>
-                      <p className="text-xs text-zinc-400 leading-relaxed">{item.why}</p>
+                      <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                        {item.why}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -521,7 +525,9 @@ export default function CompleteTrainingSetupPage() {
                     {setup.plan.map((point, i) => (
                       <div key={i} className="flex items-start gap-2">
                         <span className="text-red-400 text-xs shrink-0 mt-0.5">•</span>
-                        <p className="text-xs text-zinc-400 leading-relaxed">{point}</p>
+                        <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                          {point}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -537,8 +543,8 @@ export default function CompleteTrainingSetupPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               مبادئ التدريب الأساسية 📚
             </h2>
-            <p className="text-sm text-zinc-500">
-              الـ Principles دي أهم من أي Gear — افهمها كويس
+            <p className="text-sm text-zinc-500" dir="rtl">
+              الـ Principles دي أهم من أي Gear، افهمها كويس
             </p>
           </div>
 
@@ -554,10 +560,14 @@ export default function CompleteTrainingSetupPage() {
                     {principle.title}
                   </p>
                 </div>
-                <p className="text-sm text-zinc-300 leading-relaxed">{principle.body}</p>
+                <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">
+                  {principle.body}
+                </p>
                 <div className="bg-zinc-900/50 border border-zinc-700/50 rounded-xl p-4 flex items-start gap-3">
                   <span className="text-yellow-400 shrink-0">💡</span>
-                  <p className="text-xs text-zinc-400 leading-relaxed">{principle.tip}</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed" dir="rtl">
+                    {principle.tip}
+                  </p>
                 </div>
               </div>
             ))}
@@ -570,8 +580,8 @@ export default function CompleteTrainingSetupPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               الجداول الأسبوعية 📅
             </h2>
-            <p className="text-sm text-zinc-500">
-              جدول جاهز لكل مستوى — ابدأ بيه من بكرة
+            <p className="text-sm text-zinc-500" dir="rtl">
+              جدول جاهز لكل مستوى، ابدأ بيه من بكرة
             </p>
           </div>
 
@@ -584,7 +594,9 @@ export default function CompleteTrainingSetupPage() {
                 {/* Schedule Header */}
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-zinc-800">
                   <span className="text-xl">{schedule.icon}</span>
-                  <p className="font-black uppercase text-white">{schedule.level}</p>
+                  <p className="font-black uppercase text-white" dir="rtl">
+                    {schedule.level}
+                  </p>
                 </div>
 
                 {/* Days */}
@@ -595,10 +607,10 @@ export default function CompleteTrainingSetupPage() {
                       className="flex items-center gap-4 px-5 py-3 hover:bg-zinc-800/30 transition-colors"
                     >
                       <span className="text-lg shrink-0">{day.icon}</span>
-                      <p className="text-xs font-bold text-zinc-400 w-20 shrink-0">
+                      <p className="text-xs font-bold text-zinc-400 w-20 shrink-0" dir="rtl">
                         {day.day}
                       </p>
-                      <p className="text-xs text-zinc-300">{day.session}</p>
+                      <p className="text-xs text-zinc-300" dir="rtl">{day.session}</p>
                     </div>
                   ))}
                 </div>
@@ -613,8 +625,8 @@ export default function CompleteTrainingSetupPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               الـ Gear Checklist الكاملة ✅
             </h2>
-            <p className="text-sm text-zinc-500">
-              كل حاجة محتاجها — مرتبة حسب الأولوية
+            <p className="text-sm text-zinc-500" dir="rtl">
+              كل حاجة محتاجها، مرتبة حسب الأولوية
             </p>
           </div>
 
@@ -646,7 +658,7 @@ export default function CompleteTrainingSetupPage() {
                           )}
                         </div>
                         <div>
-                          <p className="text-sm text-white">{item.name}</p>
+                          <p className="text-sm text-white" dir="rtl">{item.name}</p>
                           {item.essential && (
                             <p className="text-xs text-red-400">أساسي</p>
                           )}
@@ -654,7 +666,7 @@ export default function CompleteTrainingSetupPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <p className="text-sm font-bold text-red-400">{item.price}</p>
-                        <p className="text-xs text-zinc-600">عبر Pulse Gear Egypt</p>
+                        <p className="text-xs text-zinc-600" dir="rtl">عبر Pulse Gear Egypt</p>
                       </div>
                     </div>
                   ))}
@@ -675,8 +687,8 @@ export default function CompleteTrainingSetupPage() {
                 key={i}
                 className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
               >
-                <p className="font-bold text-white text-sm">س: {faq.q}</p>
-                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3">
+                <p className="font-bold text-white text-sm" dir="rtl">س: {faq.q}</p>
+                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3" dir="rtl">
                   <span className="text-red-400 font-bold">ج: </span>
                   {faq.a}
                 </p>
@@ -694,9 +706,9 @@ export default function CompleteTrainingSetupPage() {
           <h3 className="text-xl font-black uppercase text-white">
             Pulse Gear Egypt — وصّلك الـ Gear الصح
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
             في Pulse Gear Egypt، بنوفرلك أفضل أجهزة التدريب العالمية
-            بأسعار مناسبة بالجنيه المصري — بدون تعقيدات الاستيراد أو
+            بأسعار مناسبة بالجنيه المصري، بدون تعقيدات الاستيراد أو
             الوسطاء. تواصل معانا وهنساعدك تبني الـ Complete Setup
             المناسب لمستواك وميزانيتك. 💪
           </p>

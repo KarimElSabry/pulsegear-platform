@@ -41,7 +41,7 @@ const zones = [
     barWidth: "40%",
     description:
       "الـ Zone الأهم في التدريب. بتبني الـ Aerobic Base وبتحسن كفاءة الجسم في حرق الدهون. ده سر الـ Elite Athletes اللي محدش بيحكيه.",
-    example: "جري هادي — تقدر تتكلم جمل قصيرة",
+    example: "جري هادي، تقدر تتكلم جمل قصيرة",
     benefit: "Endurance + Efficiency",
   },
   {
@@ -68,7 +68,7 @@ const zones = [
     bar: "bg-orange-500",
     barWidth: "80%",
     description:
-      "مجهود عالي. جسمك بيبدأ يراكم الـ Lactic Acid. بتحسن السرعة والـ Race Performance. صعب تتكلم — بتتكلم كلمتين بس.",
+      "مجهود عالي. جسمك بيبدأ يراكم الـ Lactic Acid. بتحسن السرعة والـ Race Performance. صعب تتكلم، بتتكلم كلمتين بس.",
     example: "Interval Training، Race Pace",
     benefit: "Speed + Performance",
   },
@@ -118,11 +118,11 @@ const trainingDays = [
 const mistakes = [
   {
     mistake: "التدريب في الـ Zone 3 طول الوقت",
-    fix: "الـ Zone 3 مش سهل ومش صعب — بيتعبك من غير ما يفيدك كتير. اتجنبه كـ Default.",
+    fix: "الـ Zone 3 مش سهل ومش صعب، بيتعبك من غير ما يفيدك كتير. اتجنبه كـ Default.",
   },
   {
     mistake: "ما بتدربش في الـ Zone 2 كفاية",
-    fix: "الـ Zone 2 بيبدو بطيء أوي، بس ده هو الأساس الحقيقي للـ Endurance.",
+    fix: "الـ Zone 2 بيبدو بطيء أوي بس ده هو الأساس الحقيقي للـ Endurance.",
   },
   {
     mistake: "كل يوم تدريب شديد",
@@ -192,9 +192,8 @@ export default function HeartRateZonesPage() {
             <span className="text-red-500">اتدرب بذكاء مش بتعب</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            معظم الناس بتتدرب غلط — بتتعب أوي في الأيام السهلة وبتفضل ضعيفة
+          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
+            معظم الناس بتتدرب غلط، بتتعب أوي في الأيام السهلة وبتفضل ضعيفة
             في الأيام الصعبة. الـ Heart Rate Zones هي الحل اللي هيغير
             طريقة تدريبك خالص. 🔄
           </p>
@@ -219,15 +218,15 @@ export default function HeartRateZonesPage() {
           <h2 className="text-2xl font-black uppercase text-white">
             إيه هي الـ Heart Rate Zones؟ 🤔
           </h2>
-          <p className="text-zinc-400 leading-relaxed">
+          <p className="text-zinc-400 leading-relaxed" dir="rtl">
             الـ Heart Rate Zones هي نطاقات شدة بناءً على الـ{" "}
             <span className="text-white font-bold">Maximum Heart Rate (Max HR)</span> بتاعك.
-            كل Zone بتحفز تكيفات فسيولوجية مختلفة في جسمك —
+            كل Zone بتحفز تكيفات فسيولوجية مختلفة في جسمك،
             يعني كل Zone بتخلي جسمك يتحسن في حاجة مختلفة.
           </p>
-          <p className="text-zinc-400 leading-relaxed">
-            التدريب من غير Zones زي إنك تقود عربية من غير عداد السرعة —
-            ممكن توصل، بس مش هتعرف إنت بتتحرك بكفاءة ولا لأ.
+          <p className="text-zinc-400 leading-relaxed" dir="rtl">
+            التدريب من غير Zones زي إنك تقود عربية من غير عداد السرعة،
+            ممكن توصل بس مش هتعرف إنت بتتحرك بكفاءة ولا لأ.
           </p>
 
           {/* Callout */}
@@ -235,10 +234,10 @@ export default function HeartRateZonesPage() {
             <span className="text-2xl shrink-0">💡</span>
             <div className="flex flex-col gap-1">
               <p className="font-black uppercase text-white text-sm">حقيقة مهمة</p>
-              <p className="text-zinc-400 text-sm leading-relaxed">
+              <p className="text-zinc-400 text-sm leading-relaxed" dir="rtl">
                 الـ Elite Athletes بيقضوا{" "}
                 <span className="text-white font-bold">80% من تدريبهم</span>{" "}
-                في الـ Zone 1 و Zone 2 فقط. مش كل يوم شدة عالية!
+                في الـ Zone 1 والـ Zone 2 فقط. مش كل يوم شدة عالية!
               </p>
             </div>
           </div>
@@ -258,8 +257,8 @@ export default function HeartRateZonesPage() {
             </p>
             <div className="border-t border-zinc-800 pt-4 w-full flex flex-col gap-1">
               <p className="text-xs text-zinc-500">مثال عملي</p>
-              <p className="text-lg font-bold text-zinc-300">
-                لو عندك 30 سنة → Max HR = 190 bpm
+              <p className="text-lg font-bold text-zinc-300" dir="rtl">
+                لو عندك 30 سنة، Max HR = 190 bpm
               </p>
             </div>
           </div>
@@ -271,15 +270,15 @@ export default function HeartRateZonesPage() {
                 key={ex.age}
                 className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-col items-center gap-1"
               >
-                <p className="text-xs text-zinc-500">عمر {ex.age}</p>
+                <p className="text-xs text-zinc-500" dir="rtl">عمر {ex.age}</p>
                 <p className="text-3xl font-black text-white">{ex.maxHR}</p>
                 <p className="text-xs text-zinc-600">bpm</p>
               </div>
             ))}
           </div>
 
-          <p className="text-xs text-zinc-600">
-            ⚠️ دي تقديرات. الـ Lab Stress Test بيدي أدق نتيجة، بس المعادلة دي كويسة لمعظم الناس.
+          <p className="text-xs text-zinc-600" dir="rtl">
+            ⚠️ دي تقديرات. الـ Lab Stress Test بيدي أدق نتيجة بس المعادلة دي كويسة لمعظم الناس.
           </p>
         </section>
 
@@ -300,6 +299,7 @@ export default function HeartRateZonesPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{z.emoji}</span>
                     <div>
+                      {/* ✅ Zone name kept English-only — no dir issue */}
                       <p className="font-black uppercase text-white">
                         {z.zone} — {z.name}
                       </p>
@@ -311,10 +311,12 @@ export default function HeartRateZonesPage() {
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-zinc-400 leading-relaxed">{z.description}</p>
+                <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
+                  {z.description}
+                </p>
 
                 {/* Details */}
-                <div className="flex flex-wrap gap-4 text-xs text-zinc-500">
+                <div className="flex flex-wrap gap-4 text-xs text-zinc-500" dir="rtl">
                   <span>📍 <span className="text-zinc-400">{z.example}</span></span>
                   <span>✅ <span className="text-zinc-400">{z.benefit}</span></span>
                 </div>
@@ -333,8 +335,12 @@ export default function HeartRateZonesPage() {
 
         {/* ===== 80/20 RULE ===== */}
         <section className="flex flex-col gap-6">
+
+          {/* ✅ THE FIX: Split Arabic and English into separate lines */}
           <h2 className="text-2xl font-black uppercase text-white">
-            قاعدة الـ 80/20: سر الـ Elite Athletes 🏆
+            قاعدة الـ 80/20 🏆
+            <br />
+            <span className="text-red-500" dir="auto">سر الـ Elite Athletes</span>
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -346,7 +352,7 @@ export default function HeartRateZonesPage() {
                 <p className={`text-4xl font-black ${day.textColor}`}>{day.percentage}</p>
                 <p className="font-black uppercase text-white text-sm">{day.label}</p>
                 <p className={`text-xs font-bold ${day.textColor}`}>{day.zones}</p>
-                <p className="text-xs text-zinc-500 leading-relaxed">{day.tip}</p>
+                <p className="text-xs text-zinc-500 leading-relaxed" dir="rtl">{day.tip}</p>
               </div>
             ))}
           </div>
@@ -365,8 +371,8 @@ export default function HeartRateZonesPage() {
               >
                 <span className="text-xl shrink-0">❌</span>
                 <div className="flex flex-col gap-1">
-                  <p className="font-bold text-white text-sm">{item.mistake}</p>
-                  <p className="text-sm text-zinc-400 leading-relaxed">💡 {item.fix}</p>
+                  <p className="font-bold text-white text-sm" dir="rtl">{item.mistake}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">💡 {item.fix}</p>
                 </div>
               </div>
             ))}
@@ -376,11 +382,11 @@ export default function HeartRateZonesPage() {
         {/* ===== CTA ===== */}
         <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-4 items-center text-center">
           <span className="text-4xl">⌚</span>
-          <h3 className="text-xl font-black uppercase text-white">
+          <h3 className="text-xl font-black uppercase text-white" dir="auto">
             جاهز تتدرب بالـ Heart Rate Zones؟
           </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-            محتاج Heart Rate Monitor دقيق عشان تتدرب في الـ Zone الصح.
+          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
+            محتاج Heart Rate Strap دقيق عشان تتدرب في الـ Zone الصح.
             شوف مجموعتنا من الـ Chest Straps والـ GPS Watches.
           </p>
           <Link
@@ -405,10 +411,10 @@ export default function HeartRateZonesPage() {
                 <span className="text-xs font-bold uppercase tracking-wide text-red-500">
                   {post.tag}
                 </span>
-                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200">
+                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200" dir="rtl">
                   {post.title}
                 </h3>
-                <span className="text-xs text-red-500 font-semibold">اقرأ المقال →</span>
+                <span className="text-xs text-red-500 font-semibold" dir="auto">اقرأ المقال →</span>
               </Link>
             ))}
           </div>
