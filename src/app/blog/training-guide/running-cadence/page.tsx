@@ -624,13 +624,13 @@ export default function RunningCadencePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               {
-                href: "/blog/heart-rate-zones",
+                href: "/blog/training-guide/heart-rate-zones",
                 icon: "📊",
                 tag: "Training Guide",
                 title: "Heart Rate Zones: اتدرب بذكاء مش بتعب",
               },
               {
-                href: "/blog/zone-2-training",
+                href: "/blog/training-guide/zone-2-training",
                 icon: "🫀",
                 tag: "Training Guide",
                 title: "Zone 2 Training: سر الـ Elite Athletes",

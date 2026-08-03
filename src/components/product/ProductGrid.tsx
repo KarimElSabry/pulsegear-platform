@@ -12,7 +12,7 @@ type Props = {
   filterCondition?: string
   filterAvailability?: string
   filterCategory?: string
-  randomize?: boolean // ✅ NEW
+  randomize?: boolean
 }
 
 export default function ProductGrid({
@@ -21,7 +21,7 @@ export default function ProductGrid({
   filterCondition,
   filterAvailability,
   filterCategory,
-  randomize, // ✅ NEW
+  randomize,
 }: Props) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,16 +80,33 @@ export default function ProductGrid({
     displayed = displayed.filter((p) => p.condition === filterCondition)
   }
 
-  // ✅ Category Filter
   if (filterCategory && filterCategory !== 'All') {
     displayed = displayed.filter(
       (p) => p.category?.toLowerCase().replace(/ /g, '_') === filterCategory.toLowerCase().replace(/ /g, '_')
     )
   }
 
-  // ✅ NEW — Randomize before slicing
+  // ─── Sort: available/reserved first, sold last ────────
+  const statusOrder: Record<string, number> = {
+    available: 0,
+    reserved: 1,
+    sold: 2,
+  }
+
+  displayed = displayed.sort(
+    (a, b) =>
+      (statusOrder[a.status ?? ''] ?? 0) - (statusOrder[b.status ?? ''] ?? 0)
+  )
+
+  // ─── Randomize (within same status group) ────────────
   if (randomize) {
-    displayed = displayed.sort(() => Math.random() - 0.5)
+    const groups = [
+      displayed.filter((p) => p.status === 'available'),
+      displayed.filter((p) => p.status === 'reserved'),
+      displayed.filter((p) => p.status === 'sold'),
+    ].map((group) => group.sort(() => Math.random() - 0.5))
+
+    displayed = groups.flat()
   }
 
   if (limit) {

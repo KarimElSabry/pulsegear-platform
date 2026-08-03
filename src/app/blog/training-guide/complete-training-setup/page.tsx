@@ -735,7 +735,7 @@ export default function CompleteTrainingSetupPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { href: "/blog/best-heart-rate-monitors", icon: "🫀", tag: "Gear Guide", title: "Best Heart Rate Monitors 2026" },
+              { href: "/blog/gear-guide/best-heart-rate-monitors", icon: "🫀", tag: "Gear Guide", title: "Best Heart Rate Monitors 2026" },
               { href: "/blog/gear-guide/beginners-guide", icon: "🌱", tag: "Beginner", title: "Beginner's Gear Guide" },
               { href: "/blog/gear-guide/budget-vs-premium", icon: "💰", tag: "Comparison", title: "Budget vs Premium Gear" },
             ].map((article) => (
