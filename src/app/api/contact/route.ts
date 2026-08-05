@@ -1,3 +1,5 @@
+// src/app/api/contact/route.ts
+
 import { NextResponse } from "next/server";
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_m5sS_5s9Us1vNA1MMeSobyMwg2NnJEJNcUCGa6Vlc-zOtdWeFXGCaCw1GgBDpEhDpg/exec";

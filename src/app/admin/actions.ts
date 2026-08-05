@@ -4,9 +4,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { ProductService } from '@/services/productService'
-import type { ProductCondition } from '@/types/product'
+import { createClient } from '@supabase/supabase-js'
+import type { ProductCondition, ProductStatus } from '@/types/product'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 interface SyncResult {
   checked: number
@@ -22,21 +26,16 @@ interface SyncResult {
   }>
 }
 
-// ─── Delete Product ───────────────────────────────────────────────────────────
-
 export async function deleteProduct(id: number): Promise<void> {
   await ProductService.deleteProduct(id)
   revalidatePath('/admin/products')
 }
 
-// ─── Update Product Status ────────────────────────────────────────────────────
-
 export async function updateProductStatus(
   id: number,
-  status: 'available' | 'sold' | 'reserved' | 'out_of_stock'
+  status: ProductStatus
 ): Promise<void> {
   await ProductService.updateStatus(id, status)
-
   revalidatePath('/admin/products')
   revalidatePath('/products')
   revalidatePath('/sold')
@@ -44,20 +43,13 @@ export async function updateProductStatus(
   revalidatePath('/', 'layout')
 }
 
-// ─── Trigger Vinted Sync ──────────────────────────────────────────────────────
-
 export async function triggerVintedSync(): Promise<SyncResult> {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
-
-  if (!appUrl) {
-    throw new Error('NEXT_PUBLIC_APP_URL is not defined in environment variables')
-  }
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not defined')
 
   const res = await fetch(`${appUrl}/api/check-vinted-status`, {
     method: 'GET',
-    headers: {
-      Authorization: `Bearer ${process.env.CRON_SECRET}`,
-    },
+    headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
     cache: 'no-store',
   })
 
@@ -67,19 +59,13 @@ export async function triggerVintedSync(): Promise<SyncResult> {
   }
 
   revalidatePath('/admin/products')
-
   return res.json()
 }
-
-// ─── Add Product ──────────────────────────────────────────────────────────────
 
 export async function addProduct(formData: FormData): Promise<void> {
   const imagesRaw = formData.get('images') as string
   const imageUrls = imagesRaw
-    ? imagesRaw
-        .split('\n')
-        .map((url) => url.trim())
-        .filter(Boolean)
+    ? imagesRaw.split('\n').map((url) => url.trim()).filter(Boolean)
     : []
 
   const sourceUrl = (formData.get('source_url') as string) || undefined
@@ -98,9 +84,7 @@ export async function addProduct(formData: FormData): Promise<void> {
     : undefined
 
   const isReservable = formData.get('is_reservable') === 'true'
-
-  // ✅ NEW — بناخد الـ vinted_id من الـ form
-  const vintedId = (formData.get('vinted_id') as string) || undefined
+  const vintedId     = (formData.get('vinted_id') as string) || undefined
 
   await ProductService.createProduct(
     {
@@ -118,11 +102,44 @@ export async function addProduct(formData: FormData): Promise<void> {
       source_url:     sourceUrl,
       status:         'available',
       is_reservable:  isReservable,
-      vinted_id:      vintedId, // ✅ NEW
+      vinted_id:      vintedId,
     },
     imageUrls
   )
 
   revalidatePath('/admin')
   revalidatePath('/admin/products')
+}
+
+// ─── ✅ Add Sale ──────────────────────────────────────────────────────────────
+
+export async function addSale(formData: FormData): Promise<void> {
+  const originalEur    = parseFloat(formData.get('original_eur')     as string)
+  const shippingEur    = parseFloat(formData.get('shipping_eur')      as string) || 0
+  const exchangeRate   = parseFloat(formData.get('exchange_rate')     as string)
+  const sellingPrice   = parseFloat(formData.get('selling_price_egp') as string)
+
+  const costEgp         = (originalEur + shippingEur) * exchangeRate
+  const profitEgp       = sellingPrice - costEgp
+  const profitMarginPct = costEgp > 0 ? (profitEgp / costEgp) * 100 : 0
+
+  const { error } = await supabase.from('sales').insert({
+    product_name:      formData.get('product_name'),
+    original_eur:      originalEur,
+    shipping_eur:      shippingEur,
+    exchange_rate:     exchangeRate,
+    cost_egp:          Math.round(costEgp         * 100) / 100,
+    selling_price_egp: sellingPrice,
+    profit_egp:        Math.round(profitEgp       * 100) / 100,
+    profit_margin_pct: Math.round(profitMarginPct * 100) / 100,
+    sale_channel:      formData.get('sale_channel'),
+    sale_date:         formData.get('sale_date'),
+    notes:             formData.get('notes') || null,
+  })
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/analytics')
+  revalidatePath('/admin/sales')
 }

@@ -1,3 +1,5 @@
+// src/app/api/products/[id]/reserve/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { ReservationService } from '@/services/reservationService'
 import { createClient } from '@supabase/supabase-js'

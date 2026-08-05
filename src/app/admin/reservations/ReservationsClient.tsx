@@ -13,7 +13,7 @@ export default function ReservationsClient({
   const [reservations, setReservations] = useState(initial)
 
   const updateStatus = async (id: number, status: 'confirmed' | 'cancelled') => {
-    await fetch(`/api//products/reservations/${id}/status`, {
+    await fetch(`/api/reservations/${id}/status`, { // ✅ Fixed: removed double slash + correct path
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
@@ -34,7 +34,6 @@ export default function ReservationsClient({
             key={r.id}
             className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-3"
           >
-            {/* Header — Name + Status */}
             <div className="flex items-center justify-between">
               <h2 className="text-white font-bold text-lg">{r.name}</h2>
               <span
@@ -50,13 +49,9 @@ export default function ReservationsClient({
               </span>
             </div>
 
-            {/* Phone */}
             <p className="text-zinc-400 text-sm">📱 {r.phone}</p>
-
-            {/* Note */}
             {r.note && <p className="text-zinc-500 text-sm">📝 {r.note}</p>}
 
-            {/* Product */}
             <p className="text-zinc-500 text-sm">
               🛍️ Product:{' '}
               <span className="text-white font-semibold">
@@ -64,7 +59,6 @@ export default function ReservationsClient({
               </span>
             </p>
 
-            {/* ✅ Discount Code & Price — لو موجودين */}
             {r.discount_code && (
               <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-2">
                 <span className="text-green-400 text-sm">🏷️</span>
@@ -82,7 +76,6 @@ export default function ReservationsClient({
               </div>
             )}
 
-            {/* ✅ Confirm / Cancel Buttons */}
             {r.status === 'pending' && (
               <div className="flex gap-3 mt-2">
                 <button
