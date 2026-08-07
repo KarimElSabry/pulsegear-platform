@@ -4,7 +4,7 @@
 import { formatEGP } from '@/lib/format'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition, useEffect } from 'react'
-import { addSale } from '../actions'
+import { addSale, updateSale } from '../sales/actions'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
@@ -70,7 +70,30 @@ interface AnalyticsData {
     sale_channel:      string
     sale_date:         string
     cost_egp:          number
+    commission_egp:    number   // ✅ added
+    original_eur:      number   // ✅ added
+    shipping_eur:      number   // ✅ added
+    exchange_rate:     number   // ✅ added
+    notes?:            string   // ✅ added
   }[]
+}
+
+// ─── EditSale Type ────────────────────────────────────────────────────────────
+
+interface EditSale {
+  id:                string
+  product_name:      string
+  selling_price_egp: number
+  profit_egp:        number
+  profit_margin_pct: number
+  sale_channel:      string
+  sale_date:         string
+  cost_egp:          number
+  commission_egp:    number
+  original_eur:      number
+  shipping_eur:      number
+  exchange_rate:     number
+  notes?:            string
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -89,7 +112,15 @@ const DEFAULT_SHIPPING_EUR = 10
 
 // ─── Manual Sale Form ─────────────────────────────────────────────────────────
 
-function ManualSaleForm() {
+function ManualSaleForm({
+  editSale,
+  onClose,
+}: {
+  editSale?: EditSale
+  onClose?:  () => void
+}) {
+  const isEditing = !!editSale
+
   const router                       = useRouter()
   const formRef                      = useRef<HTMLFormElement>(null)
   const [isPending, startTransition] = useTransition()
@@ -99,13 +130,25 @@ function ManualSaleForm() {
   const [eurRate,     setEurRate]     = useState<number | null>(null)
   const [rateLoading, setRateLoading] = useState(false)
   const [rateError,   setRateError]   = useState(false)
-  const [manualRate,  setManualRate]  = useState<string>('')
 
-  // ── Calculator Inputs ───────────────────────────────────────────
-  const [originalEur,   setOriginalEur]   = useState('')
-  const [shippingEur,   setShippingEur]   = useState(String(DEFAULT_SHIPPING_EUR))
-  const [sellingEgp,    setSellingEgp]    = useState('')
-  const [commissionPct, setCommissionPct] = useState('0')
+  // ── Pre-fill rate if editing ─────────────────────────────────────
+  const [manualRate, setManualRate] = useState<string>(
+    editSale ? String(editSale.exchange_rate) : ''
+  )
+
+  // ── Calculator Inputs — pre-fill if editing ──────────────────────
+  const [originalEur,   setOriginalEur]   = useState(editSale ? String(editSale.original_eur)      : '')
+  const [shippingEur,   setShippingEur]   = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
+  const [sellingEgp,    setSellingEgp]    = useState(editSale ? String(editSale.selling_price_egp) : '')
+
+  // ── Commission % — back-calculate from EGP amount ───────────────
+  const [commissionPct, setCommissionPct] = useState(() => {
+    if (!editSale) return '0'
+    if (editSale.selling_price_egp > 0 && editSale.commission_egp > 0) {
+      return ((editSale.commission_egp / editSale.selling_price_egp) * 100).toFixed(1)
+    }
+    return '0'
+  })
 
   // ── Derived ─────────────────────────────────────────────────────
   const effectiveRate = manualRate ? parseFloat(manualRate) : eurRate ?? null
@@ -130,7 +173,7 @@ function ManualSaleForm() {
       ? (profitEgp / parseFloat(sellingEgp)) * 100
       : null
 
-  // ── Fetch Live Rate ─────────────────────────────────────────────
+  // ── Fetch Live Rate — skip if editing (rate already pre-filled) ──
   async function fetchRate() {
     setRateLoading(true)
     setRateError(false)
@@ -173,7 +216,10 @@ function ManualSaleForm() {
     setRateLoading(false)
   }
 
-  useEffect(() => { fetchRate() }, [])
+  // ── Only auto-fetch rate when adding new sale ────────────────────
+  useEffect(() => {
+    if (!isEditing) fetchRate()
+  }, [isEditing])
 
   // ── Submit ──────────────────────────────────────────────────────
   async function handleSubmit(formData: FormData) {
@@ -184,27 +230,50 @@ function ManualSaleForm() {
     formData.set('commission_egp', String(Math.round(commissionAmt)))
 
     startTransition(async () => {
-      await addSale(formData)
-      formRef.current?.reset()
-      setOriginalEur('')
-      setShippingEur(String(DEFAULT_SHIPPING_EUR))
-      setSellingEgp('')
-      setCommissionPct('0')
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      if (isEditing && editSale) {
+        // ── UPDATE existing sale ──
+        await updateSale(editSale.id, formData)
+        onClose?.()
+      } else {
+        // ── INSERT new sale ──
+        await addSale(formData)
+        formRef.current?.reset()
+        setOriginalEur('')
+        setShippingEur(String(DEFAULT_SHIPPING_EUR))
+        setSellingEgp('')
+        setCommissionPct('0')
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      }
       router.refresh()
     })
   }
 
   return (
-    <section className="bg-zinc-900 border border-green-800 rounded-2xl p-6">
+    <section className={`bg-zinc-900 rounded-2xl p-6 border ${isEditing ? 'border-purple-700' : 'border-green-800'}`}>
 
       {/* Header */}
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-white">💰 Record Manual Sale</h2>
-        <p className="text-zinc-400 text-sm mt-1">
-          Log a sale — the calculator auto-computes cost, commission & profit
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            {isEditing ? '✏️ Edit Sale' : '💰 Record Manual Sale'}
+          </h2>
+          <p className="text-zinc-400 text-sm mt-1">
+            {isEditing
+              ? 'Modify the sale details — profit recalculates live'
+              : 'Log a sale — the calculator auto-computes cost, commission & profit'}
+          </p>
+        </div>
+        {/* ✕ Close button — only in edit mode */}
+        {isEditing && onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-zinc-400 hover:text-white text-2xl leading-none transition"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Success Banner */}
@@ -225,6 +294,7 @@ function ManualSaleForm() {
             name="product_name"
             required
             disabled={isPending}
+            defaultValue={editSale?.product_name ?? ''}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
             placeholder="e.g. Garmin Forerunner 965"
           />
@@ -267,11 +337,11 @@ function ManualSaleForm() {
             </div>
           </div>
 
-          {/* Manual Rate Override — shows when API fails */}
-          {(rateError || !eurRate) && (
+          {/* Manual Rate Override */}
+          {(rateError || !eurRate || isEditing) && (
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-yellow-400 uppercase tracking-widest">
-                ⚠️ API unavailable — Enter rate manually
+                {isEditing ? '💱 Exchange Rate Used' : '⚠️ API unavailable — Enter rate manually'}
               </label>
               <div className="flex items-center gap-2">
                 <input
@@ -284,17 +354,19 @@ function ManualSaleForm() {
                 />
                 <span className="text-gray-400 text-sm whitespace-nowrap">EGP / EUR</span>
               </div>
-              <p className="text-xs text-gray-500">
-                Check on{' '}
-                <a
-                  href="https://www.google.com/search?q=EUR+to+EGP"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-purple-400 underline"
-                >
-                  Google
-                </a>
-              </p>
+              {!isEditing && (
+                <p className="text-xs text-gray-500">
+                  Check on{' '}
+                  <a
+                    href="https://www.google.com/search?q=EUR+to+EGP"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-400 underline"
+                  >
+                    Google
+                  </a>
+                </p>
+              )}
             </div>
           )}
 
@@ -365,7 +437,7 @@ function ManualSaleForm() {
             />
           </div>
 
-          {/* Step 4 — Commission — editable number, NO slider */}
+          {/* Step 4 — Commission */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 4 — Collaborator Commission (%)
@@ -394,7 +466,6 @@ function ManualSaleForm() {
           {/* ── Live Breakdown ─────────────────────────────────────── */}
           {costEgp !== null && sellingEgp && (
             <div className="bg-gray-800 rounded-xl px-5 py-4 space-y-2 text-sm border border-zinc-700">
-
               <div className="flex justify-between text-gray-400">
                 <span>🛒 Product price</span>
                 <span>{parseFloat(originalEur).toFixed(2)} EUR</span>
@@ -415,15 +486,12 @@ function ManualSaleForm() {
                   {parseFloat(sellingEgp).toLocaleString()} EGP
                 </span>
               </div>
-
               {commissionAmt > 0 && (
                 <div className="flex justify-between text-pink-400">
                   <span>🤝 Commission ({commissionPct}%)</span>
                   <span>− {Math.round(commissionAmt).toLocaleString()} EGP</span>
                 </div>
               )}
-
-              {/* ── FINAL PROFIT ── */}
               <div className={`
                 flex justify-between items-center font-black text-lg
                 border-t-2 pt-3 mt-1
@@ -440,8 +508,6 @@ function ManualSaleForm() {
                     : '—'}
                 </span>
               </div>
-
-              {/* Margin badge */}
               {profitMarginPct !== null && (
                 <div className="flex justify-end pt-1">
                   <span className={`
@@ -460,7 +526,7 @@ function ManualSaleForm() {
           )}
         </div>
 
-        {/* Hidden fields — carry calculated values to server action */}
+        {/* Hidden fields */}
         <input type="hidden" name="selling_price_egp" value={sellingEgp || '0'} />
         <input type="hidden" name="exchange_rate"     value={effectiveRate ?? ''} />
         <input type="hidden" name="cost_egp"          value={costEgp !== null ? Math.round(costEgp) : ''} />
@@ -480,6 +546,7 @@ function ManualSaleForm() {
               name="sale_channel"
               required
               disabled={isPending}
+              defaultValue={editSale?.sale_channel ?? 'whatsapp'}
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
             >
               <option value="whatsapp">📱 WhatsApp</option>
@@ -498,7 +565,11 @@ function ManualSaleForm() {
               type="date"
               required
               disabled={isPending}
-              defaultValue={new Date().toISOString().split('T')[0]}
+              defaultValue={
+                editSale
+                  ? editSale.sale_date.split('T')[0]
+                  : new Date().toISOString().split('T')[0]
+              }
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
             />
           </div>
@@ -511,6 +582,7 @@ function ManualSaleForm() {
             name="notes"
             rows={2}
             disabled={isPending}
+            defaultValue={editSale?.notes ?? ''}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none disabled:opacity-50"
             placeholder="Optional notes about this sale..."
           />
@@ -519,9 +591,17 @@ function ManualSaleForm() {
         <button
           type="submit"
           disabled={isPending || !sellingEgp || !originalEur || !effectiveRate}
-          className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition text-lg"
+          className={`w-full disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition text-lg ${
+            isEditing
+              ? 'bg-purple-600 hover:bg-purple-700'
+              : 'bg-green-600 hover:bg-green-700'
+          }`}
         >
-          {isPending ? '⏳ Recording...' : '💾 Record Sale → Analytics'}
+          {isPending
+            ? '⏳ Saving...'
+            : isEditing
+            ? '💾 Save Changes'
+            : '💾 Record Sale → Analytics'}
         </button>
 
       </form>
@@ -532,6 +612,10 @@ function ManualSaleForm() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
+
+  // ── Edit Sale State ──────────────────────────────────────────────
+  const [editingSale, setEditingSale] = useState<EditSale | null>(null)
+
   const statusData = [
     { name: 'Available',    value: data.availableProducts,  color: '#22c55e' },
     { name: 'Sold',         value: data.soldProducts,       color: '#a855f7' },
@@ -586,17 +670,16 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       <section>
         <h2 className="text-white text-xl font-bold mb-4">🛍️ Sales Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard title="Total Sales"   value={data.totalSalesCount}                    icon="🛍️" color="purple" />
+          <StatCard title="Total Sales"   value={data.totalSalesCount}                         icon="🛍️" color="purple" />
           <StatCard title="Sales Revenue" value={formatEGP(data.totalSalesRevenue)} subtitle="Total selling price"   icon="💵" color="green"  />
           <StatCard title="Total Profit"  value={formatEGP(data.totalSalesProfit)}  subtitle="Revenue minus cost"    icon="📈" color="blue"   />
           <StatCard title="Total Cost"    value={formatEGP(data.totalSalesCost)}    subtitle="Purchase + shipping"   icon="🧾" color="yellow" />
-          <StatCard title="Avg Margin"    value={`${data.avgProfitMargin.toFixed(1)}%`}   subtitle="Average profit margin" icon="📊" color="pink"   />
+          <StatCard title="Avg Margin"    value={`${data.avgProfitMargin.toFixed(1)}%`}        subtitle="Average profit margin" icon="📊" color="pink"   />
         </div>
       </section>
 
       {/* ── Charts Row 1 ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
           <h3 className="text-white font-bold mb-4">🥧 Products by Status</h3>
           {statusData.length > 0 ? (
@@ -691,7 +774,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
       {/* ── Charts Row 2 ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {data.byCategory.length > 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
             <h3 className="text-white font-bold mb-4">🏷️ Products by Category</h3>
@@ -749,7 +831,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 <Tooltip contentStyle={TOOLTIP_STYLE} />
               </PieChart>
             </ResponsiveContainer>
-
             <div className="overflow-x-auto self-center">
               <table className="w-full text-sm">
                 <thead>
@@ -823,7 +904,8 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-right py-3 pr-4">Cost</th>
                   <th className="text-right py-3 pr-4">Revenue</th>
                   <th className="text-right py-3 pr-4">Profit</th>
-                  <th className="text-right py-3">Margin</th>
+                  <th className="text-right py-3 pr-4">Margin</th>
+                  <th className="text-right py-3">Edit</th>
                 </tr>
               </thead>
               <tbody>
@@ -839,7 +921,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                     <td className="py-3 pr-4 text-right text-zinc-400">{formatEGP(s.cost_egp)}</td>
                     <td className="py-3 pr-4 text-right text-green-400 font-bold">{formatEGP(s.selling_price_egp)}</td>
                     <td className="py-3 pr-4 text-right text-blue-400 font-bold">{formatEGP(s.profit_egp)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 pr-4 text-right">
                       <span className={`text-xs font-bold px-2 py-1 rounded-full ${
                         s.profit_margin_pct >= 20 ? 'bg-green-500/20 text-green-400'
                         : s.profit_margin_pct >= 10 ? 'bg-yellow-500/20 text-yellow-400'
@@ -847,6 +929,16 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                       }`}>
                         {s.profit_margin_pct.toFixed(1)}%
                       </span>
+                    </td>
+                    {/* ✏️ Edit button */}
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => setEditingSale(s)}
+                        className="text-zinc-500 hover:text-purple-400 transition text-base"
+                        title="Edit sale"
+                      >
+                        ✏️
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -912,10 +1004,23 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════ */}
-      {/* ── ✅ Manual Sale Form — at the bottom, auto-refreshes above ── */}
-      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ── Add New Sale Form ────────────────────────────────────────── */}
       <ManualSaleForm />
+
+      {/* ── Edit Sale Modal ──────────────────────────────────────────── */}
+      {editingSale && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setEditingSale(null) }}
+        >
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl">
+            <ManualSaleForm
+              editSale={editingSale}
+              onClose={() => setEditingSale(null)}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   )

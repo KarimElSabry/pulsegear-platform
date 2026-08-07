@@ -250,6 +250,11 @@ async function getAnalyticsData() {
     sale_channel:      s.sale_channel      ?? 'other',
     sale_date:         s.sale_date         ?? '',
     cost_egp:          Number(s.cost_egp)          || 0,
+    commission_egp:    Number(s.commission_egp)    || 0,  
+    original_eur:      Number(s.original_eur)      || 0,  
+    shipping_eur:      Number(s.shipping_eur)      || 0,  
+    exchange_rate:     Number(s.exchange_rate)     || 0,  
+    notes:             s.notes ?? undefined,              
   }))
 
   return {
