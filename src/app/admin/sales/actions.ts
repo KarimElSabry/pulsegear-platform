@@ -84,6 +84,7 @@ export async function deleteSale(id: string) {
   const { error } = await supabase.from('sales').delete().eq('id', id)
   if (error) throw new Error(error.message)
   revalidatePath('/admin/sales')
+  revalidatePath('/admin/analytics')
 }
 
 // ─── Get All Sales ────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@
 import { formatEGP } from '@/lib/format'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition, useEffect } from 'react'
-import { addSale, updateSale } from '../sales/actions'
+import { addSale, updateSale, deleteSale } from '../sales/actions'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
@@ -70,11 +70,11 @@ interface AnalyticsData {
     sale_channel:      string
     sale_date:         string
     cost_egp:          number
-    commission_egp:    number   // ✅ added
-    original_eur:      number   // ✅ added
-    shipping_eur:      number   // ✅ added
-    exchange_rate:     number   // ✅ added
-    notes?:            string   // ✅ added
+    commission_egp:    number
+    original_eur:      number
+    shipping_eur:      number
+    exchange_rate:     number
+    notes?:            string
   }[]
 }
 
@@ -137,9 +137,9 @@ function ManualSaleForm({
   )
 
   // ── Calculator Inputs — pre-fill if editing ──────────────────────
-  const [originalEur,   setOriginalEur]   = useState(editSale ? String(editSale.original_eur)      : '')
-  const [shippingEur,   setShippingEur]   = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
-  const [sellingEgp,    setSellingEgp]    = useState(editSale ? String(editSale.selling_price_egp) : '')
+  const [originalEur, setOriginalEur] = useState(editSale ? String(editSale.original_eur)      : '')
+  const [shippingEur, setShippingEur] = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
+  const [sellingEgp,  setSellingEgp]  = useState(editSale ? String(editSale.selling_price_egp) : '')
 
   // ── Commission % — back-calculate from EGP amount ───────────────
   const [commissionPct, setCommissionPct] = useState(() => {
@@ -173,7 +173,7 @@ function ManualSaleForm({
       ? (profitEgp / parseFloat(sellingEgp)) * 100
       : null
 
-  // ── Fetch Live Rate — skip if editing (rate already pre-filled) ──
+  // ── Fetch Live Rate ──────────────────────────────────────────────
   async function fetchRate() {
     setRateLoading(true)
     setRateError(false)
@@ -231,11 +231,9 @@ function ManualSaleForm({
 
     startTransition(async () => {
       if (isEditing && editSale) {
-        // ── UPDATE existing sale ──
         await updateSale(editSale.id, formData)
         onClose?.()
       } else {
-        // ── INSERT new sale ──
         await addSale(formData)
         formRef.current?.reset()
         setOriginalEur('')
@@ -264,7 +262,6 @@ function ManualSaleForm({
               : 'Log a sale — the calculator auto-computes cost, commission & profit'}
           </p>
         </div>
-        {/* ✕ Close button — only in edit mode */}
         {isEditing && onClose && (
           <button
             type="button"
@@ -300,9 +297,7 @@ function ManualSaleForm({
           />
         </div>
 
-        {/* ══════════════════════════════════════════════════════════ */}
-        {/* ── Live EUR → EGP Calculator ──────────────────────────── */}
-        {/* ══════════════════════════════════════════════════════════ */}
+        {/* ── Live EUR → EGP Calculator ─────────────────────────────── */}
         <div className="bg-gray-900 border border-purple-800 rounded-2xl p-5 space-y-5">
 
           {/* Rate Badge + Refresh */}
@@ -463,7 +458,7 @@ function ManualSaleForm({
             </div>
           </div>
 
-          {/* ── Live Breakdown ─────────────────────────────────────── */}
+          {/* ── Live Breakdown ───────────────────────────────────────── */}
           {costEgp !== null && sellingEgp && (
             <div className="bg-gray-800 rounded-xl px-5 py-4 space-y-2 text-sm border border-zinc-700">
               <div className="flex justify-between text-gray-400">
@@ -613,8 +608,17 @@ function ManualSaleForm({
 
 export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
+  const router = useRouter()
+
   // ── Edit Sale State ──────────────────────────────────────────────
   const [editingSale, setEditingSale] = useState<EditSale | null>(null)
+
+  // ── Delete Sale Handler ──────────────────────────────────────────
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`🗑️ Delete "${name}"?\n\nThis cannot be undone.`)) return
+    await deleteSale(id)
+    router.refresh()
+  }
 
   const statusData = [
     { name: 'Available',    value: data.availableProducts,  color: '#22c55e' },
@@ -670,11 +674,11 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       <section>
         <h2 className="text-white text-xl font-bold mb-4">🛍️ Sales Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard title="Total Sales"   value={data.totalSalesCount}                         icon="🛍️" color="purple" />
+          <StatCard title="Total Sales"   value={data.totalSalesCount}                          icon="🛍️" color="purple" />
           <StatCard title="Sales Revenue" value={formatEGP(data.totalSalesRevenue)} subtitle="Total selling price"   icon="💵" color="green"  />
           <StatCard title="Total Profit"  value={formatEGP(data.totalSalesProfit)}  subtitle="Revenue minus cost"    icon="📈" color="blue"   />
           <StatCard title="Total Cost"    value={formatEGP(data.totalSalesCost)}    subtitle="Purchase + shipping"   icon="🧾" color="yellow" />
-          <StatCard title="Avg Margin"    value={`${data.avgProfitMargin.toFixed(1)}%`}        subtitle="Average profit margin" icon="📊" color="pink"   />
+          <StatCard title="Avg Margin"    value={`${data.avgProfitMargin.toFixed(1)}%`}         subtitle="Average profit margin" icon="📊" color="pink"   />
         </div>
       </section>
 
@@ -905,7 +909,8 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-right py-3 pr-4">Revenue</th>
                   <th className="text-right py-3 pr-4">Profit</th>
                   <th className="text-right py-3 pr-4">Margin</th>
-                  <th className="text-right py-3">Edit</th>
+                  <th className="text-right py-3 pr-4">Edit</th>
+                  <th className="text-right py-3">Delete</th>  {/* ✅ NEW */}
                 </tr>
               </thead>
               <tbody>
@@ -930,8 +935,9 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         {s.profit_margin_pct.toFixed(1)}%
                       </span>
                     </td>
-                    {/* ✏️ Edit button */}
-                    <td className="py-3 text-right">
+
+                    {/* ✏️ Edit */}
+                    <td className="py-3 pr-4 text-right">
                       <button
                         onClick={() => setEditingSale(s)}
                         className="text-zinc-500 hover:text-purple-400 transition text-base"
@@ -940,6 +946,18 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         ✏️
                       </button>
                     </td>
+
+                    {/* 🗑️ Delete — ✅ NEW */}
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => handleDelete(s.id, s.product_name)}
+                        className="text-zinc-500 hover:text-red-400 transition text-base"
+                        title="Delete sale"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+
                   </tr>
                 ))}
               </tbody>
