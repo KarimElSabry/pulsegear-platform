@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
         governorate,
         city,
         street,
-        product_name: product,
-        budget,
+        requested_product: product,
+        budget: Number(budget), 
         notes,
         status: 'new',          // default status
         created_at: new Date().toISOString(),
