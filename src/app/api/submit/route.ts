@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     // ── Insert into Supabase ──────────────────────────────────────
     const { error } = await supabase.from('product_requests').insert([
       {
-        name,
+        customer_name: name,
         email,
         phone,
         governorate,
