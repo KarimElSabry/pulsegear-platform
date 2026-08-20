@@ -98,8 +98,10 @@ const steps = [
       'Log in to that app and click "Authorize" when it asks',
       "Wait 2–3 minutes for your history to sync ⏳",
     ],
-    success: "You'll know it worked when you see your recent activities listed on athletedata.health",
-    warning: "If you see zero activities: your sync is still running — give it 5 minutes and refresh. If it's still empty, disconnect and reconnect the app.",
+    success:
+      "You'll know it worked when you see your recent activities listed on athletedata.health",
+    warning:
+      "If you see zero activities: your sync is still running — give it 5 minutes and refresh. If it's still empty, disconnect and reconnect the app.",
     tip: {
       flag: "🇪🇬",
       text: "If you use both Strava and Garmin — connect Garmin. Garmin gives you sleep, HRV, and heart rate data that Strava doesn't share. More data = better analysis.",
@@ -133,15 +135,10 @@ const steps = [
     accentColor: "bg-green-500",
     title: "Create Your Project Folder",
     why: null,
-    instructions: [
-      "Open your terminal and run these commands one at a time:",
-    ],
-    terminalCommands: [
-      "mkdir my-running-coach",
-      "cd my-running-coach",
-      "claude",
-    ],
-    warning: "Don't delete this folder. Everything — your dashboard, your data, your settings — lives here.",
+    instructions: ["Open your terminal and run these commands one at a time:"],
+    terminalCommands: ["mkdir my-running-coach", "cd my-running-coach", "claude"],
+    warning:
+      "Don't delete this folder. Everything — your dashboard, your data, your settings — lives here.",
   },
   {
     number: "04",
@@ -150,10 +147,9 @@ const steps = [
     accentColor: "bg-yellow-500",
     title: "Connect Claude to Your Training Data (MCP Setup)",
     why: "You're telling Claude Code to use athletedata.health as a live data source — so every time you ask Claude something, it reads your fresh training data automatically.",
-    instructions: [
-      "Do this inside Claude Code (paste this message):",
-    ],
-    success: 'You\'ll know it\'s connected when you ask Claude "how many km did I run last week?" and it gives you the real number — not a generic answer.',
+    instructions: ["Do this inside Claude Code (paste this message):"],
+    success:
+      'You\'ll know it\'s connected when you ask Claude "how many km did I run last week?" and it gives you the real number — not a generic answer.',
   },
   {
     number: "05",
@@ -171,16 +167,15 @@ const steps = [
     accentColor: "bg-orange-500",
     title: "Make It Automatic (Daily Auto-Update) ⭐",
     why: "Instead of you going to Claude every day, Claude checks your new workouts every morning and updates your dashboard automatically.",
-    instructions: [
-      "Paste this into Claude Code:",
-    ],
+    instructions: ["Paste this into Claude Code:"],
     afterSteps: [
       "You finish a run tonight 🏃",
       "Garmin or Strava syncs it (usually within 15 minutes)",
       "Tomorrow morning at 7am Claude pulls the new data automatically",
       "You open dashboard.html and it already has yesterday's run included",
     ],
-    warning: "Your laptop needs to be on at 7am for this to run. If it's off, it runs the next time it's on and it's past 7am. You can change the time — just tell Claude \"run it at 6am\" or \"run it at 9am\" instead.",
+    warning:
+      "Your laptop needs to be on at 7am for this to run. If it's off, it runs the next time it's on and it's past 7am. You can change the time — just tell Claude \"run it at 6am\" or \"run it at 9am\" instead.",
   },
   {
     number: "07",
@@ -197,30 +192,38 @@ const faqs = [
   {
     q: "Do I need to pay for Claude?",
     a: "The free tier of Claude handles everything in this guide. You don't need a paid plan to start. If you run into limits (it tells you when you do), the paid plan is affordable and worth it if you use this daily.",
+    rtl: false,
   },
   {
     q: "My Garmin is connected to Strava — do I connect Garmin or Strava to athletedata.health?",
-    a: "Connect Garmin directly if you can. Garmin shares heart rate, HRV, sleep, and recovery data. Strava only shares pace and distance. More data = Claude gives you better answers. اتصل بالاتنين لو ممكن.",
+    a: "Connect Garmin directly if you can. Garmin shares heart rate, HRV, sleep, and recovery data. Strava only shares pace and distance. More data = Claude gives you better answers.",
+    suffix: "اتصل بالاتنين لو ممكن.",
+    rtl: false,
   },
   {
     q: "What if my activities don't show up?",
     a: "Give it 5–10 minutes after connecting. If it's still empty, disconnect and reconnect your app in athletedata.health settings. If Garmin specifically is missing HR or sleep data, check that you authorized all scopes (wellness and sleep) when you connected, not just activities.",
+    rtl: false,
   },
   {
     q: "Can I use this without Claude Code (just claude.ai on the web)?",
     a: "Yes — Steps 1 and 5 work on claude.ai without installing anything. You just won't get the automatic daily update from Step 6. You would need to open claude.ai and paste the prompt manually each time you want a fresh analysis.",
+    rtl: false,
   },
   {
     q: "Is my training data private?",
     a: "Your data goes from your app → athletedata.health → Claude. It is not shared publicly. Check the privacy policies of athletedata.health and Anthropic (Claude's maker) if you want the full details. As a rule: don't include personal information (name, location, phone number) in your prompts.",
+    rtl: false,
   },
   {
     q: "I got zero activities in my dashboard — what's wrong?",
     a: "Usually one of two things: your athletedata.health connection didn't authorize fully (disconnect and reconnect), or the sync is still running (wait 10 minutes and try again). Never accept a dashboard full of zeros as working. Claude will tell you clearly if data is missing.",
+    rtl: false,
   },
   {
     q: "I don't have a race goal right now — can I still use this?",
     a: 'تمام — just write "no fixed date, building base" in the goal section. Claude will give you a 10-week base-building plan and a dashboard that tracks your weekly volume and fitness trend without a countdown.',
+    rtl: true,
   },
 ];
 
@@ -246,18 +249,21 @@ const relatedArticles = [
     icon: "📊",
     tag: "Training Guide",
     title: "Heart Rate Zones Explained",
+    rtl: false,
   },
   {
     href: "/blog/training-guide/zone-2-training",
     icon: "🫀",
     tag: "Training Guide",
     title: "Zone 2 Training: سر الـ Elite Athletes",
+    rtl: true,
   },
   {
     href: "/blog/training-guide/complete-training-setup",
     icon: "🔧",
     tag: "Training Guide",
     title: "Complete Training Setup 2026",
+    rtl: false,
   },
 ];
 
@@ -292,27 +298,37 @@ export default function ClaudeAIRunningCoachPage() {
           </span>
 
           {/* Hero Label */}
-          <p className="text-sm font-bold uppercase tracking-widest text-zinc-500">
+          {/* ✅ FIX: mixed Arabic/English sentence → dir="rtl" */}
+          <p className="text-sm font-bold uppercase tracking-widest text-zinc-500" dir="rtl">
             🏃‍♂️ Claude بيحلل تريننجك أوتوماتيك؟ يلا نعمل ده دلوقتي.
           </p>
 
           {/* Title */}
+          {/* ✅ FIX: em dash was a plain hyphen/broken char — now a proper HTML entity */}
           <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
             Turn Your Running Data Into a
             <br />
             <span className="text-red-500">Personal Coach</span>
             <br />
-            — Automatically
+            <span aria-hidden="true">&mdash;</span> Automatically
           </h1>
 
           {/* Subheadline */}
           <p className="text-lg font-bold text-zinc-300 leading-relaxed">
-            No copy-paste. No spreadsheets. Connect once, and Claude AI reads your Strava or Garmin data, builds your dashboard, and adjusts your training plan — every single day.
+            No copy-paste. No spreadsheets. Connect once, and Claude AI reads
+            your Strava or Garmin data, builds your dashboard, and adjusts your
+            training plan &mdash; every single day.
           </p>
 
           {/* Intro */}
+          {/* ✅ FIX: starts Arabic then switches to English → dir="rtl" is correct here */}
           <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-            بجد — most runners have way more data than they know what to do with. You finish a 10K, Garmin shows you 47 numbers, and you still don't know if you trained too hard or not hard enough. This guide sets up Claude AI to answer that for you — automatically, in plain language, every morning before you even lace up.
+            بجد &mdash; most runners have way more data than they know what to
+            do with. You finish a 10K, Garmin shows you 47 numbers, and you
+            still don&apos;t know if you trained too hard or not hard enough.
+            This guide sets up Claude AI to answer that for you &mdash;
+            automatically, in plain language, every morning before you even
+            lace up.
           </p>
 
           {/* Meta */}
@@ -332,10 +348,22 @@ export default function ClaudeAIRunningCoachPage() {
               ✅ What you get at the end of this guide:
             </p>
             {[
-              { icon: "🗂️", text: "A personal training dashboard — pace trends, weekly load, fitness vs fatigue — in one HTML file you open like a normal webpage" },
-              { icon: "🔄", text: "Automatic daily updates — Claude checks for new workouts every morning without you doing anything" },
-              { icon: "🤖", text: "A prompt you send to Claude — ask it to analyze your last 4 weeks, write your next training week, or tell you if you're overtraining" },
-              { icon: "📱", text: "Works on any device — desktop, phone, tablet — no app to install" },
+              {
+                icon: "🗂️",
+                text: "A personal training dashboard — pace trends, weekly load, fitness vs fatigue — in one HTML file you open like a normal webpage",
+              },
+              {
+                icon: "🔄",
+                text: "Automatic daily updates — Claude checks for new workouts every morning without you doing anything",
+              },
+              {
+                icon: "🤖",
+                text: "A prompt you send to Claude — ask it to analyze your last 4 weeks, write your next training week, or tell you if you're overtraining",
+              },
+              {
+                icon: "📱",
+                text: "Works on any device — desktop, phone, tablet — no app to install",
+              },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <span className="text-lg shrink-0">{item.icon}</span>
@@ -381,6 +409,7 @@ export default function ClaudeAIRunningCoachPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               ⚙️ What You Need Before Starting
             </h2>
+            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
               اللي محتاجه قبل ما نبدأ — كله مجاناً
             </p>
@@ -424,11 +453,17 @@ export default function ClaudeAIRunningCoachPage() {
           </div>
 
           {/* Windows note */}
+          {/* ✅ FIX: mixed sentence — English dominant, Arabic embedded → dir="ltr" is fine, no change needed */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-start gap-3">
             <span className="text-lg shrink-0">🪟</span>
             <p className="text-xs text-zinc-400 leading-relaxed">
               <span className="text-white font-bold">Note for Egyptian runners:</span>{" "}
-              Claude Code works on Windows, Mac, and Linux. If you're on Windows, خليك على Chrome or Edge — it works fine.
+              Claude Code works on Windows, Mac, and Linux. If you&apos;re on
+              Windows,{" "}
+              <span dir="rtl" className="inline">
+                خليك على
+              </span>{" "}
+              Chrome or Edge &mdash; it works fine.
             </p>
           </div>
         </section>
@@ -436,15 +471,14 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── STEPS ─── */}
         <section id="steps" className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
+            {/* ✅ FIX: Arabic heading mixed with English → dir="rtl" */}
+            <h2 className="text-2xl font-black uppercase text-white" dir="rtl">
               📋 الخطوات — follow them in order
             </h2>
             <p className="text-sm text-zinc-500">
-              One at a time. Don't skip ahead.
+              One at a time. Don&apos;t skip ahead.
             </p>
           </div>
-
-          {/* Pass steps data to Client Component for interactive copy buttons */}
           <ClaudeCoachClient steps={steps} />
         </section>
 
@@ -454,6 +488,7 @@ export default function ClaudeAIRunningCoachPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               ❓ Frequently Asked Questions
             </h2>
+            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
               أسئلة شايفينها كتير
             </p>
@@ -467,8 +502,17 @@ export default function ClaudeAIRunningCoachPage() {
                 <p className="font-bold text-white text-sm">
                   🔸 {faq.q}
                 </p>
-                <p className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3">
+                <p
+                  className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3"
+                  dir={faq.rtl ? "rtl" : "ltr"}
+                >
                   {faq.a}
+                  {/* ✅ FIX: Garmin FAQ had Arabic suffix tacked on — now rendered separately */}
+                  {faq.suffix && (
+                    <span dir="rtl" className="block mt-1">
+                      {faq.suffix}
+                    </span>
+                  )}
                 </p>
               </div>
             ))}
@@ -481,9 +525,10 @@ export default function ClaudeAIRunningCoachPage() {
             <h2 className="text-2xl font-black uppercase text-white">
               📌 Quick Reference Commands
             </h2>
-            <p className="text-sm text-zinc-500">Save these — you'll use them every week.</p>
+            <p className="text-sm text-zinc-500">
+              Save these &mdash; you&apos;ll use them every week.
+            </p>
           </div>
-          {/* Quick commands with copy buttons — Client Component */}
           <ClaudeCoachClient quickCommands />
         </section>
 
@@ -491,8 +536,9 @@ export default function ClaudeAIRunningCoachPage() {
         <section id="limitations" className="flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <h2 className="text-2xl font-black uppercase text-white">
-              ⚠️ What This Won't Do
+              ⚠️ What This Won&apos;t Do
             </h2>
+            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
               بكل صراحة — Claude مش بيعمل كل حاجة
             </p>
@@ -502,7 +548,7 @@ export default function ClaudeAIRunningCoachPage() {
             {/* Won't do */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
               <p className="text-xs font-bold uppercase tracking-wide text-red-400">
-                ❌ Can't do this
+                ❌ Can&apos;t do this
               </p>
               <div className="flex flex-col gap-3">
                 {whatItWontDo.map((item, i) => (
@@ -534,15 +580,21 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── CLOSING ─── */}
         <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-5 text-center items-center">
           <span className="text-4xl">🏁</span>
-          <h3 className="text-xl font-black uppercase text-white">
+          {/* ✅ FIX: Arabic heading → dir="rtl" */}
+          <h3 className="text-xl font-black uppercase text-white" dir="rtl">
             يلا — الداتا بتاعتك جاهزة، Claude جاهز، انت بس كمل
           </h3>
+          {/* ✅ FIX: starts Arabic then English → dir="rtl" */}
           <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
-            Most runners collect months of data and never look past the weekly summary. This setup changes that. Claude reads the full picture — your load, your recovery, your trend — and tells you what it means in plain language, every single morning.
+            Most runners collect months of data and never look past the weekly
+            summary. This setup changes that. Claude reads the full picture
+            &mdash; your load, your recovery, your trend &mdash; and tells you
+            what it means in plain language, every single morning.
           </p>
           <p className="text-zinc-300 text-sm font-bold">
             Set it up once. Let it run. Focus on training.
           </p>
+          {/* ✅ FIX: Arabic sentence → dir="rtl" */}
           <p className="text-zinc-500 text-xs" dir="rtl">
             اتكلم معانا في الكومنتس — شيرلنا الـ readiness verdict بتاعك لما تخلص الـ setup 👇
           </p>
@@ -550,7 +602,8 @@ export default function ClaudeAIRunningCoachPage() {
 
         {/* ─── RELATED ARTICLES ─── */}
         <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
+          {/* ✅ FIX: Arabic heading → dir="rtl" */}
+          <h2 className="text-2xl font-black uppercase text-white" dir="rtl">
             اقرأ كمان 📚
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -564,7 +617,11 @@ export default function ClaudeAIRunningCoachPage() {
                 <p className="text-xs font-bold uppercase tracking-wide text-purple-400">
                   {article.tag}
                 </p>
-                <p className="font-bold text-white text-sm group-hover:text-red-400 transition-colors duration-200" dir="rtl">
+                {/* ✅ FIX: dir driven by data */}
+                <p
+                  className="font-bold text-white text-sm group-hover:text-red-400 transition-colors duration-200"
+                  dir={article.rtl ? "rtl" : "ltr"}
+                >
                   {article.title}
                 </p>
               </Link>
