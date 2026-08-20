@@ -2,9 +2,9 @@
 'use client'
 
 import { formatEGP } from '@/lib/format'
-import { useRouter } from 'next/navigation'
+import { useRouter }  from 'next/navigation'
 import { useRef, useState, useTransition, useEffect } from 'react'
-import { addSale, updateSale, deleteSale } from '../sales/actions'
+import { addSale, updateSale, deleteSale, updateDiscountUsage } from '../sales/actions'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend,
@@ -75,6 +75,7 @@ interface AnalyticsData {
     shipping_eur:      number
     exchange_rate:     number
     notes?:            string
+    discount_code?:    string | null // ✅ Added
   }[]
 }
 
@@ -94,6 +95,7 @@ interface EditSale {
   shipping_eur:      number
   exchange_rate:     number
   notes?:            string
+  discount_code?:    string | null // ✅ Added
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -110,14 +112,23 @@ const TOOLTIP_STYLE = {
 const FALLBACK_RATE        = 55
 const DEFAULT_SHIPPING_EUR = 10
 
+function formatDuration(seconds: string) {
+  const s   = parseInt(seconds)
+  const min = Math.floor(s / 60)
+  const rem = s % 60
+  return `${min}m ${rem}s`
+}
+
 // ─── Manual Sale Form ─────────────────────────────────────────────────────────
 
 function ManualSaleForm({
   editSale,
   onClose,
+  discountCodes = [], // ✅ Added
 }: {
-  editSale?: EditSale
-  onClose?:  () => void
+  editSale?:      EditSale
+  onClose?:       () => void
+  discountCodes?: { code: string; discount_percent: number; is_active: boolean }[] // ✅ Added
 }) {
   const isEditing = !!editSale
 
@@ -126,22 +137,18 @@ function ManualSaleForm({
   const [isPending, startTransition] = useTransition()
   const [success, setSuccess]        = useState(false)
 
-  // ── EUR → EGP Rate ──────────────────────────────────────────────
   const [eurRate,     setEurRate]     = useState<number | null>(null)
   const [rateLoading, setRateLoading] = useState(false)
   const [rateError,   setRateError]   = useState(false)
 
-  // ── Pre-fill rate if editing ─────────────────────────────────────
   const [manualRate, setManualRate] = useState<string>(
     editSale ? String(editSale.exchange_rate) : ''
   )
 
-  // ── Calculator Inputs — pre-fill if editing ──────────────────────
   const [originalEur, setOriginalEur] = useState(editSale ? String(editSale.original_eur)      : '')
   const [shippingEur, setShippingEur] = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
   const [sellingEgp,  setSellingEgp]  = useState(editSale ? String(editSale.selling_price_egp) : '')
 
-  // ── Commission % — back-calculate from EGP amount ───────────────
   const [commissionPct, setCommissionPct] = useState(() => {
     if (!editSale) return '0'
     if (editSale.selling_price_egp > 0 && editSale.commission_egp > 0) {
@@ -150,7 +157,6 @@ function ManualSaleForm({
     return '0'
   })
 
-  // ── Derived ─────────────────────────────────────────────────────
   const effectiveRate = manualRate ? parseFloat(manualRate) : eurRate ?? null
 
   const costEgp =
@@ -173,7 +179,6 @@ function ManualSaleForm({
       ? (profitEgp / parseFloat(sellingEgp)) * 100
       : null
 
-  // ── Fetch Live Rate ──────────────────────────────────────────────
   async function fetchRate() {
     setRateLoading(true)
     setRateError(false)
@@ -216,12 +221,10 @@ function ManualSaleForm({
     setRateLoading(false)
   }
 
-  // ── Only auto-fetch rate when adding new sale ────────────────────
   useEffect(() => {
     if (!isEditing) fetchRate()
   }, [isEditing])
 
-  // ── Submit ──────────────────────────────────────────────────────
   async function handleSubmit(formData: FormData) {
     if (effectiveRate)            formData.set('exchange_rate',     String(effectiveRate))
     if (costEgp)                  formData.set('cost_egp',          String(Math.round(costEgp)))
@@ -247,10 +250,12 @@ function ManualSaleForm({
     })
   }
 
+  // ✅ Only show active codes in dropdown
+  const activeCodes = discountCodes.filter((d) => d.is_active)
+
   return (
     <section className={`bg-zinc-900 rounded-2xl p-6 border ${isEditing ? 'border-purple-700' : 'border-green-800'}`}>
 
-      {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">
@@ -273,7 +278,6 @@ function ManualSaleForm({
         )}
       </div>
 
-      {/* Success Banner */}
       {success && (
         <div className="mb-4 bg-green-500/20 border border-green-500/40 text-green-400 text-sm font-semibold px-4 py-3 rounded-xl">
           ✅ Sale recorded! Analytics updated automatically.
@@ -282,7 +286,6 @@ function ManualSaleForm({
 
       <form ref={formRef} action={handleSubmit} className="space-y-6">
 
-        {/* Product Name */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">
             Product Name <span className="text-purple-400">*</span>
@@ -297,10 +300,8 @@ function ManualSaleForm({
           />
         </div>
 
-        {/* ── Live EUR → EGP Calculator ─────────────────────────────── */}
         <div className="bg-gray-900 border border-purple-800 rounded-2xl p-5 space-y-5">
 
-          {/* Rate Badge + Refresh */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h3 className="text-sm font-bold text-purple-400 uppercase tracking-widest">
               💱 Live EUR → EGP Calculator
@@ -332,7 +333,6 @@ function ManualSaleForm({
             </div>
           </div>
 
-          {/* Manual Rate Override */}
           {(rateError || !eurRate || isEditing) && (
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-yellow-400 uppercase tracking-widest">
@@ -365,7 +365,6 @@ function ManualSaleForm({
             </div>
           )}
 
-          {/* Step 1 — EUR Price */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 1 — Original Price (EUR)
@@ -386,7 +385,6 @@ function ManualSaleForm({
             )}
           </div>
 
-          {/* Step 2 — Shipping */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 2 — Shipping to Egypt (EUR)
@@ -416,7 +414,6 @@ function ManualSaleForm({
             )}
           </div>
 
-          {/* Step 3 — Selling Price EGP */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 3 — Actual Selling Price (EGP)
@@ -432,7 +429,6 @@ function ManualSaleForm({
             />
           </div>
 
-          {/* Step 4 — Commission */}
           <div className="space-y-2">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 4 — Collaborator Commission (%)
@@ -458,7 +454,6 @@ function ManualSaleForm({
             </div>
           </div>
 
-          {/* ── Live Breakdown ───────────────────────────────────────── */}
           {costEgp !== null && sellingEgp && (
             <div className="bg-gray-800 rounded-xl px-5 py-4 space-y-2 text-sm border border-zinc-700">
               <div className="flex justify-between text-gray-400">
@@ -521,7 +516,6 @@ function ManualSaleForm({
           )}
         </div>
 
-        {/* Hidden fields */}
         <input type="hidden" name="selling_price_egp" value={sellingEgp || '0'} />
         <input type="hidden" name="exchange_rate"     value={effectiveRate ?? ''} />
         <input type="hidden" name="cost_egp"          value={costEgp !== null ? Math.round(costEgp) : ''} />
@@ -531,7 +525,6 @@ function ManualSaleForm({
         <input type="hidden" name="original_eur"      value={originalEur || '0'} />
         <input type="hidden" name="shipping_eur"      value={shippingEur || '0'} />
 
-        {/* Channel + Date */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
@@ -570,7 +563,29 @@ function ManualSaleForm({
           </div>
         </div>
 
-        {/* Notes */}
+        {/* ✅ Discount Code Dropdown */}
+        {activeCodes.length > 0 && (
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-200">
+              Discount Code{' '}
+              <span className="text-zinc-500 font-normal text-xs">(optional — contributor tracking)</span>
+            </label>
+            <select
+              name="discount_code"
+              disabled={isPending}
+              defaultValue={editSale?.discount_code ?? ''}
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
+            >
+              <option value="">— No discount code —</option>
+              {activeCodes.map((d) => (
+                <option key={d.code} value={d.code}>
+                  {d.code} — {d.discount_percent}% off
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">Notes</label>
           <textarea
@@ -609,11 +624,8 @@ function ManualSaleForm({
 export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
   const router = useRouter()
-
-  // ── Edit Sale State ──────────────────────────────────────────────
   const [editingSale, setEditingSale] = useState<EditSale | null>(null)
 
-  // ── Delete Sale Handler ──────────────────────────────────────────
   async function handleDelete(id: string, name: string) {
     if (!confirm(`🗑️ Delete "${name}"?\n\nThis cannot be undone.`)) return
     await deleteSale(id)
@@ -635,6 +647,9 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
   return (
     <div className="space-y-10">
+
+      {/* ── Divider ─────────────────────────────────────────────────── */}
+      <div className="border-t border-zinc-800" />
 
       {/* ── Overview Stats ───────────────────────────────────────────── */}
       <section>
@@ -909,8 +924,9 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-right py-3 pr-4">Revenue</th>
                   <th className="text-right py-3 pr-4">Profit</th>
                   <th className="text-right py-3 pr-4">Margin</th>
+                  <th className="text-right py-3 pr-4">Code</th>   {/* ✅ Added */}
                   <th className="text-right py-3 pr-4">Edit</th>
-                  <th className="text-right py-3">Delete</th>  {/* ✅ NEW */}
+                  <th className="text-right py-3">Delete</th>
                 </tr>
               </thead>
               <tbody>
@@ -936,7 +952,17 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                       </span>
                     </td>
 
-                    {/* ✏️ Edit */}
+                    {/* ✅ Discount Code Cell */}
+                    <td className="py-3 pr-4 text-right">
+                      {s.discount_code ? (
+                        <span className="text-xs font-bold bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full font-mono">
+                          {s.discount_code}
+                        </span>
+                      ) : (
+                        <span className="text-zinc-600 text-xs">—</span>
+                      )}
+                    </td>
+
                     <td className="py-3 pr-4 text-right">
                       <button
                         onClick={() => setEditingSale(s)}
@@ -946,8 +972,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         ✏️
                       </button>
                     </td>
-
-                    {/* 🗑️ Delete — ✅ NEW */}
                     <td className="py-3 text-right">
                       <button
                         onClick={() => handleDelete(s.id, s.product_name)}
@@ -957,7 +981,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         🗑️
                       </button>
                     </td>
-
                   </tr>
                 ))}
               </tbody>
@@ -1023,7 +1046,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       )}
 
       {/* ── Add New Sale Form ────────────────────────────────────────── */}
-      <ManualSaleForm />
+      <ManualSaleForm discountCodes={data.discountCodes} /> {/* ✅ Pass discountCodes */}
 
       {/* ── Edit Sale Modal ──────────────────────────────────────────── */}
       {editingSale && (
@@ -1035,6 +1058,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
             <ManualSaleForm
               editSale={editingSale}
               onClose={() => setEditingSale(null)}
+              discountCodes={data.discountCodes} // ✅ Pass discountCodes
             />
           </div>
         </div>

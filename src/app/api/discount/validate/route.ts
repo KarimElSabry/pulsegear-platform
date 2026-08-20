@@ -20,9 +20,13 @@ export async function POST(req: NextRequest) {
       .from('discount_codes')
       .select('id, code, discount_percent, is_active')
       .ilike('code', code.trim())
-      .single()
+      .maybeSingle() // ✅ بدل .single() — مش بيرمي error لو مفيش نتيجة
 
-    if (error || !data) {
+    if (error) {
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
+
+    if (!data) {
       return NextResponse.json({ error: 'Invalid discount code' }, { status: 404 })
     }
 
@@ -33,7 +37,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ✅ مش بنزود usage_count هنا — بيتزود بس لما الحجز يتأكد
     return NextResponse.json({
       success: true,
       code: data.code,

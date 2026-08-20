@@ -1,4 +1,4 @@
-// src/admin/sales/actions.ts
+// src/app/admin/sales/actions.ts
 
 'use server'
 
@@ -18,6 +18,7 @@ export async function addSale(formData: FormData) {
   const sellingPriceEgp = parseFloat(formData.get('selling_price_egp') as string) || 0
   const commissionEgp   = parseFloat(formData.get('commission_egp')    as string) || 0
   const marginPct       = parseFloat(formData.get('profit_margin_pct') as string) || 0
+  const discountCode    = (formData.get('discount_code') as string) || null
 
   const costEgp   = (originalEur + shippingEur) * exchangeRate
   const profitEgp = sellingPriceEgp - costEgp - commissionEgp
@@ -37,9 +38,16 @@ export async function addSale(formData: FormData) {
     source_platform:   formData.get('source_platform'),
     source_url:        formData.get('source_url') || null,
     notes:             formData.get('notes') || null,
+    discount_code:     discountCode,
   })
 
   if (error) throw new Error(error.message)
+
+  // ── Increment usage_count if a code was selected ──────────────────────────
+  if (discountCode) {
+    await supabase.rpc('increment_discount_usage', { code_value: discountCode })
+  }
+
   revalidatePath('/admin/analytics')
   revalidatePath('/admin/sales')
 }
@@ -96,4 +104,27 @@ export async function getSales() {
 
   if (error) throw new Error(error.message)
   return data ?? []
+}
+
+// ─── Get Discount Codes ───────────────────────────────────────────────────────
+export async function getDiscountCodes() {
+  const { data, error } = await supabase
+    .from('discount_codes')
+    .select('code, discount_percent')
+    .eq('is_active', true)
+    .order('code')
+
+  if (error) throw new Error(error.message)
+  return data ?? []
+}
+
+// ─── Update Discount Code Usage Count ────────────────────────────────────────
+export async function updateDiscountUsage(code: string, newCount: number) {
+  const { error } = await supabase
+    .from('discount_codes')
+    .update({ usage_count: newCount })
+    .eq('code', code)
+
+  if (error) throw new Error(error.message)
+  revalidatePath('/admin/analytics')
 }

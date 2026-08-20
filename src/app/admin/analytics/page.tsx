@@ -1,10 +1,11 @@
 // src/app/admin/analytics/page.tsx
 
 import { createServerClient } from '@/lib/supabase'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import AnalyticsClient from './AnalyticsClient'
+import { cookies }            from 'next/headers'
+import { redirect }           from 'next/navigation'
+import Link                   from 'next/link'
+import AnalyticsClient        from './AnalyticsClient'
+import { getGA4Data }         from '@/lib/analytics'
 
 async function checkAuth() {
   const cookieStore = await cookies()
@@ -25,9 +26,9 @@ async function getAnalyticsData() {
     mostLikedRes,
     reservationsTimeRes,
     productsTimeRes,
-    // ✅ NEW
     salesRes,
     salesTimeRes,
+    ga4Data,
   ] = await Promise.all([
 
     supabase
@@ -67,18 +68,19 @@ async function getAnalyticsData() {
       .select('created_at')
       .gte('created_at', thirtyDaysAgo),
 
-    // ✅ All sales (for totals + channel breakdown + recent)
     supabase
       .from('sales')
       .select('*')
       .order('sale_date', { ascending: false }),
 
-    // ✅ Sales last 30 days (for time series)
     supabase
       .from('sales')
       .select('sale_date, selling_price_egp, profit_egp')
       .gte('sale_date', thirtyDaysAgo)
       .order('sale_date', { ascending: true }),
+
+    // ✅ GA4 — runs in parallel, won't break page if it fails
+    getGA4Data(),
   ])
 
   // ── Products ──────────────────────────────────────────────────────
@@ -178,8 +180,8 @@ async function getAnalyticsData() {
   const reservationsOverTime = [...timeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
   // ── Products Over Time ────────────────────────────────────────────
-  const productsTimeData  = productsTimeRes.data ?? []
-  const productsTimeMap   = new Map<string, number>()
+  const productsTimeData = productsTimeRes.data ?? []
+  const productsTimeMap  = new Map<string, number>()
 
   productsTimeData.forEach((p) => {
     const date = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
@@ -204,7 +206,7 @@ async function getAnalyticsData() {
     .sort((a, b) => b.likes - a.likes)
     .slice(0, 10)
 
-  // ── ✅ Sales ──────────────────────────────────────────────────────
+  // ── Sales ─────────────────────────────────────────────────────────
   const sales = salesRes.data ?? []
 
   const totalSalesCount   = sales.length
@@ -216,7 +218,6 @@ async function getAnalyticsData() {
       ? sales.reduce((sum, s) => sum + (Number(s.profit_margin_pct) || 0), 0) / totalSalesCount
       : 0
 
-  // Sales by channel
   const channelMap = new Map<string, { count: number; revenue: number; profit: number }>()
   sales.forEach((s) => {
     const ch       = s.sale_channel ?? 'unknown'
@@ -228,7 +229,6 @@ async function getAnalyticsData() {
   })
   const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({ channel, ...val }))
 
-  // Sales over time
   const salesTimeMap = new Map<string, { revenue: number; profit: number; count: number }>()
   ;(salesTimeRes.data ?? []).forEach((s) => {
     const date     = new Date(s.sale_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
@@ -240,21 +240,21 @@ async function getAnalyticsData() {
   })
   const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
-  // Recent sales (last 10)
   const recentSales = sales.slice(0, 10).map((s) => ({
     id:                String(s.id),
-    product_name:      s.product_name      ?? 'Unknown',
+    product_name:      s.product_name             ?? 'Unknown',
     selling_price_egp: Number(s.selling_price_egp) || 0,
     profit_egp:        Number(s.profit_egp)        || 0,
     profit_margin_pct: Number(s.profit_margin_pct) || 0,
-    sale_channel:      s.sale_channel      ?? 'other',
-    sale_date:         s.sale_date         ?? '',
+    sale_channel:      s.sale_channel              ?? 'other',
+    sale_date:         s.sale_date                 ?? '',
     cost_egp:          Number(s.cost_egp)          || 0,
-    commission_egp:    Number(s.commission_egp)    || 0,  
-    original_eur:      Number(s.original_eur)      || 0,  
-    shipping_eur:      Number(s.shipping_eur)      || 0,  
-    exchange_rate:     Number(s.exchange_rate)     || 0,  
-    notes:             s.notes ?? undefined,              
+    commission_egp:    Number(s.commission_egp)    || 0,
+    original_eur:      Number(s.original_eur)      || 0,
+    shipping_eur:      Number(s.shipping_eur)      || 0,
+    exchange_rate:     Number(s.exchange_rate)     || 0,
+    notes:             s.notes                     ?? undefined,
+    discount_code:     s.discount_code             ?? null,
   }))
 
   return {
@@ -278,7 +278,7 @@ async function getAnalyticsData() {
     cancelledReservations,
 
     // Lists
-    discountCodes:        discountCodesRes.data ?? [],
+    discountCodes:       discountCodesRes.data ?? [],
     topReservedProducts,
     byCategory,
     byBrand,
@@ -291,7 +291,7 @@ async function getAnalyticsData() {
     totalLikes,
     mostLikedProducts,
 
-    // ✅ Sales
+    // Sales
     totalSalesCount,
     totalSalesRevenue,
     totalSalesProfit,
@@ -300,6 +300,9 @@ async function getAnalyticsData() {
     salesByChannel,
     salesOverTime,
     recentSales,
+
+    // ✅ GA4
+    ...ga4Data,
   }
 }
 

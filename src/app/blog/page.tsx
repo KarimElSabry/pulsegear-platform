@@ -5,7 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 
 /* ─────────────────────────────────────────────
-   DATA — Paths مصلحة تتطابق مع الـ Folder Structure
+   DATA
 ───────────────────────────────────────────── */
 
 const allPosts = [
@@ -53,6 +53,15 @@ const allPosts = [
     title: "Complete Training Setup — كل حاجة في مكان واحد",
     desc: "من الـ HR Zones للـ Recovery للـ Gear — الدليل الشامل لبناء Training System كامل.",
     readTime: "12 min read",
+    featured: false,
+  },
+  {
+    slug: "training-guide/claude-ai-running-coach-setup",
+    emoji: "🤖",
+    tag: "Training Guide",
+    title: "Claude AI: كوتش جري شخصي أوتوماتيك",
+    desc: "وصّل Strava أو Garmin بـ Claude AI وخلّيه يحلل تدريبك ويبني الـ Dashboard بتاعك كل يوم أوتوماتيك.",
+    readTime: "15 min read",
     featured: false,
   },
 
@@ -134,7 +143,7 @@ const allPosts = [
 ];
 
 /* ─────────────────────────────────────────────
-   TAGS — لازم تتطابق بالظبط مع الـ tag في allPosts
+   TAGS
 ───────────────────────────────────────────── */
 
 const tags = ["All", "Training Guide", "Gear Guide", "Gear Review"];
@@ -194,14 +203,14 @@ export default function BlogPage() {
             كل حاجة محتاجها عشان توصل للـ Next Level
           </p>
 
-          {/* ── Category Hub Links ── */}
+          {/* Category Hub Links */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
             {[
               {
                 href: "/blog/training-guide",
                 icon: "📊",
                 label: "Training Guide",
-                desc: "HR Zones · Zone 2 · Recovery",
+                desc: "HR Zones · Zone 2 · Recovery · AI Coach",
                 color: "border-purple-500/30 hover:border-purple-500 text-purple-400",
               },
               {
@@ -238,7 +247,7 @@ export default function BlogPage() {
             ))}
           </div>
 
-          {/* ── Filter Tabs ── */}
+          {/* Filter Tabs */}
           <div className="flex flex-wrap gap-2 mt-4">
             {tags.map((tag) => (
               <button

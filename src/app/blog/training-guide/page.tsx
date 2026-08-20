@@ -80,6 +80,18 @@ const articles = [
     levelColor: "text-zinc-400",
     featured: false,
   },
+  {
+    href: "/blog/training-guide/claude-ai-running-coach-setup",
+    icon: "🤖",
+    tag: "AI Tools",
+    tagColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+    title: "Claude AI: كوتش جري شخصي أوتوماتيك",
+    desc: "وصّل Strava أو Garmin بـ Claude AI وخلّيه يحلل تدريبك ويبني الـ Dashboard بتاعك كل يوم أوتوماتيك.",
+    readTime: "15 min",
+    level: "All Levels",
+    levelColor: "text-zinc-400",
+    featured: false,
+  },
 ];
 
 const concepts = [
@@ -118,6 +130,12 @@ const concepts = [
     title: "Recovery",
     desc: "الجسم بيتحسن في الراحة مش في التمرين. Rest Days مش كسل.",
     href: "/blog/training-guide/sleep-recovery",
+  },
+  {
+    icon: "🤖",
+    title: "AI Coaching",
+    desc: "Claude AI بيقرأ بياناتك ويحللها ويكتبلك Training Plan مخصوص كل يوم.",
+    href: "/blog/training-guide/claude-ai-running-coach-setup",
   },
 ];
 
@@ -160,7 +178,15 @@ const learningPath = [
     title: "اربط كل حاجة ببعض",
     desc: "كل حاجة في مكان واحد: Complete Training Setup.",
     href: "/blog/training-guide/complete-training-setup",
-    cta: "اقرأ أخيراً →",
+    cta: "اقرأ خامس →",
+  },
+  {
+    step: "06",
+    color: "border-purple-500/30 bg-purple-500/5 text-purple-400",
+    title: "خلّي Claude يحلل بياناتك أوتوماتيك",
+    desc: "وصّل Strava أو Garmin بـ Claude AI واعمل Dashboard يتحدث كل يوم.",
+    href: "/blog/training-guide/claude-ai-running-coach-setup",
+    cta: "اقرأ سادس →",
   },
 ];
 
@@ -436,6 +462,47 @@ export default function TrainingGuideHubPage() {
             className="self-start text-xs font-bold text-red-400 hover:text-red-300 uppercase tracking-wide transition-colors duration-200"
           >
             شوف أفضل GPS Watches →
+          </Link>
+        </section>
+
+        {/* ─── AI COACH BANNER ─── */}
+        <section className="bg-gradient-to-br from-purple-600/20 to-zinc-900 border border-purple-500/20 rounded-2xl p-6 flex flex-col gap-5">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🤖</span>
+            <div>
+              <p className="font-black text-white uppercase tracking-wide">
+                Claude AI Running Coach
+              </p>
+              <p className="text-xs text-zinc-500" dir="rtl">
+                خلّي الـ AI يحلل بياناتك ويكتبلك Training Plan كل يوم أوتوماتيك
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { feature: "Auto Dashboard", desc: "يتحدث كل صبح بدون ما تعمل حاجة", icon: "🗂️" },
+              { feature: "Data Analysis", desc: "بيقرأ Strava وGarmin وHRV", icon: "📊" },
+              { feature: "Training Plan", desc: "Plan مخصوص بناءً على بياناتك الحقيقية", icon: "📋" },
+            ].map((item) => (
+              <div
+                key={item.feature}
+                className="bg-zinc-800/50 rounded-xl p-3 flex items-center gap-3"
+              >
+                <span className="text-lg">{item.icon}</span>
+                <div>
+                  <p className="text-xs font-bold text-white">{item.feature}</p>
+                  <p className="text-xs text-zinc-500" dir="rtl">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Link
+            href="/blog/training-guide/claude-ai-running-coach-setup"
+            className="self-start text-xs font-bold text-purple-400 hover:text-purple-300 uppercase tracking-wide transition-colors duration-200"
+          >
+            اقرأ الـ Setup Guide الكامل →
           </Link>
         </section>
 

@@ -1,4 +1,4 @@
-// components/GoogleAnalytics.tsx
+// /src/components/GoogleAnalytics.tsx
 import Script from "next/script";
 
 const GoogleAnalytics = () => {
