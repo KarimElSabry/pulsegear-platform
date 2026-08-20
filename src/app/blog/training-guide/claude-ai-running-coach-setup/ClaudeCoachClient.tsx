@@ -42,21 +42,19 @@ function CopyButton({ text }: { text: string }) {
 }
 
 /* ─────────────────────────────────────────────
-   PROMPT BLOCK — styled dark card with copy
+   PROMPT BLOCK
 ───────────────────────────────────────────── */
 
 function PromptBlock({ content, label }: { content: string; label?: string }) {
   return (
     <div className="flex flex-col gap-0 rounded-xl overflow-hidden border border-zinc-700">
-      {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800 border-b border-zinc-700">
-        <span className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+        <span className="text-xs font-bold uppercase tracking-wide text-zinc-400" dir="ltr">
           {label ?? "Prompt — paste into Claude"}
         </span>
         <CopyButton text={content} />
       </div>
-      {/* Content */}
-      <pre className="bg-zinc-900 px-5 py-4 text-xs text-zinc-300 leading-relaxed overflow-x-auto whitespace-pre-wrap font-mono">
+      <pre className="bg-zinc-900 px-5 py-4 text-sm text-zinc-300 leading-relaxed overflow-x-auto whitespace-pre-wrap font-mono" dir="ltr">
         {content}
       </pre>
     </div>
@@ -78,13 +76,13 @@ function TerminalBlock({ commands }: { commands: string[] }) {
             <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
             <span className="w-3 h-3 rounded-full bg-green-500/60" />
           </div>
-          <span className="text-xs font-bold uppercase tracking-wide text-zinc-400 ml-1">
+          <span className="text-xs font-bold uppercase tracking-wide text-zinc-400 ml-1" dir="ltr">
             Terminal
           </span>
         </div>
         <CopyButton text={content} />
       </div>
-      <div className="bg-zinc-950 px-5 py-4 font-mono text-xs">
+      <div className="bg-zinc-950 px-5 py-4 font-mono text-sm" dir="ltr">
         {commands.map((cmd, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className="text-green-500 shrink-0">$</span>
@@ -250,11 +248,15 @@ function StepCard({ step }: { step: any }) {
       {/* Step Header */}
       <div className="flex items-center gap-4 px-6 py-5 border-b border-zinc-800">
         <div className="flex flex-col items-center gap-0.5 shrink-0">
-          <span className="text-xs font-bold uppercase tracking-widest text-zinc-600">Step</span>
-          <span className={`text-3xl font-black ${step.numberColor}`}>{step.number}</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-zinc-600" dir="ltr">
+            Step
+          </span>
+          <span className={`text-3xl font-black ${step.numberColor}`} dir="ltr">
+            {step.number}
+          </span>
         </div>
         <div className={`w-px h-10 ${step.accentColor} opacity-30 shrink-0`} />
-        <h3 className="font-black uppercase text-white text-lg leading-tight">
+        <h3 className="font-bold text-white text-lg leading-tight" dir="ltr">
           {step.title}
         </h3>
       </div>
@@ -264,22 +266,28 @@ function StepCard({ step }: { step: any }) {
         {/* Why */}
         {step.why && (
           <div className="flex items-start gap-3 bg-zinc-900/50 rounded-xl p-4">
-            <span className="text-lg shrink-0">💡</span>
-            <p className="text-xs text-zinc-400 leading-relaxed">{step.why}</p>
+            <span className="text-xl shrink-0">💡</span>
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
+              {step.why}
+            </p>
           </div>
         )}
 
         {/* Instructions */}
         {step.instructions && step.instructions.length > 0 && (
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">Do this:</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
+              Do this:
+            </p>
             <div className="flex flex-col gap-2">
               {step.instructions.map((instruction: string, i: number) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className={`text-xs font-bold shrink-0 mt-0.5 ${step.numberColor}`}>
+                  <span className={`text-sm font-bold shrink-0 mt-0.5 ${step.numberColor}`} dir="ltr">
                     {i + 1}.
                   </span>
-                  <p className="text-sm text-zinc-300 leading-relaxed">{instruction}</p>
+                  <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
+                    {instruction}
+                  </p>
                 </div>
               ))}
             </div>
@@ -306,11 +314,16 @@ function StepCard({ step }: { step: any }) {
           <div className="flex flex-col gap-3">
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 flex items-start gap-2">
               <span className="text-yellow-400 shrink-0">⚠️</span>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                <span className="text-yellow-400 font-bold">Fill in Section 1</span> with your own goal before you send it. Everything else Claude handles automatically from your connected data.
+              <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
+                <span className="text-yellow-400 font-bold">Fill in Section 1</span>{" "}
+                with your own goal before you send it. Everything else Claude handles
+                automatically from your connected data.
               </p>
             </div>
-            <PromptBlock content={dashboardPrompt} label="Full Dashboard Prompt — Copy & Paste into Claude Code" />
+            <PromptBlock
+              content={dashboardPrompt}
+              label="Full Dashboard Prompt — Copy & Paste into Claude Code"
+            />
           </div>
         )}
 
@@ -320,13 +333,17 @@ function StepCard({ step }: { step: any }) {
             <PromptBlock content={autoUpdatePrompt} label="Paste into Claude Code" />
             {step.afterSteps && (
               <div className="flex flex-col gap-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">After this:</p>
+                <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
+                  After this:
+                </p>
                 {step.afterSteps.map((s: string, i: number) => (
                   <div key={i} className="flex items-start gap-3">
-                    <span className={`text-xs font-bold shrink-0 mt-0.5 ${step.numberColor}`}>
+                    <span className={`text-sm font-bold shrink-0 mt-0.5 ${step.numberColor}`} dir="ltr">
                       {i + 1}.
                     </span>
-                    <p className="text-sm text-zinc-300 leading-relaxed">{s}</p>
+                    <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
+                      {s}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -337,7 +354,7 @@ function StepCard({ step }: { step: any }) {
         {/* Step 7 — Ask Claude Examples */}
         {step.number === "07" && (
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+            <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
               Copy and paste any of these:
             </p>
             {askClaudeExamples.map((example, i) => (
@@ -345,7 +362,7 @@ function StepCard({ step }: { step: any }) {
                 key={i}
                 className="flex items-start justify-between gap-3 bg-zinc-900 border border-zinc-700 rounded-xl p-4"
               >
-                <p className="text-xs text-zinc-300 leading-relaxed font-mono flex-1">
+                <p className="text-sm text-zinc-300 leading-relaxed font-mono flex-1" dir="ltr">
                   {example}
                 </p>
                 <CopyButton text={example} />
@@ -358,7 +375,9 @@ function StepCard({ step }: { step: any }) {
         {step.success && (
           <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-4">
             <span className="text-green-400 shrink-0">✅</span>
-            <p className="text-xs text-zinc-300 leading-relaxed">{step.success}</p>
+            <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
+              {step.success}
+            </p>
           </div>
         )}
 
@@ -366,7 +385,9 @@ function StepCard({ step }: { step: any }) {
         {step.warning && (
           <div className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
             <span className="text-yellow-400 shrink-0">⚠️</span>
-            <p className="text-xs text-zinc-400 leading-relaxed">{step.warning}</p>
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
+              {step.warning}
+            </p>
           </div>
         )}
 
@@ -374,7 +395,12 @@ function StepCard({ step }: { step: any }) {
         {step.tip && (
           <div className="flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
             <span className="shrink-0">{step.tip.flag}</span>
-            <p className="text-xs text-zinc-400 leading-relaxed">{step.tip.text}</p>
+            <p
+              className="text-sm text-zinc-400 leading-relaxed"
+              dir={step.tip.dir ?? "ltr"}
+            >
+              {step.tip.text}
+            </p>
           </div>
         )}
 
@@ -396,13 +422,13 @@ function QuickCommandsSection() {
           className="bg-zinc-900 border border-zinc-700 rounded-xl overflow-hidden"
         >
           <div className="flex items-center justify-between px-4 py-2.5 bg-zinc-800 border-b border-zinc-700">
-            <span className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+            <span className="text-sm font-bold uppercase tracking-wide text-zinc-400" dir="ltr">
               {cmd.label}
             </span>
             <CopyButton text={cmd.prompt} />
           </div>
           <div className="px-5 py-4">
-            <p className="text-xs text-zinc-300 font-mono leading-relaxed">
+            <p className="text-sm text-zinc-300 font-mono leading-relaxed" dir="ltr">
               {cmd.prompt}
             </p>
           </div>
@@ -422,7 +448,10 @@ interface ClaudeCoachClientProps {
   quickCommands?: boolean;
 }
 
-export function ClaudeCoachClient({ steps, quickCommands: showQuickCommands }: ClaudeCoachClientProps) {
+export function ClaudeCoachClient({
+  steps,
+  quickCommands: showQuickCommands,
+}: ClaudeCoachClientProps) {
   if (showQuickCommands) {
     return <QuickCommandsSection />;
   }

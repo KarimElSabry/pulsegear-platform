@@ -30,7 +30,8 @@ export async function getDeals() {
   if (requestIds.length > 0) {
     const { data: requests, error: reqError } = await supabase
       .from('product_requests')
-      .select('id, requested_product, budget, customer_name, phone, customer_instagram') // ✅
+      // ✅ FIX: customer_instagram → instagram
+      .select('id, requested_product, budget, customer_name, phone, instagram')
       .in('id', requestIds)
 
     if (reqError) throw new Error(reqError.message)
@@ -52,7 +53,8 @@ export async function getDeals() {
 export async function getOpenProductRequests() {
   const { data, error } = await supabase
     .from('product_requests')
-    .select('id, requested_product, customer_name, phone, customer_instagram, budget, status, notes') // ✅
+    // ✅ FIX: customer_instagram → instagram
+    .select('id, requested_product, customer_name, phone, instagram, budget, status, notes')
     .in('status', ['new', 'contacted', 'deal_agreed'])
     .order('created_at', { ascending: false })
 
@@ -68,7 +70,7 @@ export async function createDeal(formData: FormData) {
       : null,
 
     customer_name:      formData.get('customer_name')      || null,
-    customer_phone:     formData.get('phone')     || null,
+    customer_phone:     formData.get('phone')              || null,
     customer_instagram: formData.get('customer_instagram') || null,
 
     status:             formData.get('status')             || 'deposit_pending',
@@ -113,7 +115,7 @@ export async function updateDeal(id: string, formData: FormData) {
     .from('deals')
     .update({
       customer_name:      formData.get('customer_name')      || null,
-      customer_phone:     formData.get('phone')     || null,
+      customer_phone:     formData.get('phone')              || null,
       customer_instagram: formData.get('customer_instagram') || null,
 
       status:             formData.get('status'),

@@ -5,11 +5,13 @@ import Link from "next/link";
 import { ClaudeCoachClient } from "./ClaudeCoachClient";
 
 const SITE_URL = "https://pulsegear-platform.vercel.app";
+const SHOP_URL = "https://pulsegear-platform.vercel.app/products";
+const INSTAGRAM_URL = "https://instagram.com/pulsegear_egypt";
 
 export const metadata: Metadata = {
   title: "How to Make Claude AI Your Personal Running Coach (Auto-Setup Guide)",
   description:
-    "Step-by-step guide to connecting Strava or Garmin to Claude AI through athletedata.health — and making your training dashboard update itself automatically. For Egyptian runners who want real answers from their data.",
+    "Step-by-step guide to connecting Strava or Garmin to Claude AI through athletedata.health and making your training dashboard update itself automatically. For Egyptian runners who want real answers from their data.",
   keywords: [
     "Claude AI running coach",
     "Strava Claude AI",
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
         url: `${SITE_URL}/og-claude-coach.jpg`,
         width: 1200,
         height: 630,
-        alt: "Claude AI Running Coach Setup — Pulse Gear Egypt",
+        alt: "Claude AI Running Coach Setup - Pulse Gear Egypt",
       },
     ],
   },
@@ -89,22 +91,23 @@ const steps = [
     numberColor: "text-blue-400",
     accentColor: "bg-blue-500",
     title: "Connect Your Training Apps to athletedata.health",
-    why: "athletedata.health is the bridge between your training apps (Strava, Garmin, COROS, etc.) and Claude AI. Without this connection, Claude can't read your data — it can only read what you paste manually.",
+    why: "athletedata.health is the bridge between your training apps (Strava, Garmin, COROS, etc.) and Claude AI. Without this connection, Claude cannot read your data. It can only read what you paste manually.",
     instructions: [
       "Go to athletedata.health",
       "Create a free account with your email",
-      'Click "Connect Apps"',
-      "Choose your app — Strava, Garmin, COROS, Polar, Wahoo, Suunto, or WHOOP",
-      'Log in to that app and click "Authorize" when it asks',
-      "Wait 2–3 minutes for your history to sync ⏳",
+      "Click Connect Apps",
+      "Choose your app: Strava, Garmin, COROS, Polar, Wahoo, Suunto, or WHOOP",
+      "Log in to that app and click Authorize when it asks",
+      "Wait 2 to 3 minutes for your history to sync",
     ],
     success:
-      "You'll know it worked when you see your recent activities listed on athletedata.health",
+      "You will know it worked when you see your recent activities listed on athletedata.health",
     warning:
-      "If you see zero activities: your sync is still running — give it 5 minutes and refresh. If it's still empty, disconnect and reconnect the app.",
+      "If you see zero activities, your sync is still running. Give it 5 minutes and refresh. If it is still empty, disconnect and reconnect the app.",
     tip: {
       flag: "🇪🇬",
-      text: "If you use both Strava and Garmin — connect Garmin. Garmin gives you sleep, HRV, and heart rate data that Strava doesn't share. More data = better analysis.",
+      text: "لو بتستخدم Strava و Garmin مع بعض، وصّل Garmin. بيديك sleep و HRV وبيانات القلب اللي Strava مش بيشاركها. كل ما البيانات أكتر، كل ما التحليل أحسن.",
+      dir: "rtl",
     },
   },
   {
@@ -113,19 +116,20 @@ const steps = [
     numberColor: "text-purple-400",
     accentColor: "bg-purple-500",
     title: "Get Claude Code on Your Laptop",
-    why: "Claude.ai (the website) is great for one-time analysis. But for automatic daily updates, you need Claude Code — the version that runs on your computer and can be scheduled like an alarm.",
+    why: "Claude.ai on the web is great for one-time analysis. But for automatic daily updates, you need Claude Code, the version that runs on your computer and can be scheduled like an alarm.",
     instructions: [
       "Go to claude.ai/code",
       "Download Claude Code for your operating system (Windows / Mac / Linux)",
-      "Install it — it's like installing any normal app",
+      "Install it like any normal app",
       "Open your terminal (Command Prompt on Windows, Terminal on Mac)",
       "Type this and press Enter:",
     ],
     terminalCommand: "claude",
-    success: "If you see a welcome message — تمام، شغال 🎉",
+    success: "If you see a welcome message, you are good to go.",
     tip: {
       flag: "💡",
-      text: "مش عارف تشتغل بالـ terminal؟ No problem — Steps 1–4 still work without it. You just won't get the automatic daily update. You can always come back and add that part later.",
+      text: "مش عارف تشتغل بالـ terminal؟ مش مشكلة. الخطوات 1 لـ 4 شغالة من غيره. بس مش هتاخد الـ auto-update اليومي. تقدر ترجع وتضيفه بعدين.",
+      dir: "rtl",
     },
   },
   {
@@ -138,7 +142,7 @@ const steps = [
     instructions: ["Open your terminal and run these commands one at a time:"],
     terminalCommands: ["mkdir my-running-coach", "cd my-running-coach", "claude"],
     warning:
-      "Don't delete this folder. Everything — your dashboard, your data, your settings — lives here.",
+      "Do not delete this folder. Everything, your dashboard, your data, your settings, lives here.",
   },
   {
     number: "04",
@@ -146,10 +150,10 @@ const steps = [
     numberColor: "text-yellow-400",
     accentColor: "bg-yellow-500",
     title: "Connect Claude to Your Training Data (MCP Setup)",
-    why: "You're telling Claude Code to use athletedata.health as a live data source — so every time you ask Claude something, it reads your fresh training data automatically.",
+    why: "You are telling Claude Code to use athletedata.health as a live data source. So every time you ask Claude something, it reads your fresh training data automatically.",
     instructions: ["Do this inside Claude Code (paste this message):"],
     success:
-      'You\'ll know it\'s connected when you ask Claude "how many km did I run last week?" and it gives you the real number — not a generic answer.',
+      "You will know it is connected when you ask Claude how many km you ran last week and it gives you the real number, not a generic answer.",
   },
   {
     number: "05",
@@ -165,7 +169,7 @@ const steps = [
     color: "border-orange-500/40 bg-orange-500/5",
     numberColor: "text-orange-400",
     accentColor: "bg-orange-500",
-    title: "Make It Automatic (Daily Auto-Update) ⭐",
+    title: "Make It Automatic (Daily Auto-Update)",
     why: "Instead of you going to Claude every day, Claude checks your new workouts every morning and updates your dashboard automatically.",
     instructions: ["Paste this into Claude Code:"],
     afterSteps: [
@@ -175,7 +179,7 @@ const steps = [
       "You open dashboard.html and it already has yesterday's run included",
     ],
     warning:
-      "Your laptop needs to be on at 7am for this to run. If it's off, it runs the next time it's on and it's past 7am. You can change the time — just tell Claude \"run it at 6am\" or \"run it at 9am\" instead.",
+      "Your laptop needs to be on at 7am for this to run. If it is off, it runs the next time it is on and it is past 7am. You can change the time by telling Claude to run it at 6am or 9am instead.",
   },
   {
     number: "07",
@@ -191,80 +195,63 @@ const steps = [
 const faqs = [
   {
     q: "Do I need to pay for Claude?",
-    a: "The free tier of Claude handles everything in this guide. You don't need a paid plan to start. If you run into limits (it tells you when you do), the paid plan is affordable and worth it if you use this daily.",
-    rtl: false,
+    qAr: "محتاج أدفع عشان أستخدم Claude؟",
+    a: "The free tier of Claude handles everything in this guide. You do not need a paid plan to start. If you run into limits, it tells you when you do. The paid plan is affordable and worth it if you use this daily.",
+    aAr: "الـ free plan بتاع Claude بيعمل كل حاجة في الـ guide ده. مش محتاج تدفع عشان تبدأ. لو وصلت للـ limit هيقولك. لو بتستخدمه كل يوم، الـ paid plan بسعر كويس وبيستاهل.",
   },
   {
-    q: "My Garmin is connected to Strava — do I connect Garmin or Strava to athletedata.health?",
-    a: "Connect Garmin directly if you can. Garmin shares heart rate, HRV, sleep, and recovery data. Strava only shares pace and distance. More data = Claude gives you better answers.",
+    q: "My Garmin is connected to Strava. Do I connect Garmin or Strava to athletedata.health?",
+    qAr: "Garmin بتاعي متوصل بـ Strava. أوصّل Garmin ولا Strava بـ athletedata.health؟",
+    a: "Connect Garmin directly if you can. Garmin shares heart rate, HRV, sleep, and recovery data. Strava only shares pace and distance. More data means Claude gives you better answers.",
+    aAr: "وصّل Garmin مباشرة لو قدرت. Garmin بيشارك بيانات القلب و HRV والنوم والريكفري. Strava بيشارك بس الـ pace والمسافة. كل ما البيانات أكتر، كل ما إجابات Claude أحسن.",
     suffix: "اتصل بالاتنين لو ممكن.",
-    rtl: false,
   },
   {
-    q: "What if my activities don't show up?",
-    a: "Give it 5–10 minutes after connecting. If it's still empty, disconnect and reconnect your app in athletedata.health settings. If Garmin specifically is missing HR or sleep data, check that you authorized all scopes (wellness and sleep) when you connected, not just activities.",
-    rtl: false,
+    q: "What if my activities do not show up?",
+    qAr: "إيه اللي أعمله لو الـ activities مش ظاهرة؟",
+    a: "Give it 5 to 10 minutes after connecting. If it is still empty, disconnect and reconnect your app in athletedata.health settings. If Garmin is missing HR or sleep data, check that you authorized all scopes (wellness and sleep) when you connected, not just activities.",
+    aAr: "استنى 5 لـ 10 دقايق بعد الاتصال. لو لسه فاضي، افصل وأعد الاتصال من إعدادات athletedata.health. لو Garmin مش بيظهر بيانات القلب أو النوم، تأكد إنك وافقت على كل الصلاحيات (wellness و sleep) مش بس الـ activities.",
   },
   {
     q: "Can I use this without Claude Code (just claude.ai on the web)?",
-    a: "Yes — Steps 1 and 5 work on claude.ai without installing anything. You just won't get the automatic daily update from Step 6. You would need to open claude.ai and paste the prompt manually each time you want a fresh analysis.",
-    rtl: false,
+    qAr: "أقدر أستخدمه من غير Claude Code، يعني من الموقع بس؟",
+    a: "Yes. Steps 1 and 5 work on claude.ai without installing anything. You just will not get the automatic daily update from Step 6. You would need to open claude.ai and paste the prompt manually each time you want a fresh analysis.",
+    aAr: "أيوه. الخطوات 1 و 5 شغالة على claude.ai من غير ما تنزّل حاجة. بس مش هتاخد الـ auto-update اليومي من الخطوة 6. هتحتاج تفتح claude.ai وتعمل paste للـ prompt بإيدك كل مرة عايز تحليل جديد.",
   },
   {
     q: "Is my training data private?",
-    a: "Your data goes from your app → athletedata.health → Claude. It is not shared publicly. Check the privacy policies of athletedata.health and Anthropic (Claude's maker) if you want the full details. As a rule: don't include personal information (name, location, phone number) in your prompts.",
-    rtl: false,
+    qAr: "بيانات تمريني هتبقى private؟",
+    a: "Your data goes from your app to athletedata.health to Claude. It is not shared publicly. Check the privacy policies of athletedata.health and Anthropic if you want the full details. As a rule, do not include personal information like your name, location, or phone number in your prompts.",
+    aAr: "البيانات بتاعتك بتروح من الـ app لـ athletedata.health لـ Claude. مش بتتشارك للعموم. لو عايز التفاصيل الكاملة، اقرأ سياسة الخصوصية بتاعة athletedata.health و Anthropic. كقاعدة، متحطش معلومات شخصية زي اسمك أو موقعك في الـ prompts.",
   },
   {
-    q: "I got zero activities in my dashboard — what's wrong?",
-    a: "Usually one of two things: your athletedata.health connection didn't authorize fully (disconnect and reconnect), or the sync is still running (wait 10 minutes and try again). Never accept a dashboard full of zeros as working. Claude will tell you clearly if data is missing.",
-    rtl: false,
+    q: "I got zero activities in my dashboard. What is wrong?",
+    qAr: "الـ dashboard بتاعي بيظهر صفر activities. إيه المشكلة؟",
+    a: "Usually one of two things: your athletedata.health connection did not authorize fully (disconnect and reconnect), or the sync is still running (wait 10 minutes and try again). Never accept a dashboard full of zeros as working. Claude will tell you clearly if data is missing.",
+    aAr: "غالباً واحدة من اتنين: الاتصال بـ athletedata.health مش اتعمله صح (افصل وأعد الاتصال)، أو الـ sync لسه شغال (استنى 10 دقايق وحاول تاني). متقبلش dashboard مليان أصفار على إنه شغال. Claude هيقولك بوضوح لو في بيانات ناقصة.",
   },
   {
-    q: "I don't have a race goal right now — can I still use this?",
-    a: 'تمام — just write "no fixed date, building base" in the goal section. Claude will give you a 10-week base-building plan and a dashboard that tracks your weekly volume and fitness trend without a countdown.',
-    rtl: true,
+    q: "I do not have a race goal right now. Can I still use this?",
+    qAr: "معنديش هدف سباق دلوقتي. أقدر أستخدمه برضو؟",
+    a: "Yes. Just write no fixed date, building base in the goal section. Claude will give you a 10-week base-building plan and a dashboard that tracks your weekly volume and fitness trend without a countdown.",
+    aAr: "تمام. اكتب في الـ goal section: no fixed date, building base. وهيديك خطة 10 أسابيع لبناء الـ base مع dashboard بيتابع الـ volume الأسبوعي وتطور اللياقة من غير countdown.",
   },
 ];
 
 const whatItWontDo = [
   "It cannot watch your workout in real time",
   "It cannot contact your doctor or adjust medication",
-  "It cannot guarantee race results — it gives analysis, not promises",
+  "It cannot guarantee race results. It gives analysis, not promises",
   "It cannot replace a qualified running coach for elite-level training",
-  "It will not invent numbers if data is missing — it will tell you the data is absent",
+  "It will not invent numbers if data is missing. It will tell you the data is absent",
 ];
 
 const whatItDoesBest = [
   "Spots patterns in your data that you would never catch manually",
   "Gives you honest feedback without sugarcoating",
   "Answers specific questions about your specific numbers",
-  "Updates your plan as your fitness changes — not a one-size plan",
+  "Updates your plan as your fitness changes, not a one-size plan",
   "Saves you hours of trying to interpret Garmin's own graphs",
-];
-
-const relatedArticles = [
-  {
-    href: "/blog/training-guide/heart-rate-zones",
-    icon: "📊",
-    tag: "Training Guide",
-    title: "Heart Rate Zones Explained",
-    rtl: false,
-  },
-  {
-    href: "/blog/training-guide/zone-2-training",
-    icon: "🫀",
-    tag: "Training Guide",
-    title: "Zone 2 Training: سر الـ Elite Athletes",
-    rtl: true,
-  },
-  {
-    href: "/blog/training-guide/complete-training-setup",
-    icon: "🔧",
-    tag: "Training Guide",
-    title: "Complete Training Setup 2026",
-    rtl: false,
-  },
 ];
 
 /* ─────────────────────────────────────────────
@@ -279,122 +266,126 @@ export default function ClaudeAIRunningCoachPage() {
           HERO
       ══════════════════════════════════════ */}
       <section className="w-full border-b border-zinc-800 py-20 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
-
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wide flex-wrap">
-            <Link href="/" className="hover:text-white transition-colors duration-200">Home</Link>
-            <span>/</span>
-            <Link href="/blog" className="hover:text-white transition-colors duration-200">Blog</Link>
-            <span>/</span>
-            <Link href="/blog/training-guide" className="hover:text-white transition-colors duration-200">Training Guide</Link>
-            <span>/</span>
-            <span className="text-zinc-400">Claude AI Running Coach</span>
-          </div>
+        <div className="max-w-3xl mx-auto flex flex-col gap-8">
 
           {/* Tag */}
           <span className="self-start text-xs font-bold uppercase tracking-wide text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
             Training Guide · AI Tools
           </span>
 
-          {/* Hero Label */}
-          {/* ✅ FIX: mixed Arabic/English sentence → dir="rtl" */}
-          <p className="text-sm font-bold uppercase tracking-widest text-zinc-500" dir="rtl">
-            🏃‍♂️ Claude بيحلل تريننجك أوتوماتيك؟ يلا نعمل ده دلوقتي.
-          </p>
-
-          {/* Title */}
-          {/* ✅ FIX: em dash was a plain hyphen/broken char — now a proper HTML entity */}
-          <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
-            Turn Your Running Data Into a
-            <br />
-            <span className="text-red-500">Personal Coach</span>
-            <br />
-            <span aria-hidden="true">&mdash;</span> Automatically
-          </h1>
-
-          {/* Subheadline */}
-          <p className="text-lg font-bold text-zinc-300 leading-relaxed">
-            No copy-paste. No spreadsheets. Connect once, and Claude AI reads
-            your Strava or Garmin data, builds your dashboard, and adjusts your
-            training plan &mdash; every single day.
-          </p>
-
-          {/* Intro */}
-          {/* ✅ FIX: starts Arabic then switches to English → dir="rtl" is correct here */}
-          <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-            بجد &mdash; most runners have way more data than they know what to
-            do with. You finish a 10K, Garmin shows you 47 numbers, and you
-            still don&apos;t know if you trained too hard or not hard enough.
-            This guide sets up Claude AI to answer that for you &mdash;
-            automatically, in plain language, every morning before you even
-            lace up.
-          </p>
-
-          {/* Meta */}
-          <div className="flex items-center gap-4 text-xs text-zinc-500 flex-wrap">
-            <span>⏱ 15 min read</span>
-            <span>•</span>
-            <span>🤖 AI Tools</span>
-            <span>•</span>
-            <span>🇪🇬 For Egyptian Runners</span>
-            <span>•</span>
-            <span>Updated 2026</span>
+          {/* Hook */}
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-bold text-red-400 uppercase tracking-widest" dir="ltr">
+              Watched the reel? Full setup is right here.
+            </p>
+            <h1 className="text-4xl md:text-5xl font-black leading-tight" dir="rtl">
+              خلي Claude AI يقرأ
+              <br />
+              <span className="text-red-500">تمرينك كل يوم</span>
+              <br />
+              لوحده.
+            </h1>
+            <p className="text-base text-zinc-300 leading-relaxed max-w-xl" dir="ltr">
+              Connect Strava or Garmin once. Claude builds your dashboard and
+              updates it every morning automatically. No copy-paste. No
+              spreadsheets. 15 minutes to set up.
+            </p>
           </div>
 
-          {/* What You'll Build */}
+          {/* Trust Bar */}
+          <div className="flex items-center gap-4 text-sm text-zinc-500 flex-wrap" dir="ltr">
+            <span>🇪🇬 For Egyptian Runners</span>
+            <span>·</span>
+            <span>⏱ 15 min setup</span>
+            <span>·</span>
+            <span>✅ 100% Free</span>
+            <span>·</span>
+            <span>🤖 AI Tools</span>
+          </div>
+
+          {/* Follow CTA — First */}
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-base font-bold text-white" dir="rtl">
+                عجبك الـ tutorial؟
+              </p>
+              <p className="text-sm text-zinc-400" dir="ltr">
+                Follow the page for gear, deals, and weekly training tips.
+              </p>
+            </div>
+            <a
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap"
+            >
+              Follow على Instagram
+            </a>
+          </div>
+
+          {/* What You'll Get */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">
-              ✅ What you get at the end of this guide:
+            <p className="text-sm font-bold uppercase tracking-wide text-zinc-400" dir="rtl">
+              هتعمل إيه في الـ 15 دقيقة دول:
             </p>
             {[
               {
                 icon: "🗂️",
-                text: "A personal training dashboard — pace trends, weekly load, fitness vs fatigue — in one HTML file you open like a normal webpage",
+                text: "Dashboard شخصي بيعرض pace trends و weekly load و fitness vs fatigue في ملف HTML واحد",
+                dir: "rtl" as const,
               },
               {
                 icon: "🔄",
-                text: "Automatic daily updates — Claude checks for new workouts every morning without you doing anything",
+                text: "Auto-update كل يوم الصبح من غير ما تعمل حاجة",
+                dir: "rtl" as const,
               },
               {
                 icon: "🤖",
-                text: "A prompt you send to Claude — ask it to analyze your last 4 weeks, write your next training week, or tell you if you're overtraining",
+                text: "تقدر تسأل Claude عن آخر 4 أسابيع، الأسبوع الجاي، أو لو بتعمل overtraining",
+                dir: "rtl" as const,
               },
               {
                 icon: "📱",
-                text: "Works on any device — desktop, phone, tablet — no app to install",
+                text: "شغال على أي device، desktop أو موبايل، من غير app",
+                dir: "rtl" as const,
               },
             ].map((item, i) => (
               <div key={i} className="flex items-start gap-3">
-                <span className="text-lg shrink-0">{item.icon}</span>
-                <p className="text-sm text-zinc-300 leading-relaxed">{item.text}</p>
+                <span className="text-xl shrink-0">{item.icon}</span>
+                <p className="text-sm text-zinc-300 leading-relaxed" dir={item.dir}>
+                  {item.text}
+                </p>
               </div>
             ))}
           </div>
 
-          {/* Table of Contents */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">
-              📋 Table of Contents
-            </p>
-            {[
-              { href: "#requirements", label: "What You Need Before Starting" },
-              { href: "#steps", label: "Step-by-Step Setup (7 Steps)" },
-              { href: "#faq", label: "Frequently Asked Questions" },
-              { href: "#quick-reference", label: "Quick Reference Commands" },
-              { href: "#limitations", label: "What This Won't Do" },
-            ].map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition-colors duration-200 group"
-              >
-                <span className="w-1 h-1 rounded-full bg-zinc-600 group-hover:bg-red-500 transition-colors duration-200 shrink-0" />
-                {item.label}
-              </a>
-            ))}
-          </div>
+        </div>
+      </section>
 
+      {/* ══════════════════════════════════════
+          GEAR BANNER
+      ══════════════════════════════════════ */}
+      <section className="w-full border-b border-zinc-800 bg-zinc-900/50 py-6 px-6">
+        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🏃</span>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-bold text-white" dir="rtl">
+                بتدور على الـ running gear الصح؟
+              </p>
+              <p className="text-sm text-zinc-400" dir="rtl">
+                الـ gear اللي بنستخدمه، متاح دلوقتي.
+              </p>
+            </div>
+          </div>
+          <a
+            href={SHOP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 border border-red-500 text-red-400 hover:bg-red-500 hover:text-white text-sm font-bold uppercase tracking-wide px-4 py-2 rounded-full transition-all duration-200 whitespace-nowrap"
+          >
+            اتفرج على الـ Gear
+          </a>
         </div>
       </section>
 
@@ -406,12 +397,11 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── REQUIREMENTS ─── */}
         <section id="requirements" className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
+            <h2 className="text-2xl font-bold text-white" dir="ltr">
               ⚙️ What You Need Before Starting
             </h2>
-            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
-              اللي محتاجه قبل ما نبدأ — كله مجاناً
+              اللي محتاجه قبل ما نبدأ، كله مجاناً
             </p>
           </div>
 
@@ -430,18 +420,21 @@ export default function ClaudeAIRunningCoachPage() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <span>{req.icon}</span>
-                        <span className="text-zinc-300 text-xs leading-relaxed">{req.what}</span>
+                        <span className="text-zinc-300 text-sm leading-relaxed" dir="ltr">
+                          {req.what}
+                        </span>
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-green-400 font-bold text-xs">✅ Free</span>
+                      <span className="text-green-400 font-bold text-sm">✅ Free</span>
                     </td>
                     <td className="px-5 py-4">
                       <a
                         href={req.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-2"
+                        className="text-sm text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-2"
+                        dir="ltr"
                       >
                         {req.where}
                       </a>
@@ -452,18 +445,11 @@ export default function ClaudeAIRunningCoachPage() {
             </table>
           </div>
 
-          {/* Windows note */}
-          {/* ✅ FIX: mixed sentence — English dominant, Arabic embedded → dir="ltr" is fine, no change needed */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-start gap-3">
-            <span className="text-lg shrink-0">🪟</span>
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <span className="text-xl shrink-0">🪟</span>
+            <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
               <span className="text-white font-bold">Note for Egyptian runners:</span>{" "}
-              Claude Code works on Windows, Mac, and Linux. If you&apos;re on
-              Windows,{" "}
-              <span dir="rtl" className="inline">
-                خليك على
-              </span>{" "}
-              Chrome or Edge &mdash; it works fine.
+              Claude Code works on Windows, Mac, and Linux. Chrome or Edge works best.
             </p>
           </div>
         </section>
@@ -471,49 +457,79 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── STEPS ─── */}
         <section id="steps" className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            {/* ✅ FIX: Arabic heading mixed with English → dir="rtl" */}
-            <h2 className="text-2xl font-black uppercase text-white" dir="rtl">
-              📋 الخطوات — follow them in order
+            <h2 className="text-2xl font-bold text-white" dir="rtl">
+              الخطوات، واحدة واحدة 📋
             </h2>
-            <p className="text-sm text-zinc-500">
-              One at a time. Don&apos;t skip ahead.
+            <p className="text-sm text-zinc-500" dir="ltr">
+              One at a time. Do not skip ahead.
             </p>
           </div>
           <ClaudeCoachClient steps={steps} />
         </section>
 
+        {/* ─── MID-PAGE FOLLOW CTA ─── */}
+        <section className="bg-gradient-to-br from-purple-600/15 to-pink-600/10 border border-purple-500/20 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
+          <span className="text-3xl">📲</span>
+          <h3 className="text-lg font-bold text-white" dir="rtl">
+            عجبك الـ setup لحد هنا؟
+          </h3>
+          <p className="text-sm text-zinc-400 max-w-sm leading-relaxed" dir="ltr">
+            Follow the page on Instagram for gear reviews, running deals, and
+            weekly tips for Egyptian runners.
+          </p>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-6 py-3 rounded-full transition-all duration-200" dir="rtl"
+          >
+            Follow على Instagram
+          </a>
+        </section>
+
         {/* ─── FAQ ─── */}
         <section id="faq" className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
+            <h2 className="text-2xl font-bold text-white" dir="ltr">
               ❓ Frequently Asked Questions
             </h2>
-            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
               أسئلة شايفينها كتير
             </p>
           </div>
+
           <div className="flex flex-col gap-4">
             {faqs.map((faq, i) => (
               <div
                 key={i}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
+                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4"
               >
-                <p className="font-bold text-white text-sm">
+                {/* English Question */}
+                <p className="font-bold text-white text-base" dir="ltr">
                   🔸 {faq.q}
                 </p>
-                <p
-                  className="text-xs text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3"
-                  dir={faq.rtl ? "rtl" : "ltr"}
-                >
-                  {faq.a}
-                  {/* ✅ FIX: Garmin FAQ had Arabic suffix tacked on — now rendered separately */}
-                  {faq.suffix && (
-                    <span dir="rtl" className="block mt-1">
-                      {faq.suffix}
-                    </span>
-                  )}
+
+                {/* Arabic Question */}
+                <p className="text-sm font-bold text-zinc-400" dir="rtl">
+                  {faq.qAr}
                 </p>
+
+                <div className="border-t border-zinc-800 pt-4 flex flex-col gap-3">
+                  {/* English Answer */}
+                  <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
+                    {faq.a}
+                    {faq.suffix && (
+                      <span dir="rtl" className="block mt-1 text-sm text-zinc-400">
+                        {faq.suffix}
+                      </span>
+                    )}
+                  </p>
+
+                  {/* Arabic Answer */}
+                  <p className="text-sm text-zinc-500 leading-relaxed border-t border-zinc-800/60 pt-3" dir="rtl">
+                    {faq.aAr}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -522,11 +538,11 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── QUICK REFERENCE ─── */}
         <section id="quick-reference" className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
+            <h2 className="text-2xl font-bold text-white" dir="ltr">
               📌 Quick Reference Commands
             </h2>
-            <p className="text-sm text-zinc-500">
-              Save these &mdash; you&apos;ll use them every week.
+            <p className="text-sm text-zinc-500" dir="ltr">
+              Save these. You will use them every week.
             </p>
           </div>
           <ClaudeCoachClient quickCommands />
@@ -535,41 +551,42 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── LIMITATIONS ─── */}
         <section id="limitations" className="flex flex-col gap-8">
           <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-black uppercase text-white">
-              ⚠️ What This Won&apos;t Do
+            <h2 className="text-2xl font-bold text-white" dir="ltr">
+              ⚠️ What This Will Not Do
             </h2>
-            {/* ✅ FIX: Arabic sentence → dir="rtl" */}
             <p className="text-sm text-zinc-500" dir="rtl">
-              بكل صراحة — Claude مش بيعمل كل حاجة
+              بكل صراحة، Claude مش بيعمل كل حاجة
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Won't do */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-red-400">
-                ❌ Can&apos;t do this
+              <p className="text-sm font-bold uppercase tracking-wide text-red-400" dir="ltr">
+                ❌ Cannot do this
               </p>
               <div className="flex flex-col gap-3">
                 {whatItWontDo.map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-red-500 text-xs shrink-0 mt-0.5">✗</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{item}</p>
+                    <span className="text-red-500 text-sm shrink-0 mt-0.5">✗</span>
+                    <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
+                      {item}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Does best */}
             <div className="bg-zinc-900 border border-green-500/20 rounded-2xl p-6 flex flex-col gap-4">
-              <p className="text-xs font-bold uppercase tracking-wide text-green-400">
+              <p className="text-sm font-bold uppercase tracking-wide text-green-400" dir="ltr">
                 ✅ Does this extremely well
               </p>
               <div className="flex flex-col gap-3">
                 {whatItDoesBest.map((item, i) => (
                   <div key={i} className="flex items-start gap-2">
-                    <span className="text-green-500 text-xs shrink-0 mt-0.5">✓</span>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{item}</p>
+                    <span className="text-green-500 text-sm shrink-0 mt-0.5">✓</span>
+                    <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
+                      {item}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -580,64 +597,100 @@ export default function ClaudeAIRunningCoachPage() {
         {/* ─── CLOSING ─── */}
         <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-5 text-center items-center">
           <span className="text-4xl">🏁</span>
-          {/* ✅ FIX: Arabic heading → dir="rtl" */}
-          <h3 className="text-xl font-black uppercase text-white" dir="rtl">
-            يلا — الداتا بتاعتك جاهزة، Claude جاهز، انت بس كمل
+          <h3 className="text-xl font-bold text-white" dir="rtl">
+            يلا، الداتا بتاعتك جاهزة، Claude جاهز، انت بس كمل
           </h3>
-          {/* ✅ FIX: starts Arabic then English → dir="rtl" */}
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
+          <p className="text-sm text-zinc-400 max-w-md leading-relaxed" dir="ltr">
             Most runners collect months of data and never look past the weekly
-            summary. This setup changes that. Claude reads the full picture
-            &mdash; your load, your recovery, your trend &mdash; and tells you
-            what it means in plain language, every single morning.
+            summary. This setup changes that. Claude reads the full picture,
+            your load, your recovery, your trend, and tells you what it means
+            in plain language, every single morning.
           </p>
-          <p className="text-zinc-300 text-sm font-bold">
+          <p className="text-sm text-zinc-300 font-bold" dir="ltr">
             Set it up once. Let it run. Focus on training.
           </p>
-          {/* ✅ FIX: Arabic sentence → dir="rtl" */}
-          <p className="text-zinc-500 text-xs" dir="rtl">
-            اتكلم معانا في الكومنتس — شيرلنا الـ readiness verdict بتاعك لما تخلص الـ setup 👇
+        </section>
+
+        {/* ══════════════════════════════════════
+            COMMENT CTA — BIG
+        ══════════════════════════════════════ */}
+        <section className="bg-gradient-to-br from-zinc-900 to-zinc-800 border-2 border-zinc-600 rounded-2xl p-10 flex flex-col items-center gap-6 text-center">
+          <span className="text-5xl">💬</span>
+
+          {/* Big headline */}
+          <div className="flex flex-col gap-3">
+            <h3 className="text-3xl md:text-4xl font-black text-white leading-tight" dir="rtl">
+              اتكلم معانا
+              <br />
+              <span className="text-yellow-400">في الكومنتس</span>
+            </h3>
+            <p className="text-lg font-bold text-zinc-300" dir="ltr">
+              Tell us how it went.
+            </p>
+          </div>
+
+          {/* Prompts */}
+          <div className="flex flex-col gap-3 w-full max-w-md">
+            {[
+              { emoji: "🏃", text: "شيرلنا الـ readiness verdict بتاعك", dir: "rtl" as const },
+              { emoji: "❓", text: "عندك سؤال في أي خطوة؟ اسأل هنا", dir: "rtl" as const },
+              { emoji: "🔥", text: "عجبك الـ setup؟ قولنا", dir: "rtl" as const },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 bg-zinc-900/60 border border-zinc-700 rounded-xl px-4 py-3"
+              >
+                <span className="text-xl shrink-0">{item.emoji}</span>
+                <p className="text-sm font-bold text-zinc-300" dir={item.dir}>
+                  {item.text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-sm text-zinc-500" dir="rtl">
+            بنرد على كل كومنت 👇
           </p>
         </section>
 
-        {/* ─── RELATED ARTICLES ─── */}
-        <section className="flex flex-col gap-6">
-          {/* ✅ FIX: Arabic heading → dir="rtl" */}
-          <h2 className="text-2xl font-black uppercase text-white" dir="rtl">
-            اقرأ كمان 📚
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {relatedArticles.map((article) => (
-              <Link
-                key={article.href}
-                href={article.href}
-                className="bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-2xl p-5 flex flex-col gap-3 transition-colors duration-200 group"
-              >
-                <span className="text-2xl">{article.icon}</span>
-                <p className="text-xs font-bold uppercase tracking-wide text-purple-400">
-                  {article.tag}
-                </p>
-                {/* ✅ FIX: dir driven by data */}
-                <p
-                  className="font-bold text-white text-sm group-hover:text-red-400 transition-colors duration-200"
-                  dir={article.rtl ? "rtl" : "ltr"}
-                >
-                  {article.title}
-                </p>
-              </Link>
-            ))}
+        {/* ─── FINAL GEAR CTA ─── */}
+        <section className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 flex flex-col items-center gap-5 text-center">
+          <span className="text-3xl">🛒</span>
+          <div className="flex flex-col gap-2">
+            <h3 className="text-lg font-bold text-white" dir="rtl">
+              جاهز تتدرب صح؟
+            </h3>
+            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed" dir="rtl">
+              الـ running gear اللي محتاجه موجود، بأسعار مناسبة للـ Egyptian runners.
+            </p>
           </div>
+          <a
+            href={SHOP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-red-500 hover:bg-red-400 text-white text-sm font-bold px-8 py-3 rounded-full transition-all duration-200"
+          >
+            اتفرج على الـ Collection
+          </a>
         </section>
 
-        {/* Back */}
-        <div className="flex justify-center pt-4">
-          <Link
-            href="/blog"
-            className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
+        {/* ─── FINAL FOLLOW CTA ─── */}
+        <section className="flex flex-col items-center gap-4 text-center pb-4">
+          <p className="text-sm text-zinc-400" dir="rtl">
+            عايز تشوف gear جديد ودـ deals وتips كل أسبوع؟
+          </p>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-6 py-3 rounded-full transition-all duration-200"
           >
-            ← Back to Blog
-          </Link>
-        </div>
+            Follow @pulsegear_egypt على Instagram
+          </a>
+          <p className="text-sm text-zinc-600" dir="rtl">
+            اتكلم معانا في الكومنتس على الـ reel
+          </p>
+        </section>
 
       </article>
     </main>
