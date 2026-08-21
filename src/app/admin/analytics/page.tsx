@@ -1,5 +1,8 @@
 // src/app/admin/analytics/page.tsx
 
+export const dynamic    = 'force-dynamic'  // ✅ FIX — disable Next.js cache
+export const revalidate = 0                // ✅ FIX — always fetch fresh data
+
 import { createServerClient } from '@/lib/supabase'
 import { cookies }            from 'next/headers'
 import { redirect }           from 'next/navigation'
@@ -79,7 +82,6 @@ async function getAnalyticsData() {
       .gte('sale_date', thirtyDaysAgo)
       .order('sale_date', { ascending: true }),
 
-    // ✅ GA4 — runs in parallel, won't break page if it fails
     getGA4Data(),
   ])
 
@@ -258,40 +260,27 @@ async function getAnalyticsData() {
   }))
 
   return {
-    // Overview
     totalProducts,
     availableProducts,
     soldProducts,
     reservedProducts,
     outOfStockProducts,
-
-    // Revenue
     totalRevenue,
     discountedRevenue,
     totalSavingsGiven,
     avgProductPrice,
-
-    // Reservations
     totalReservations,
     pendingReservations,
     confirmedReservations,
     cancelledReservations,
-
-    // Lists
     discountCodes:       discountCodesRes.data ?? [],
     topReservedProducts,
     byCategory,
     byBrand,
-
-    // Time series
     reservationsOverTime,
     productsOverTime,
-
-    // Likes
     totalLikes,
     mostLikedProducts,
-
-    // Sales
     totalSalesCount,
     totalSalesRevenue,
     totalSalesProfit,
@@ -300,8 +289,6 @@ async function getAnalyticsData() {
     salesByChannel,
     salesOverTime,
     recentSales,
-
-    // ✅ GA4
     ...ga4Data,
   }
 }

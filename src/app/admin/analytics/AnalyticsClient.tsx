@@ -75,7 +75,7 @@ interface AnalyticsData {
     shipping_eur:      number
     exchange_rate:     number
     notes?:            string
-    discount_code?:    string | null // ✅ Added
+    discount_code?:    string | null
   }[]
 }
 
@@ -95,7 +95,7 @@ interface EditSale {
   shipping_eur:      number
   exchange_rate:     number
   notes?:            string
-  discount_code?:    string | null // ✅ Added
+  discount_code?:    string | null
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -124,11 +124,11 @@ function formatDuration(seconds: string) {
 function ManualSaleForm({
   editSale,
   onClose,
-  discountCodes = [], // ✅ Added
+  discountCodes = [],
 }: {
   editSale?:      EditSale
   onClose?:       () => void
-  discountCodes?: { code: string; discount_percent: number; is_active: boolean }[] // ✅ Added
+  discountCodes?: { code: string; discount_percent: number; is_active: boolean }[]
 }) {
   const isEditing = !!editSale
 
@@ -145,9 +145,10 @@ function ManualSaleForm({
     editSale ? String(editSale.exchange_rate) : ''
   )
 
-  const [originalEur, setOriginalEur] = useState(editSale ? String(editSale.original_eur)      : '')
-  const [shippingEur, setShippingEur] = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
-  const [sellingEgp,  setSellingEgp]  = useState(editSale ? String(editSale.selling_price_egp) : '')
+  const [originalEur,   setOriginalEur]   = useState(editSale ? String(editSale.original_eur)      : '')
+  const [shippingEur,   setShippingEur]   = useState(editSale ? String(editSale.shipping_eur)      : String(DEFAULT_SHIPPING_EUR))
+  const [sellingEgp,    setSellingEgp]    = useState(editSale ? String(editSale.selling_price_egp) : '')
+  const [discountCode,  setDiscountCode]  = useState<string>(editSale?.discount_code ?? '')  // ✅ controlled state
 
   const [commissionPct, setCommissionPct] = useState(() => {
     if (!editSale) return '0'
@@ -232,6 +233,9 @@ function ManualSaleForm({
     if (profitMarginPct !== null) formData.set('profit_margin_pct', String(profitMarginPct.toFixed(2)))
     formData.set('commission_egp', String(Math.round(commissionAmt)))
 
+    // ✅ FIX — explicitly set discount_code from controlled state
+    formData.set('discount_code', discountCode ?? '')
+
     startTransition(async () => {
       if (isEditing && editSale) {
         await updateSale(editSale.id, formData)
@@ -243,6 +247,7 @@ function ManualSaleForm({
         setShippingEur(String(DEFAULT_SHIPPING_EUR))
         setSellingEgp('')
         setCommissionPct('0')
+        setDiscountCode('')  // ✅ reset discount code
         setSuccess(true)
         setTimeout(() => setSuccess(false), 3000)
       }
@@ -250,7 +255,6 @@ function ManualSaleForm({
     })
   }
 
-  // ✅ Only show active codes in dropdown
   const activeCodes = discountCodes.filter((d) => d.is_active)
 
   return (
@@ -333,7 +337,8 @@ function ManualSaleForm({
             </div>
           </div>
 
-          {(rateError || !eurRate || isEditing) && (
+          {/* ✅ FIX — show rate input for both edit mode AND when API fails */}
+          {(rateError || !eurRate) && (
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-yellow-400 uppercase tracking-widest">
                 {isEditing ? '💱 Exchange Rate Used' : '⚠️ API unavailable — Enter rate manually'}
@@ -362,6 +367,26 @@ function ManualSaleForm({
                   </a>
                 </p>
               )}
+            </div>
+          )}
+
+          {/* ✅ Edit mode — show original rate + option to use live rate */}
+          {isEditing && (
+            <div className="flex items-center gap-3 bg-gray-800/60 rounded-xl px-4 py-3">
+              <span className="text-xs text-gray-400">
+                Rate used in original sale:
+                <strong className="text-white ml-1">{editSale?.exchange_rate} EGP</strong>
+              </span>
+              <button
+                type="button"
+                onClick={async () => {
+                  await fetchRate()
+                  if (eurRate) setManualRate(eurRate.toFixed(2))
+                }}
+                className="ml-auto text-xs text-purple-400 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full transition"
+              >
+                🔄 Use Live Rate
+              </button>
             </div>
           )}
 
@@ -563,7 +588,7 @@ function ManualSaleForm({
           </div>
         </div>
 
-        {/* ✅ Discount Code Dropdown */}
+        {/* ✅ FIX — Discount Code as fully controlled select */}
         {activeCodes.length > 0 && (
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
@@ -573,7 +598,8 @@ function ManualSaleForm({
             <select
               name="discount_code"
               disabled={isPending}
-              defaultValue={editSale?.discount_code ?? ''}
+              value={discountCode}                          // ✅ controlled
+              onChange={(e) => setDiscountCode(e.target.value)} // ✅ controlled
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
             >
               <option value="">— No discount code —</option>
@@ -648,7 +674,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
   return (
     <div className="space-y-10">
 
-      {/* ── Divider ─────────────────────────────────────────────────── */}
       <div className="border-t border-zinc-800" />
 
       {/* ── Overview Stats ───────────────────────────────────────────── */}
@@ -924,7 +949,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-right py-3 pr-4">Revenue</th>
                   <th className="text-right py-3 pr-4">Profit</th>
                   <th className="text-right py-3 pr-4">Margin</th>
-                  <th className="text-right py-3 pr-4">Code</th>   {/* ✅ Added */}
+                  <th className="text-right py-3 pr-4">Code</th>
                   <th className="text-right py-3 pr-4">Edit</th>
                   <th className="text-right py-3">Delete</th>
                 </tr>
@@ -951,8 +976,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         {s.profit_margin_pct.toFixed(1)}%
                       </span>
                     </td>
-
-                    {/* ✅ Discount Code Cell */}
                     <td className="py-3 pr-4 text-right">
                       {s.discount_code ? (
                         <span className="text-xs font-bold bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full font-mono">
@@ -962,7 +985,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         <span className="text-zinc-600 text-xs">—</span>
                       )}
                     </td>
-
                     <td className="py-3 pr-4 text-right">
                       <button
                         onClick={() => setEditingSale(s)}
@@ -1046,7 +1068,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       )}
 
       {/* ── Add New Sale Form ────────────────────────────────────────── */}
-      <ManualSaleForm discountCodes={data.discountCodes} /> {/* ✅ Pass discountCodes */}
+      <ManualSaleForm discountCodes={data.discountCodes} />
 
       {/* ── Edit Sale Modal ──────────────────────────────────────────── */}
       {editingSale && (
@@ -1058,7 +1080,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
             <ManualSaleForm
               editSale={editingSale}
               onClose={() => setEditingSale(null)}
-              discountCodes={data.discountCodes} // ✅ Pass discountCodes
+              discountCodes={data.discountCodes}
             />
           </div>
         </div>

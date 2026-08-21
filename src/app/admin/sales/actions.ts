@@ -1,4 +1,4 @@
-// src/app/admin/sales/actions.ts
+// app/admin/sales/actions.ts
 
 'use server'
 
@@ -43,7 +43,6 @@ export async function addSale(formData: FormData) {
 
   if (error) throw new Error(error.message)
 
-  // ── Increment usage_count if a code was selected ──────────────────────────
   if (discountCode) {
     await supabase.rpc('increment_discount_usage', { code_value: discountCode })
   }
@@ -61,8 +60,21 @@ export async function updateSale(id: string, formData: FormData) {
   const commissionEgp   = parseFloat(formData.get('commission_egp')    as string) || 0
   const marginPct       = parseFloat(formData.get('profit_margin_pct') as string) || 0
 
+  // ✅ FIX 1 — read discount_code, empty string → null
+  const rawCode      = formData.get('discount_code') as string | null
+  const discountCode = rawCode && rawCode.trim() !== '' ? rawCode.trim() : null
+
   const costEgp   = (originalEur + shippingEur) * exchangeRate
   const profitEgp = sellingPriceEgp - costEgp - commissionEgp
+
+  // ✅ FIX 2 — fetch old code before updating to adjust usage_count
+  const { data: existingSale } = await supabase
+    .from('sales')
+    .select('discount_code')
+    .eq('id', id)
+    .single()
+
+  const oldCode = existingSale?.discount_code ?? null
 
   const { error } = await supabase
     .from('sales')
@@ -79,18 +91,42 @@ export async function updateSale(id: string, formData: FormData) {
       sale_channel:      formData.get('sale_channel'),
       sale_date:         formData.get('sale_date'),
       notes:             formData.get('notes') || null,
+      discount_code:     discountCode,           // ✅ FIX 3 — was missing!
     })
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+
+  // ✅ FIX 4 — adjust usage_count only if code actually changed
+  if (oldCode !== discountCode) {
+    if (oldCode) {
+      await supabase.rpc('decrement_discount_usage', { code_value: oldCode })
+    }
+    if (discountCode) {
+      await supabase.rpc('increment_discount_usage', { code_value: discountCode })
+    }
+  }
+
   revalidatePath('/admin/analytics')
   revalidatePath('/admin/sales')
 }
 
 // ─── Delete Sale ─────────────────────────────────────────────────────────────
 export async function deleteSale(id: string) {
+  // ✅ FIX 5 — decrement usage_count when deleting a sale that had a code
+  const { data: sale } = await supabase
+    .from('sales')
+    .select('discount_code')
+    .eq('id', id)
+    .single()
+
+  if (sale?.discount_code) {
+    await supabase.rpc('decrement_discount_usage', { code_value: sale.discount_code })
+  }
+
   const { error } = await supabase.from('sales').delete().eq('id', id)
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/sales')
   revalidatePath('/admin/analytics')
 }
