@@ -7,10 +7,9 @@ const PROPERTY_ID = process.env.GA4_PROPERTY_ID!
 
 function getClient(): BetaAnalyticsDataClient {
 
-  // ✅ PRODUCTION (Vercel) — credentials from base64 env variable
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_B64) {
-    const json        = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_B64, 'base64').toString('utf-8')
-    const credentials = JSON.parse(json)
+  // ✅ PRODUCTION (Vercel) — credentials from env variable
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
     return new BetaAnalyticsDataClient({ credentials })
   }
 
@@ -198,11 +197,29 @@ export async function getGA4Data() {
         users:      parseInt(row.metricValues?.[2]?.value ?? '0'),
       })),
 
-      ga4NewVsReturning: (returningUsers[0].rows ?? []).map((row) => ({
-        type:     row.dimensionValues?.[0]?.value ?? '',
-        users:    parseInt(row.metricValues?.[0]?.value ?? '0'),
-        sessions: parseInt(row.metricValues?.[1]?.value ?? '0'),
-      })),
+      // ✅ FIX — merge duplicate "Returning Users" rows from GA4
+      ga4NewVsReturning: (() => {
+        const rows = returningUsers[0].rows ?? []
+        const result: Record<string, { type: string; users: number; sessions: number }> = {}
+
+        for (const row of rows) {
+          const rawType  = row.dimensionValues?.[0]?.value ?? ''
+          const users    = parseInt(row.metricValues?.[0]?.value ?? '0')
+          const sessions = parseInt(row.metricValues?.[1]?.value ?? '0')
+
+          // Normalize — anything that's not "new" goes under "Returning Users"
+          const type = rawType === 'new' ? 'New Users' : 'Returning Users'
+
+          if (!result[type]) {
+            result[type] = { type, users: 0, sessions: 0 }
+          }
+
+          result[type].users    += users
+          result[type].sessions += sessions
+        }
+
+        return Object.values(result)
+      })(),
     }
 
   } catch (error) {
