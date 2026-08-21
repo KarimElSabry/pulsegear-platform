@@ -1,13 +1,29 @@
 // src/lib/analytics.ts
 import { BetaAnalyticsDataClient } from '@google-analytics/data'
 import path from 'path'
+import fs from 'fs'
 
 const PROPERTY_ID = process.env.GA4_PROPERTY_ID!
 
-function getClient() {
-  return new BetaAnalyticsDataClient({
-    keyFilename: path.join(process.cwd(), 'secrets', 'pulsegear-analytics.json'),
-  })
+function getClient(): BetaAnalyticsDataClient {
+
+  // ✅ PRODUCTION (Vercel) — credentials from base64 env variable
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_B64) {
+    const json        = Buffer.from(process.env.GOOGLE_SERVICE_ACCOUNT_B64, 'base64').toString('utf-8')
+    const credentials = JSON.parse(json)
+    return new BetaAnalyticsDataClient({ credentials })
+  }
+
+  // ✅ LOCAL DEV — use the JSON file
+  const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+    ? path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
+    : path.join(process.cwd(), 'secrets', 'pulsegear-analytics.json')
+
+  if (!fs.existsSync(keyPath)) {
+    throw new Error(`GA4 key file not found at: ${keyPath}`)
+  }
+
+  return new BetaAnalyticsDataClient({ keyFilename: keyPath })
 }
 
 export async function getGA4Data() {
@@ -87,17 +103,20 @@ export async function getGA4Data() {
           ],
         }),
 
-        // 6. Top countries 🆕
+        // 6. Top countries
         client.runReport({
           property: `properties/${PROPERTY_ID}`,
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'country' }],
-          metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+          metrics: [
+            { name: 'activeUsers' },
+            { name: 'sessions' },
+          ],
           orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
           limit: 8,
         }),
 
-        // 7. Landing pages 🆕
+        // 7. Landing pages
         client.runReport({
           property: `properties/${PROPERTY_ID}`,
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
@@ -111,12 +130,15 @@ export async function getGA4Data() {
           limit: 8,
         }),
 
-        // 8. New vs Returning 🆕
+        // 8. New vs Returning
         client.runReport({
           property: `properties/${PROPERTY_ID}`,
           dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
           dimensions: [{ name: 'newVsReturning' }],
-          metrics: [{ name: 'activeUsers' }, { name: 'sessions' }],
+          metrics: [
+            { name: 'activeUsers' },
+            { name: 'sessions' },
+          ],
         }),
       ])
 
@@ -124,14 +146,14 @@ export async function getGA4Data() {
 
     return {
       ga4: {
-        activeUsers:         overviewRow?.[0]?.value ?? '0',
-        sessions:            overviewRow?.[1]?.value ?? '0',
-        pageViews:           overviewRow?.[2]?.value ?? '0',
-        bounceRate:          parseFloat(overviewRow?.[3]?.value ?? '0').toFixed(1),
-        avgSessionDuration:  parseFloat(overviewRow?.[4]?.value ?? '0').toFixed(0),
-        newUsers:            overviewRow?.[5]?.value ?? '0',
-        pagesPerSession:     parseFloat(overviewRow?.[6]?.value ?? '0').toFixed(2),
-        engagementRate:      parseFloat(overviewRow?.[7]?.value ?? '0').toFixed(1),
+        activeUsers:        overviewRow?.[0]?.value ?? '0',
+        sessions:           overviewRow?.[1]?.value ?? '0',
+        pageViews:          overviewRow?.[2]?.value ?? '0',
+        bounceRate:         parseFloat(overviewRow?.[3]?.value ?? '0').toFixed(1),
+        avgSessionDuration: parseFloat(overviewRow?.[4]?.value ?? '0').toFixed(0),
+        newUsers:           overviewRow?.[5]?.value ?? '0',
+        pagesPerSession:    parseFloat(overviewRow?.[6]?.value ?? '0').toFixed(2),
+        engagementRate:     parseFloat(overviewRow?.[7]?.value ?? '0').toFixed(1),
       },
 
       ga4TopPages: (topPages[0].rows ?? []).map((row) => ({
@@ -163,7 +185,6 @@ export async function getGA4Data() {
         bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
       })),
 
-      // 🆕 New fields
       ga4Countries: (countryData[0].rows ?? []).map((row) => ({
         country:  row.dimensionValues?.[0]?.value ?? '',
         users:    parseInt(row.metricValues?.[0]?.value ?? '0'),
