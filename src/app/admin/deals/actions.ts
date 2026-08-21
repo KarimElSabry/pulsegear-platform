@@ -66,8 +66,7 @@ export async function createDeal(formData: FormData) {
       : null,
 
     customer_name:      formData.get('customer_name')      || null,
-    // ✅ FIX — read customer_phone (matches form field name)
-    customer_phone:     formData.get('customer_phone')     || null,
+    phone:              formData.get('phone')              || null,
     customer_instagram: formData.get('customer_instagram') || null,
 
     status:             formData.get('status')             || 'deposit_pending',
@@ -103,7 +102,10 @@ export async function createDeal(formData: FormData) {
   })
 
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/sales')
+  revalidatePath('/admin/analytics')
 }
 
 // ─── Update Deal ──────────────────────────────────────────────────────────────
@@ -112,8 +114,7 @@ export async function updateDeal(id: string, formData: FormData) {
     .from('deals')
     .update({
       customer_name:      formData.get('customer_name')      || null,
-      // ✅ FIX — read customer_phone (matches form field name)
-      customer_phone:     formData.get('customer_phone')     || null,
+      phone:              formData.get('phone')              || null,
       customer_instagram: formData.get('customer_instagram') || null,
 
       status:             formData.get('status'),
@@ -150,7 +151,10 @@ export async function updateDeal(id: string, formData: FormData) {
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/sales')
+  revalidatePath('/admin/analytics')
 }
 
 // ─── Update Deal Status Only ──────────────────────────────────────────────────
@@ -169,16 +173,108 @@ export async function updateDealStatus(id: string, status: DealStatus) {
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+
+  // ✅ AUTO-SYNC — when deal is completed, insert into sales automatically
+  if (status === 'completed') {
+    await syncDealToSales(id)
+  }
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/sales')
+  revalidatePath('/admin/analytics')
+}
+
+// ─── Sync Completed Deal → Sales ──────────────────────────────────────────────
+async function syncDealToSales(dealId: string) {
+  // 1. fetch the full deal + linked product request
+  const { data: deal, error: dealError } = await supabase
+    .from('deals')
+    .select(`
+      *,
+      product_request:product_requests (
+        requested_product
+      )
+    `)
+    .eq('id', dealId)
+    .single()
+
+  if (dealError || !deal) {
+    console.error('syncDealToSales: could not fetch deal', dealError)
+    return
+  }
+
+  // 2. check if already synced — avoid duplicates
+  const { data: existing } = await supabase
+    .from('sales')
+    .select('id')
+    .eq('deal_id', dealId)
+    .maybeSingle()
+
+  if (existing) {
+    console.log('syncDealToSales: already synced, skipping')
+    return
+  }
+
+  // 3. derive product name — prefer linked request, fallback to customer name
+  const productName =
+    deal.product_request?.requested_product ??
+    deal.customer_name                       ??
+    'Unknown Product'
+
+  // 4. calculate financials
+  const sourceEur  = deal.source_price_eur  ?? 0
+  const rate       = deal.exchange_rate      ?? 0
+  const costEgp    = sourceEur * rate
+  const sellingEgp = deal.selling_price_egp  ?? 0
+  const commission = deal.commission_egp     ?? 0
+  const profitEgp  = sellingEgp - costEgp - commission
+  const marginPct  = sellingEgp > 0
+    ? parseFloat(((profitEgp / sellingEgp) * 100).toFixed(2))
+    : 0
+
+  // 5. insert into sales
+  const { error: insertError } = await supabase.from('sales').insert({
+    deal_id:           dealId,
+    product_name:      productName,
+    original_eur:      sourceEur,
+    shipping_eur:      0,
+    exchange_rate:     rate,
+    cost_egp:          costEgp,
+    selling_price_egp: sellingEgp,
+    profit_egp:        profitEgp,
+    profit_margin_pct: marginPct,
+    commission_egp:    commission,
+    sale_channel:      deal.sale_channel    ?? 'whatsapp',
+    sale_date:         new Date().toISOString().split('T')[0],
+    source_platform:   deal.source_platform ?? null,
+    source_url:        deal.source_link     ?? null,
+    notes:             deal.notes           ?? null,
+    discount_code:     null,
+  })
+
+  if (insertError) {
+    console.error('syncDealToSales: insert failed', insertError)
+  } else {
+    console.log('syncDealToSales: ✅ synced deal', dealId, 'to sales')
+  }
 }
 
 // ─── Delete Deal ──────────────────────────────────────────────────────────────
 export async function deleteDeal(id: string) {
+  // ✅ also delete the linked sale if it was auto-synced
+  await supabase
+    .from('sales')
+    .delete()
+    .eq('deal_id', id)
+
   const { error } = await supabase
     .from('deals')
     .delete()
     .eq('id', id)
 
   if (error) throw new Error(error.message)
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/sales')
+  revalidatePath('/admin/analytics')
 }

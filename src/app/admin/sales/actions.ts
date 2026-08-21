@@ -24,6 +24,8 @@ export async function addSale(formData: FormData) {
   const profitEgp = sellingPriceEgp - costEgp - commissionEgp
 
   const { error } = await supabase.from('sales').insert({
+    // ✅ deal_id is null for manually added sales
+    deal_id:           null,
     product_name:      formData.get('product_name'),
     original_eur:      originalEur,
     shipping_eur:      shippingEur,
@@ -37,7 +39,7 @@ export async function addSale(formData: FormData) {
     sale_date:         formData.get('sale_date'),
     source_platform:   formData.get('source_platform'),
     source_url:        formData.get('source_url') || null,
-    notes:             formData.get('notes') || null,
+    notes:             formData.get('notes')       || null,
     discount_code:     discountCode,
   })
 
@@ -60,14 +62,13 @@ export async function updateSale(id: string, formData: FormData) {
   const commissionEgp   = parseFloat(formData.get('commission_egp')    as string) || 0
   const marginPct       = parseFloat(formData.get('profit_margin_pct') as string) || 0
 
-  // ✅ FIX 1 — read discount_code, empty string → null
   const rawCode      = formData.get('discount_code') as string | null
   const discountCode = rawCode && rawCode.trim() !== '' ? rawCode.trim() : null
 
   const costEgp   = (originalEur + shippingEur) * exchangeRate
   const profitEgp = sellingPriceEgp - costEgp - commissionEgp
 
-  // ✅ FIX 2 — fetch old code before updating to adjust usage_count
+  // fetch old code before updating to adjust usage_count
   const { data: existingSale } = await supabase
     .from('sales')
     .select('discount_code')
@@ -91,13 +92,15 @@ export async function updateSale(id: string, formData: FormData) {
       sale_channel:      formData.get('sale_channel'),
       sale_date:         formData.get('sale_date'),
       notes:             formData.get('notes') || null,
-      discount_code:     discountCode,           // ✅ FIX 3 — was missing!
+      discount_code:     discountCode,
+      // ✅ NOTE — we never overwrite deal_id on update
+      // deal_id stays whatever it was set to originally
     })
     .eq('id', id)
 
   if (error) throw new Error(error.message)
 
-  // ✅ FIX 4 — adjust usage_count only if code actually changed
+  // adjust usage_count only if code actually changed
   if (oldCode !== discountCode) {
     if (oldCode) {
       await supabase.rpc('decrement_discount_usage', { code_value: oldCode })
@@ -113,7 +116,7 @@ export async function updateSale(id: string, formData: FormData) {
 
 // ─── Delete Sale ─────────────────────────────────────────────────────────────
 export async function deleteSale(id: string) {
-  // ✅ FIX 5 — decrement usage_count when deleting a sale that had a code
+  // decrement usage_count when deleting a sale that had a code
   const { data: sale } = await supabase
     .from('sales')
     .select('discount_code')
