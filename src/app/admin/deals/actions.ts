@@ -1,5 +1,3 @@
-// src/app/admin/deals/actions.ts
-
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -30,7 +28,6 @@ export async function getDeals() {
   if (requestIds.length > 0) {
     const { data: requests, error: reqError } = await supabase
       .from('product_requests')
-      // ✅ FIX: customer_instagram → instagram
       .select('id, requested_product, budget, customer_name, phone, instagram')
       .in('id', requestIds)
 
@@ -49,11 +46,10 @@ export async function getDeals() {
   }))
 }
 
-// ─── Get Open Product Requests (for linking) ──────────────────────────────────
+// ─── Get Open Product Requests ────────────────────────────────────────────────
 export async function getOpenProductRequests() {
   const { data, error } = await supabase
     .from('product_requests')
-    // ✅ FIX: customer_instagram → instagram
     .select('id, requested_product, customer_name, phone, instagram, budget, status, notes')
     .in('status', ['new', 'contacted', 'deal_agreed'])
     .order('created_at', { ascending: false })
@@ -70,13 +66,14 @@ export async function createDeal(formData: FormData) {
       : null,
 
     customer_name:      formData.get('customer_name')      || null,
-    customer_phone:     formData.get('phone')              || null,
+    // ✅ FIX — read customer_phone (matches form field name)
+    customer_phone:     formData.get('customer_phone')     || null,
     customer_instagram: formData.get('customer_instagram') || null,
 
     status:             formData.get('status')             || 'deposit_pending',
-
     source_link:        formData.get('source_link')        || null,
     source_platform:    formData.get('source_platform')    || null,
+
     source_price_eur:   formData.get('source_price_eur')
       ? parseFloat(formData.get('source_price_eur') as string)
       : null,
@@ -115,13 +112,14 @@ export async function updateDeal(id: string, formData: FormData) {
     .from('deals')
     .update({
       customer_name:      formData.get('customer_name')      || null,
-      customer_phone:     formData.get('phone')              || null,
+      // ✅ FIX — read customer_phone (matches form field name)
+      customer_phone:     formData.get('customer_phone')     || null,
       customer_instagram: formData.get('customer_instagram') || null,
 
       status:             formData.get('status'),
-
       source_link:        formData.get('source_link')        || null,
       source_platform:    formData.get('source_platform')    || null,
+
       source_price_eur:   formData.get('source_price_eur')
         ? parseFloat(formData.get('source_price_eur') as string)
         : null,
@@ -159,11 +157,11 @@ export async function updateDeal(id: string, formData: FormData) {
 export async function updateDealStatus(id: string, status: DealStatus) {
   const extra: Record<string, string> = {}
 
-  if (status === 'deposit_paid')     extra.deposit_paid_at   = new Date().toISOString()
-  if (status === 'shipping')         extra.shipped_at        = new Date().toISOString()
-  if (status === 'arrived_egypt')    extra.arrived_egypt_at  = new Date().toISOString()
-  if (status === 'delivered')        extra.delivered_at      = new Date().toISOString()
-  if (status === 'completed')        extra.remaining_paid_at = new Date().toISOString()
+  if (status === 'deposit_paid')   extra.deposit_paid_at   = new Date().toISOString()
+  if (status === 'shipping')       extra.shipped_at        = new Date().toISOString()
+  if (status === 'arrived_egypt')  extra.arrived_egypt_at  = new Date().toISOString()
+  if (status === 'delivered')      extra.delivered_at      = new Date().toISOString()
+  if (status === 'completed')      extra.remaining_paid_at = new Date().toISOString()
 
   const { error } = await supabase
     .from('deals')

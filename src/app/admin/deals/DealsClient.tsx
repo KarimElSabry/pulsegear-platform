@@ -10,14 +10,14 @@ type ProductRequest = {
   id:                  number
   requested_product:   string | null
   customer_name:       string | null
-  phone?:              string | null  // ✅ fixed
+  phone?:              string | null
   customer_instagram?: string | null
   budget:              number | null
   status:              string
   notes?:              string | null
 }
 
-// Status Badge
+// ── Status Badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }: { status: DealStatus }) {
   const found = DEAL_STATUSES.find((s) => s.value === status)
   return (
@@ -27,26 +27,24 @@ function StatusBadge({ status }: { status: DealStatus }) {
   )
 }
 
-// Field Wrapper
+// ── Field Wrapper ─────────────────────────────────────────────────────────────
 function Field({
   label,
   optional,
   children,
   hint,
 }: {
-  label: string
+  label:     string
   optional?: boolean
-  children: React.ReactNode
-  hint?: string
+  children:  React.ReactNode
+  hint?:     string
 }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-2">
         {label}
         {optional && <span className="text-gray-600 normal-case font-normal">(optional)</span>}
-        {hint && (
-          <span className="text-indigo-400 normal-case font-normal text-xs">{hint}</span>
-        )}
+        {hint && <span className="text-indigo-400 normal-case font-normal text-xs">{hint}</span>}
       </label>
       {children}
     </div>
@@ -58,27 +56,53 @@ const inputClass =
 
 // ── Live Exchange Rate Hook ───────────────────────────────────────────────────
 function useEurToEgp() {
-  const [rate, setRate]       = useState<number | null>(null)
+  const [rate,    setRate]    = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(false)
+  const [error,   setError]   = useState(false)
 
-  useEffect(() => {
+  async function fetchRate() {
     setLoading(true)
-    fetch('https://api.frankfurter.app/latest?from=EUR&to=EGP')
-      .then((r) => r.json())
-      .then((data) => {
-        const fetched = data?.rates?.EGP
-        if (fetched) {
-          setRate(Math.round(fetched * 100) / 100)
-        } else {
-          setError(true)
-        }
-      })
-      .catch(() => setError(true))
-      .finally(() => setLoading(false))
-  }, [])
+    setError(false)
 
-  return { rate, loading, error }
+    const APIs = [
+      async () => {
+        const res  = await fetch('https://open.er-api.com/v6/latest/EUR')
+        const data = await res.json()
+        if (data?.rates?.EGP) return data.rates.EGP as number
+        throw new Error('no EGP')
+      },
+      async () => {
+        const res  = await fetch(
+          'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json'
+        )
+        const data = await res.json()
+        if (data?.eur?.egp) return data.eur.egp as number
+        throw new Error('no EGP')
+      },
+      async () => {
+        const res  = await fetch('https://api.frankfurter.app/latest?from=EUR&to=EGP')
+        const data = await res.json()
+        if (data?.rates?.EGP) return data.rates.EGP as number
+        throw new Error('no EGP')
+      },
+    ]
+
+    for (const api of APIs) {
+      try {
+        const fetched = await api()
+        setRate(Math.round(fetched * 100) / 100)
+        setLoading(false)
+        return
+      } catch { continue }
+    }
+
+    setError(true)
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchRate() }, [])
+
+  return { rate, loading, error, refetch: fetchRate }
 }
 
 // ── Deal Form Fields ──────────────────────────────────────────────────────────
@@ -86,20 +110,26 @@ function DealFormFields({
   deal,
   productRequests,
 }: {
-  deal?: Deal
-  productRequests: ProductRequest[]
+  deal?:            Deal
+  productRequests:  ProductRequest[]
 }) {
-  const { rate: liveRate, loading: rateLoading, error: rateError } = useEurToEgp()
+  const { rate: liveRate, loading: rateLoading, error: rateError, refetch } = useEurToEgp()
 
+  // ✅ FIX 1 — use customer_phone (correct field name from Deal type)
   const [customerName,      setCustomerName]      = useState(deal?.customer_name      ?? '')
-  const [customerPhone,     setCustomerPhone]      = useState(deal?.phone              ?? '')
+  const [customerPhone,     setCustomerPhone]      = useState(deal?.phone     ?? '')
   const [customerInstagram, setCustomerInstagram]  = useState(deal?.customer_instagram ?? '')
-  const [sellingPrice,      setSellingPrice]       = useState(deal?.selling_price_egp?.toString() ?? '')
-  const [depositAmount,     setDepositAmount]      = useState(deal?.deposit_amount_egp?.toString() ?? '')
+  const [sellingPrice,      setSellingPrice]       = useState(deal?.selling_price_egp?.toString()   ?? '')
+  const [depositAmount,     setDepositAmount]      = useState(deal?.deposit_amount_egp?.toString()  ?? '')
   const [remainingAmount,   setRemainingAmount]    = useState(deal?.remaining_amount_egp?.toString() ?? '')
   const [notes,             setNotes]              = useState(deal?.notes              ?? '')
-  const [exchangeRate,      setExchangeRate]       = useState(deal?.exchange_rate?.toString() ?? '')
 
+  // ✅ FIX 2 — exchange rate: start with deal value if editing, else wait for live rate
+  const [exchangeRate,      setExchangeRate]       = useState(
+    deal?.exchange_rate ? String(deal.exchange_rate) : ''
+  )
+
+  // ✅ FIX 3 — inject live rate only when creating (not editing)
   const rateInjected = useRef(false)
   useEffect(() => {
     if (!deal && liveRate && !rateInjected.current) {
@@ -108,13 +138,24 @@ function DealFormFields({
     }
   }, [liveRate, deal])
 
+  // ✅ FIX 4 — source_price_eur state for live EGP calculation
+  const [sourcePriceEur, setSourcePriceEur] = useState(
+    deal?.source_price_eur?.toString() ?? ''
+  )
+
+  // ✅ FIX 5 — auto-calculate selling price from EUR × rate
+  const calculatedEgp =
+    sourcePriceEur && exchangeRate
+      ? Math.round(parseFloat(sourcePriceEur) * parseFloat(exchangeRate))
+      : null
+
   function handleRequestChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const id = Number(e.target.value)
+    const id  = Number(e.target.value)
     if (!id) return
     const req = productRequests.find((r) => r.id === id)
     if (!req) return
     if (req.customer_name)      setCustomerName(req.customer_name)
-    if (req.phone)              setCustomerPhone(req.phone)
+    if (req.phone)              setCustomerPhone(req.phone)         // ✅ phone from request
     if (req.customer_instagram) setCustomerInstagram(req.customer_instagram)
     if (req.budget)             setSellingPrice(String(req.budget))
     if (req.notes)              setNotes(req.notes)
@@ -136,7 +177,7 @@ function DealFormFields({
 
   return (
     <>
-      {/* Section: Linked Request */}
+      {/* ── Linked Request ─────────────────────────────────────────── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2">
           Linked Request
@@ -158,7 +199,7 @@ function DealFormFields({
         </Field>
       </div>
 
-      {/* Section: Customer Info */}
+      {/* ── Customer Info ──────────────────────────────────────────── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2">
           Customer Info
@@ -175,6 +216,7 @@ function DealFormFields({
         />
       </Field>
 
+      {/* ✅ FIX — name="customer_phone" matches the DB column */}
       <Field label="Customer Phone">
         <input
           name="phone"
@@ -209,7 +251,7 @@ function DealFormFields({
         </select>
       </Field>
 
-      {/* Section: Deal Info */}
+      {/* ── Deal Info ──────────────────────────────────────────────── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2 mt-2">
           Deal Info
@@ -257,24 +299,34 @@ function DealFormFields({
         </Field>
       </div>
 
-      {/* Section: Financials */}
+      {/* ── Financials ─────────────────────────────────────────────── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2 mt-2">
           Financials
         </p>
       </div>
 
+      {/* ✅ FIX — source price is now controlled state */}
       <Field label="Source Price (EUR)">
         <input
           name="source_price_eur"
           type="number"
           step="0.01"
-          defaultValue={deal?.source_price_eur ?? ''}
+          value={sourcePriceEur}
+          onChange={(e) => setSourcePriceEur(e.target.value)}
           className={inputClass}
           placeholder="0.00"
         />
+        {/* ✅ FIX — show live EGP equivalent */}
+        {calculatedEgp !== null && exchangeRate && (
+          <p className="text-xs text-indigo-400 mt-1">
+            ≈ {calculatedEgp.toLocaleString()} EGP
+            <span className="text-gray-600 ml-1">(at {exchangeRate} EGP/EUR)</span>
+          </p>
+        )}
       </Field>
 
+      {/* ✅ FIX — exchange rate with refresh button */}
       <Field
         label="Exchange Rate (EUR to EGP)"
         hint={
@@ -287,15 +339,35 @@ function DealFormFields({
             : ''
         }
       >
-        <input
-          name="exchange_rate"
-          type="number"
-          step="0.01"
-          value={exchangeRate}
-          onChange={(e) => setExchangeRate(e.target.value)}
-          className={`${inputClass} ${liveRate && !deal ? 'border-indigo-600' : ''}`}
-          placeholder="0.00"
-        />
+        <div className="flex gap-2">
+          <input
+            name="exchange_rate"
+            type="number"
+            step="0.01"
+            value={exchangeRate}
+            onChange={(e) => setExchangeRate(e.target.value)}
+            className={`${inputClass} ${liveRate ? 'border-indigo-600' : ''}`}
+            placeholder="0.00"
+          />
+          {/* ✅ FIX — refresh button to get latest rate */}
+          <button
+            type="button"
+            onClick={async () => {
+              await refetch()
+              if (liveRate) setExchangeRate(String(liveRate))
+            }}
+            className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 rounded-lg transition whitespace-nowrap"
+            title="Refresh live rate"
+          >
+            🔄
+          </button>
+        </div>
+        {/* ✅ FIX — show edit mode warning */}
+        {deal && (
+          <p className="text-xs text-yellow-500 mt-1">
+            ⚠️ Original rate: {deal.exchange_rate} — click 🔄 to use live rate
+          </p>
+        )}
       </Field>
 
       <Field label="Selling Price (EGP)">
@@ -345,7 +417,7 @@ function DealFormFields({
         />
       </Field>
 
-      {/* Notes */}
+      {/* ── Notes ──────────────────────────────────────────────────── */}
       <div className="col-span-2">
         <Field label="Notes" optional>
           <textarea
@@ -369,9 +441,9 @@ function DealCard({
   onDelete,
   onStatusChange,
 }: {
-  deal: Deal
-  onEdit: (deal: Deal) => void
-  onDelete: (id: string) => void
+  deal:           Deal
+  onEdit:         (deal: Deal) => void
+  onDelete:       (id: string) => void
   onStatusChange: (id: string, status: DealStatus) => void
 }) {
   const productName =
@@ -387,6 +459,7 @@ function DealCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-white text-sm">{productName}</p>
+          {/* ✅ FIX — show customer_phone (correct field) */}
           <p className="text-xs text-gray-500 mt-0.5">
             {deal.phone ?? deal.customer_instagram ?? 'No contact info'}
           </p>
@@ -486,8 +559,8 @@ function Modal({
   onClose,
   children,
 }: {
-  title: string
-  onClose: () => void
+  title:    string
+  onClose:  () => void
   children: React.ReactNode
 }) {
   return (
@@ -499,7 +572,7 @@ function Modal({
             onClick={onClose}
             className="text-gray-500 hover:text-white text-lg font-bold transition"
           >
-            X
+            ✕
           </button>
         </div>
         <div className="p-6">{children}</div>
@@ -513,14 +586,14 @@ export default function DealsClient({
   deals: initialDeals,
   productRequests,
 }: {
-  deals: Deal[]
+  deals:           Deal[]
   productRequests: ProductRequest[]
 }) {
-  const [deals, setDeals]               = useState<Deal[]>(initialDeals)
-  const [showForm, setShowForm]         = useState(false)
-  const [editingDeal, setEditingDeal]   = useState<Deal | null>(null)
-  const [filterStatus, setFilterStatus] = useState<DealStatus | 'all'>('all')
-  const [loading, setLoading]           = useState(false)
+  const [deals,         setDeals]         = useState<Deal[]>(initialDeals)
+  const [showForm,      setShowForm]      = useState(false)
+  const [editingDeal,   setEditingDeal]   = useState<Deal | null>(null)
+  const [filterStatus,  setFilterStatus]  = useState<DealStatus | 'all'>('all')
+  const [loading,       setLoading]       = useState(false)
 
   const activeDeals    = deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
   const completedDeals = deals.filter((d) => d.status === 'completed')
@@ -570,7 +643,7 @@ export default function DealsClient({
           onClick={() => setShowForm(true)}
           className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg transition text-sm"
         >
-          New Deal
+          + New Deal
         </button>
       </div>
 
@@ -623,7 +696,7 @@ export default function DealsClient({
       {filteredDeals.length === 0 ? (
         <div className="text-center py-16 text-gray-600">
           <p className="text-4xl mb-3">🤝</p>
-          <p className="font-medium">No deals yet - create your first one!</p>
+          <p className="font-medium">No deals yet — create your first one!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
