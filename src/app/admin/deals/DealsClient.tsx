@@ -1,10 +1,11 @@
-// app/admin/deals/DealsClient.tsx
-
+// src/app/admin/deals/DealsClient.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Deal, DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, DealStatus } from '@/types/deals'
+import { Deal, DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, DealStatus, SaleChannel } from '@/types/deals'
 import { createDeal, updateDeal, updateDealStatus, deleteDeal } from './actions'
+
+type DealStatusValue = DealStatus
 
 type ProductRequest = {
   id:                  number
@@ -60,7 +61,6 @@ function useEurToEgp() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
 
-  // ✅ FIX — returns the fetched value directly so callers don't rely on stale state
   async function fetchRate(): Promise<number | null> {
     setLoading(true)
     setError(false)
@@ -94,7 +94,7 @@ function useEurToEgp() {
         const rounded = Math.round(fetched * 100) / 100
         setRate(rounded)
         setLoading(false)
-        return rounded // ✅ return directly — no stale closure issue
+        return rounded
       } catch { continue }
     }
 
@@ -118,23 +118,36 @@ function DealFormFields({
 }) {
   const { rate: liveRate, loading: rateLoading, error: rateError, refetch } = useEurToEgp()
 
-  // ✅ All fields are fully controlled state
-  const [customerName,      setCustomerName]      = useState(deal?.customer_name          ?? '')
-  const [customerPhone,     setCustomerPhone]      = useState(deal?.phone                  ?? '')
-  const [customerInstagram, setCustomerInstagram]  = useState(deal?.customer_instagram     ?? '')
-  const [sellingPrice,      setSellingPrice]       = useState(deal?.selling_price_egp?.toString()    ?? '')
-  const [depositAmount,     setDepositAmount]      = useState(deal?.deposit_amount_egp?.toString()   ?? '')
-  const [remainingAmount,   setRemainingAmount]    = useState(deal?.remaining_amount_egp?.toString() ?? '')
-  const [commissionEgp,     setCommissionEgp]      = useState(deal?.commission_egp?.toString()       ?? '0')
-  const [notes,             setNotes]              = useState(deal?.notes                  ?? '')
-  const [sourcePriceEur,    setSourcePriceEur]     = useState(deal?.source_price_eur?.toString()     ?? '')
+  // ✅ All fields fully controlled
+  const [customerName,      setCustomerName]     = useState(deal?.customer_name       ?? '')
+  const [customerPhone,     setCustomerPhone]     = useState(deal?.phone               ?? '')
+  const [customerInstagram, setCustomerInstagram] = useState(deal?.customer_instagram  ?? '')
+  const [sellingPrice,      setSellingPrice]      = useState(deal?.selling_price_egp?.toString()    ?? '')
+  const [depositAmount,     setDepositAmount]     = useState(deal?.deposit_amount_egp?.toString()   ?? '')
+  const [remainingAmount,   setRemainingAmount]   = useState(deal?.remaining_amount_egp?.toString() ?? '')
+  const [commissionEgp,     setCommissionEgp]     = useState(deal?.commission_egp?.toString()       ?? '0')
+  const [notes,             setNotes]             = useState(deal?.notes               ?? '')
+  const [sourcePriceEur,    setSourcePriceEur]    = useState(deal?.source_price_eur?.toString()     ?? '')
 
-  // ✅ Exchange rate: use deal value when editing, wait for live rate when creating
+  // ✅ Typed controlled selects
+  const [status,         setStatus]         = useState<DealStatusValue>(
+    (deal?.status as DealStatusValue) ?? 'deposit_pending'
+  )
+  const [sourcePlatform, setSourcePlatform] = useState<string>(
+    deal?.source_platform ?? ''
+  )
+  const [saleChannel,    setSaleChannel]    = useState<SaleChannel>(
+    (deal?.sale_channel as SaleChannel) ?? 'whatsapp'
+  )
+  const [requestId,      setRequestId]      = useState<string>(
+    deal?.product_request_id ? String(deal.product_request_id) : ''
+  )
+
+  // ✅ Exchange rate: use deal value when editing, inject live rate when creating
   const [exchangeRate, setExchangeRate] = useState(
     deal?.exchange_rate ? String(deal.exchange_rate) : ''
   )
 
-  // ✅ Only inject live rate once on create (not on edit)
   const rateInjected = useRef(false)
   useEffect(() => {
     if (!deal && liveRate && !rateInjected.current) {
@@ -143,17 +156,15 @@ function DealFormFields({
     }
   }, [liveRate, deal])
 
-  // ✅ Live EGP calculation preview
   const calculatedEgp =
     sourcePriceEur && exchangeRate
       ? Math.round(parseFloat(sourcePriceEur) * parseFloat(exchangeRate))
       : null
 
-  // ✅ Auto-fill from linked product request
   function handleRequestChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const id  = Number(e.target.value)
-    if (!id) return
-    const req = productRequests.find((r) => r.id === id)
+    const id = e.target.value
+    setRequestId(id)
+    const req = productRequests.find((r) => r.id === Number(id))
     if (!req) return
     if (req.customer_name)      setCustomerName(req.customer_name)
     if (req.phone)              setCustomerPhone(req.phone)
@@ -184,15 +195,15 @@ function DealFormFields({
           Linked Request
         </p>
         <Field label="Link to Product Request" optional>
+          <input type="hidden" name="product_request_id" value={requestId} />
           <select
-            name="product_request_id"
-            defaultValue={deal?.product_request_id ?? ''}
+            value={requestId}
             onChange={handleRequestChange}
             className={inputClass}
           >
             <option value="">No linked request</option>
             {productRequests.map((r) => (
-              <option key={r.id} value={r.id}>
+              <option key={r.id} value={String(r.id)}>
                 #{r.id} - {r.requested_product ?? 'Unknown'} ({r.customer_name ?? 'No name'})
               </option>
             ))}
@@ -217,7 +228,6 @@ function DealFormFields({
         />
       </Field>
 
-      {/* ✅ FIX — fully controlled, name="phone" matches DB column */}
       <Field label="Customer Phone">
         <input
           name="phone"
@@ -238,15 +248,17 @@ function DealFormFields({
         />
       </Field>
 
+      {/* ✅ Sale Channel — controlled + hidden input + objects from types */}
       <Field label="Sale Channel">
+        <input type="hidden" name="sale_channel" value={saleChannel} />
         <select
-          name="sale_channel"
-          defaultValue={deal?.sale_channel ?? 'whatsapp'}
+          value={saleChannel}
+          onChange={(e) => setSaleChannel(e.target.value as SaleChannel)}
           className={inputClass}
         >
           {SALE_CHANNELS.map((c) => (
-            <option key={c} value={c}>
-              {c.charAt(0).toUpperCase() + c.slice(1)}
+            <option key={c.value} value={c.value}>
+              {c.icon} {c.label}
             </option>
           ))}
         </select>
@@ -259,10 +271,12 @@ function DealFormFields({
         </p>
       </div>
 
+      {/* ✅ Status — controlled + hidden input */}
       <Field label="Status">
+        <input type="hidden" name="status" value={status} />
         <select
-          name="status"
-          defaultValue={deal?.status ?? 'deposit_pending'}
+          value={status}
+          onChange={(e) => setStatus(e.target.value as DealStatusValue)}
           className={inputClass}
         >
           {DEAL_STATUSES.map((s) => (
@@ -273,10 +287,12 @@ function DealFormFields({
         </select>
       </Field>
 
+      {/* ✅ Source Platform — controlled + hidden input */}
       <Field label="Source Platform">
+        <input type="hidden" name="source_platform" value={sourcePlatform} />
         <select
-          name="source_platform"
-          defaultValue={deal?.source_platform ?? ''}
+          value={sourcePlatform}
+          onChange={(e) => setSourcePlatform(e.target.value)}
           className={inputClass}
         >
           <option value="">Select platform...</option>
@@ -328,13 +344,10 @@ function DealFormFields({
       <Field
         label="Exchange Rate (EUR to EGP)"
         hint={
-          rateLoading
-            ? 'جاري تحميل السعر...'
-            : rateError
-            ? 'تعذر تحميل السعر'
-            : liveRate
-            ? `السعر الحالي: ${liveRate}`
-            : ''
+          rateLoading ? 'جاري تحميل السعر...'
+          : rateError  ? 'تعذر تحميل السعر'
+          : liveRate   ? `السعر الحالي: ${liveRate}`
+          : ''
         }
       >
         <div className="flex gap-2">
@@ -347,7 +360,6 @@ function DealFormFields({
             className={`${inputClass} ${liveRate ? 'border-indigo-600' : ''}`}
             placeholder="0.00"
           />
-          {/* ✅ FIX — use returned value from refetch directly, no stale state */}
           <button
             type="button"
             onClick={async () => {
@@ -403,7 +415,6 @@ function DealFormFields({
         />
       </Field>
 
-      {/* ✅ FIX — commission is now fully controlled state, not defaultValue */}
       <Field label="Commission (EGP)">
         <input
           name="commission_egp"
@@ -450,6 +461,11 @@ function DealCard({
 
   const currentIndex = DEAL_STATUSES.findIndex((s) => s.value === deal.status)
   const nextStatus   = DEAL_STATUSES[currentIndex + 1]
+
+  // ✅ Channel icon from SALE_CHANNELS array
+  function channelIcon(channel: string) {
+    return SALE_CHANNELS.find((c) => c.value === channel)?.icon ?? '📦'
+  }
 
   return (
     <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-3 hover:border-indigo-700 transition">
@@ -505,7 +521,9 @@ function DealCard({
         )}
         <div className="bg-gray-800 rounded-lg px-2 py-1.5">
           <span className="text-gray-500">Channel </span>
-          <span className="font-semibold text-white capitalize">{deal.sale_channel}</span>
+          <span className="font-semibold text-white capitalize">
+            {channelIcon(deal.sale_channel)} {deal.sale_channel}
+          </span>
         </div>
       </div>
 

@@ -1,5 +1,4 @@
 // app/admin/deals/actions.ts
-
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -10,6 +9,26 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
+
+// ── Safe parse helpers ────────────────────────────────────────────────────────
+function getStr(formData: FormData, key: string): string | null {
+  const v = formData.get(key) as string | null
+  return v && v.trim() !== '' ? v.trim() : null
+}
+
+function getFloat(formData: FormData, key: string): number | null {
+  const v = formData.get(key) as string | null
+  if (!v || v.trim() === '') return null
+  const n = parseFloat(v)
+  return isNaN(n) ? null : n
+}
+
+function getInt(formData: FormData, key: string): number | null {
+  const v = formData.get(key) as string | null
+  if (!v || v.trim() === '') return null
+  const n = parseInt(v)
+  return isNaN(n) ? null : n
+}
 
 // ─── Get All Deals ────────────────────────────────────────────────────────────
 export async function getDeals() {
@@ -62,37 +81,31 @@ export async function getOpenProductRequests() {
 
 // ─── Create Deal ──────────────────────────────────────────────────────────────
 export async function createDeal(formData: FormData) {
-  // ✅ Safe parse helpers
-  const getStr   = (key: string) => (formData.get(key) as string | null) || null
-  const getFloat = (key: string) => {
-    const v = formData.get(key) as string | null
-    return v && v.trim() !== '' ? parseFloat(v) : null
+  // ✅ Debug log
+  console.log('createDeal formData entries:')
+  for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
+
+  const payload = {
+    product_request_id:   getInt(formData,   'product_request_id'),
+    customer_name:        getStr(formData,   'customer_name'),
+    phone:                getStr(formData,   'phone'),
+    customer_instagram:   getStr(formData,   'customer_instagram'),
+    status:               getStr(formData,   'status')       ?? 'deposit_pending',
+    source_link:          getStr(formData,   'source_link'),
+    source_platform:      getStr(formData,   'source_platform'),
+    sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
+    notes:                getStr(formData,   'notes'),
+    source_price_eur:     getFloat(formData, 'source_price_eur'),
+    exchange_rate:        getFloat(formData, 'exchange_rate'),
+    selling_price_egp:    getFloat(formData, 'selling_price_egp'),
+    deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
+    remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
+    commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
   }
-  const getInt = (key: string) => {
-    const v = formData.get(key) as string | null
-    return v && v.trim() !== '' ? parseInt(v) : null
-  }
 
-  const { error } = await supabase.from('deals').insert({
-    product_request_id:   getInt('product_request_id'),
+  console.log('createDeal payload:', payload)
 
-    customer_name:        getStr('customer_name'),
-    phone:                getStr('phone'),
-    customer_instagram:   getStr('customer_instagram'),
-
-    status:               getStr('status')       ?? 'deposit_pending',
-    source_link:          getStr('source_link'),
-    source_platform:      getStr('source_platform'),
-    sale_channel:         getStr('sale_channel') ?? 'whatsapp',
-    notes:                getStr('notes'),
-
-    source_price_eur:     getFloat('source_price_eur'),
-    exchange_rate:        getFloat('exchange_rate'),
-    selling_price_egp:    getFloat('selling_price_egp'),
-    deposit_amount_egp:   getFloat('deposit_amount_egp'),
-    remaining_amount_egp: getFloat('remaining_amount_egp'),
-    commission_egp:       getFloat('commission_egp') ?? 0,
-  })
+  const { error } = await supabase.from('deals').insert(payload)
 
   if (error) {
     console.error('createDeal error:', error)
@@ -106,43 +119,33 @@ export async function createDeal(formData: FormData) {
 
 // ─── Update Deal ──────────────────────────────────────────────────────────────
 export async function updateDeal(id: string, formData: FormData) {
-  // ✅ Safe parse helpers
-  const getStr   = (key: string) => (formData.get(key) as string | null) || null
-  const getFloat = (key: string) => {
-    const v = formData.get(key) as string | null
-    return v && v.trim() !== '' ? parseFloat(v) : null
-  }
-  const getInt = (key: string) => {
-    const v = formData.get(key) as string | null
-    return v && v.trim() !== '' ? parseInt(v) : null
-  }
+  // ✅ Debug log
+  console.log('updateDeal formData entries:')
+  for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
 
-  const updatePayload = {
-    product_request_id:   getInt('product_request_id'),
-
-    customer_name:        getStr('customer_name'),
-    phone:                getStr('phone'),
-    customer_instagram:   getStr('customer_instagram'),
-
-    status:               getStr('status')       ?? 'deposit_pending',
-    source_link:          getStr('source_link'),
-    source_platform:      getStr('source_platform'),
-    sale_channel:         getStr('sale_channel') ?? 'whatsapp',
-    notes:                getStr('notes'),
-
-    source_price_eur:     getFloat('source_price_eur'),
-    exchange_rate:        getFloat('exchange_rate'),
-    selling_price_egp:    getFloat('selling_price_egp'),
-    deposit_amount_egp:   getFloat('deposit_amount_egp'),
-    remaining_amount_egp: getFloat('remaining_amount_egp'),
-    commission_egp:       getFloat('commission_egp') ?? 0,
+  const payload = {
+    product_request_id:   getInt(formData,   'product_request_id'),
+    customer_name:        getStr(formData,   'customer_name'),
+    phone:                getStr(formData,   'phone'),
+    customer_instagram:   getStr(formData,   'customer_instagram'),
+    status:               getStr(formData,   'status')       ?? 'deposit_pending',
+    source_link:          getStr(formData,   'source_link'),
+    source_platform:      getStr(formData,   'source_platform'),
+    sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
+    notes:                getStr(formData,   'notes'),
+    source_price_eur:     getFloat(formData, 'source_price_eur'),
+    exchange_rate:        getFloat(formData, 'exchange_rate'),
+    selling_price_egp:    getFloat(formData, 'selling_price_egp'),
+    deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
+    remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
+    commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
   }
 
-  console.log('updateDeal payload:', updatePayload)
+  console.log('updateDeal payload:', payload)
 
   const { error } = await supabase
     .from('deals')
-    .update(updatePayload)
+    .update(payload)
     .eq('id', id)
 
   if (error) {

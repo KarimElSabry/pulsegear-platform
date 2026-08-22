@@ -13,7 +13,13 @@ export type DealStatus =
   | 'completed'
   | 'cancelled'
 
-export type SaleChannel = 'whatsapp' | 'instagram' | 'other'
+// ✅ Added website & personal
+export type SaleChannel =
+  | 'whatsapp'
+  | 'instagram'
+  | 'website'
+  | 'personal'
+  | 'other'
 
 export type SourcePlatform = 'Kleinanzeigen' | 'Vinted' | 'Amazon' | 'eBay' | 'Other'
 
@@ -23,7 +29,7 @@ export interface Deal {
 
   // Customer
   customer_name:      string | null
-  phone:     string | null
+  phone:              string | null
   customer_instagram: string | null
 
   // Status
@@ -79,7 +85,14 @@ export const DEAL_STATUSES: { value: DealStatus; label: string; color: string }[
   { value: 'cancelled',         label: '❌ Cancelled',         color: 'bg-red-100 text-red-800'         },
 ]
 
-export const SALE_CHANNELS: SaleChannel[] = ['whatsapp', 'instagram', 'other']
+// ✅ Added website & personal
+export const SALE_CHANNELS: { value: SaleChannel; label: string; icon: string }[] = [
+  { value: 'whatsapp',  label: 'WhatsApp',  icon: '💬' },
+  { value: 'instagram', label: 'Instagram', icon: '📸' },
+  { value: 'website',   label: 'Website',   icon: '🌐' },
+  { value: 'personal',  label: 'Personal',  icon: '🤝' },
+  { value: 'other',     label: 'Other',     icon: '📦' },
+]
 
 export const SOURCE_PLATFORMS: SourcePlatform[] = [
   'Kleinanzeigen',
