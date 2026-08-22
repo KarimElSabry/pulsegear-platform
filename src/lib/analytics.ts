@@ -75,7 +75,6 @@ export async function getGA4Data() {
           { name: 'averageSessionDuration' },
           { name: 'bounceRate' },
           { name: 'exits' },
-          { name: 'exitRate' },
         ],
         orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
         limit: 10,
@@ -180,7 +179,6 @@ export async function getGA4Data() {
         ],
         metrics: [
           { name: 'exits' },
-          { name: 'exitRate' },
           { name: 'screenPageViews' },
         ],
         orderBys: [{ metric: { metricName: 'exits' }, desc: true }],
@@ -270,7 +268,10 @@ export async function getGA4Data() {
         avgDuration: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(0),
         bounceRate:  parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
         exits:       parseInt(row.metricValues?.[4]?.value   ?? '0'),
-        exitRate:    parseFloat(row.metricValues?.[5]?.value ?? '0').toFixed(1),
+        exitRate:    (
+    parseInt(row.metricValues?.[4]?.value ?? '0') /
+    Math.max(parseInt(row.metricValues?.[0]?.value ?? '1'), 1) * 100
+  ).toFixed(1),
       })),
 
       // ── Daily Users ─────────────────────────────────────────────
@@ -367,7 +368,10 @@ export async function getGA4Data() {
         page:      row.dimensionValues?.[0]?.value ?? '',
         pageTitle: row.dimensionValues?.[1]?.value ?? '',
         exits:     parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        exitRate:  parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
+        exitRate:  (
+    parseInt(row.metricValues?.[0]?.value ?? '0') /
+    Math.max(parseInt(row.metricValues?.[1]?.value ?? '1'), 1) * 100
+  ).toFixed(1),
         views:     parseInt(row.metricValues?.[2]?.value  ?? '0'),
       })),
 
