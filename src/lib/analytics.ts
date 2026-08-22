@@ -5,14 +5,11 @@ import fs from 'fs'
 const PROPERTY_ID = process.env.GA4_PROPERTY_ID!
 
 function getClient(): BetaAnalyticsDataClient {
-
-  // ✅ PRODUCTION (Vercel) — credentials from env variable
   if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
     return new BetaAnalyticsDataClient({ credentials })
   }
 
-  // ✅ LOCAL DEV — use the JSON file
   const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
     ? path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
     : path.join(process.cwd(), 'secrets', 'pulsegear-analytics.json')
@@ -24,229 +21,228 @@ function getClient(): BetaAnalyticsDataClient {
   return new BetaAnalyticsDataClient({ keyFilename: keyPath })
 }
 
+// ✅ بنشغل كل report لوحده ونشوف أيهم بيفشل
+async function runSafe(
+  client: BetaAnalyticsDataClient,
+  name: string,
+  request: Parameters<BetaAnalyticsDataClient['runReport']>[0]
+) {
+  try {
+    const [response] = await client.runReport(request)
+    console.log(`✅ Report OK: ${name}`)
+    return response
+  } catch (error: any) {
+    console.error(`❌ Report FAILED: ${name}`)
+    console.error(`   Error: ${error?.message}`)
+    console.error(`   Code:  ${error?.code}`)
+    // ✅ رجّع object فاضي بدل ما يكسر كل حاجة
+    return { rows: [], failedReport: name, failedError: error?.message }
+  }
+}
+
 export async function getGA4Data() {
   try {
     const client = getClient()
 
-    const [
-      overview,
-      topPages,
-      dailyUsers,
-      trafficSources,
-      deviceBreakdown,
-      countryData,
-      landingPages,
-      returningUsers,
-      exitPages,
-      cityData,
-      operatingSystem,
-      sourcesMedium,
-    ] = await Promise.all([
+    const overview = await runSafe(client, 'overview', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'screenPageViews' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'newUsers' },
+        { name: 'screenPageViewsPerSession' },
+        { name: 'engagementRate' },
+        { name: 'totalUsers' },
+        { name: 'conversions' },
+      ],
+    })
 
-      // 1. Overview metrics
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'screenPageViews' },
-          { name: 'bounceRate' },
-          { name: 'averageSessionDuration' },
-          { name: 'newUsers' },
-          { name: 'screenPageViewsPerSession' },
-          { name: 'engagementRate' },
-          { name: 'totalUsers' },
-          { name: 'conversions' },
-        ],
-      }),
+    const topPages = await runSafe(client, 'topPages', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [
+        { name: 'pagePath' },
+        { name: 'pageTitle' },
+      ],
+      metrics: [
+        { name: 'screenPageViews' },
+        { name: 'activeUsers' },
+        { name: 'averageSessionDuration' },
+        { name: 'bounceRate' },
+        { name: 'exits' },
+      ],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+      limit: 10,
+    })
 
-      // 2. Top pages
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [
-          { name: 'pagePath' },
-          { name: 'pageTitle' },
-        ],
-        metrics: [
-          { name: 'screenPageViews' },
-          { name: 'activeUsers' },
-          { name: 'averageSessionDuration' },
-          { name: 'bounceRate' },
-          { name: 'exits' },
-        ],
-        orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
-        limit: 10,
-      }),
+    const dailyUsers = await runSafe(client, 'dailyUsers', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'date' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'screenPageViews' },
+        { name: 'newUsers' },
+        { name: 'engagementRate' },
+      ],
+      orderBys: [{ dimension: { dimensionName: 'date' } }],
+    })
 
-      // 3. Daily users
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'date' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'screenPageViews' },
-          { name: 'newUsers' },
-          { name: 'engagementRate' },
-        ],
-        orderBys: [{ dimension: { dimensionName: 'date' } }],
-      }),
+    const trafficSources = await runSafe(client, 'trafficSources', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'totalUsers' },
+        { name: 'bounceRate' },
+        { name: 'engagementRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'conversions' },
+      ],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    })
 
-      // 4. Traffic sources — FIXED with totalUsers + extra metrics
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'sessionDefaultChannelGroup' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'totalUsers' },
-          { name: 'bounceRate' },
-          { name: 'engagementRate' },
-          { name: 'averageSessionDuration' },
-          { name: 'conversions' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-      }),
+    const deviceBreakdown = await runSafe(client, 'deviceBreakdown', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'deviceCategory' }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'activeUsers' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+        { name: 'screenPageViewsPerSession' },
+      ],
+    })
 
-      // 5. Device breakdown
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'deviceCategory' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'activeUsers' },
-          { name: 'bounceRate' },
-          { name: 'averageSessionDuration' },
-          { name: 'screenPageViewsPerSession' },
-        ],
-      }),
+    const countryData = await runSafe(client, 'countryData', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'country' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+      ],
+      orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+      limit: 8,
+    })
 
-      // 6. Top countries
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'country' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'bounceRate' },
-          { name: 'averageSessionDuration' },
-        ],
-        orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
-        limit: 8,
-      }),
+    const landingPages = await runSafe(client, 'landingPages', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'landingPage' }],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'activeUsers' },
+        { name: 'averageSessionDuration' },
+        { name: 'conversions' },
+      ],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 8,
+    })
 
-      // 7. Landing pages
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'landingPage' }],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'bounceRate' },
-          { name: 'activeUsers' },
-          { name: 'averageSessionDuration' },
-          { name: 'conversions' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 8,
-      }),
+    const returningUsers = await runSafe(client, 'returningUsers', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'newVsReturning' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+      ],
+    })
 
-      // 8. New vs Returning
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'newVsReturning' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'bounceRate' },
-          { name: 'averageSessionDuration' },
-        ],
-      }),
+    const exitPages = await runSafe(client, 'exitPages', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [
+        { name: 'pagePath' },
+        { name: 'pageTitle' },
+      ],
+      metrics: [
+        { name: 'exits' },
+        { name: 'screenPageViews' },
+      ],
+      orderBys: [{ metric: { metricName: 'exits' }, desc: true }],
+      limit: 8,
+    })
 
-      // 9. Exit pages — NEW
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [
-          { name: 'pagePath' },
-          { name: 'pageTitle' },
-        ],
-        metrics: [
-          { name: 'exits' },
-          { name: 'screenPageViews' },
-        ],
-        orderBys: [{ metric: { metricName: 'exits' }, desc: true }],
-        limit: 8,
-      }),
-
-      // 10. City breakdown (Egypt focus) — NEW
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [
-          { name: 'country' },
-          { name: 'city' },
-        ],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'bounceRate' },
-        ],
-        dimensionFilter: {
-          filter: {
-            fieldName: 'country',
-            stringFilter: { value: 'Egypt' },
-          },
+    const cityData = await runSafe(client, 'cityData', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [
+        { name: 'country' },
+        { name: 'city' },
+      ],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+      ],
+      dimensionFilter: {
+        filter: {
+          fieldName: 'country',
+          stringFilter: { value: 'Egypt' },
         },
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 10,
-      }),
+      },
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10,
+    })
 
-      // 11. Operating System — NEW
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [{ name: 'operatingSystem' }],
-        metrics: [
-          { name: 'activeUsers' },
-          { name: 'sessions' },
-          { name: 'bounceRate' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 8,
-      }),
+    const operatingSystem = await runSafe(client, 'operatingSystem', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [{ name: 'operatingSystem' }],
+      metrics: [
+        { name: 'activeUsers' },
+        { name: 'sessions' },
+        { name: 'bounceRate' },
+      ],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 8,
+    })
 
-      // 12. Source / Medium detail — NEW
-      client.runReport({
-        property: `properties/${PROPERTY_ID}`,
-        dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-        dimensions: [
-          { name: 'sessionSource' },
-          { name: 'sessionMedium' },
-        ],
-        metrics: [
-          { name: 'sessions' },
-          { name: 'totalUsers' },
-          { name: 'bounceRate' },
-          { name: 'averageSessionDuration' },
-        ],
-        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        limit: 10,
-      }),
-    ])
+    const sourcesMedium = await runSafe(client, 'sourcesMedium', {
+      property: `properties/${PROPERTY_ID}`,
+      dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+      dimensions: [
+        { name: 'sessionSource' },
+        { name: 'sessionMedium' },
+      ],
+      metrics: [
+        { name: 'sessions' },
+        { name: 'totalUsers' },
+        { name: 'bounceRate' },
+        { name: 'averageSessionDuration' },
+      ],
+      orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+      limit: 10,
+    })
 
-    const overviewRow = overview[0].rows?.[0]?.metricValues
+    // ✅ نحط كل الـ failed reports في الـ response
+    const failedReports = [
+      overview, topPages, dailyUsers, trafficSources,
+      deviceBreakdown, countryData, landingPages, returningUsers,
+      exitPages, cityData, operatingSystem, sourcesMedium,
+    ]
+      .filter((r: any) => r.failedReport)
+      .map((r: any) => ({ report: r.failedReport, error: r.failedError }))
+
+    const overviewRow = (overview as any).rows?.[0]?.metricValues
 
     return {
-
-      // ── Overview ────────────────────────────────────────────────
-      ga4: {
+      // ✅ لو في failed reports هنرجع ga4: null مع قائمة المشاكل
+      ga4: failedReports.length > 0 && !(overview as any).rows ? null : {
         activeUsers:        overviewRow?.[0]?.value ?? '0',
         sessions:           overviewRow?.[1]?.value ?? '0',
         pageViews:          overviewRow?.[2]?.value ?? '0',
@@ -259,8 +255,10 @@ export async function getGA4Data() {
         conversions:        overviewRow?.[9]?.value ?? '0',
       },
 
-      // ── Top Pages ───────────────────────────────────────────────
-      ga4TopPages: (topPages[0].rows ?? []).map((row) => ({
+      // ✅ أهم حاجة — قائمة الـ reports اللي فشلت
+      failedReports,
+
+      ga4TopPages: ((topPages as any).rows ?? []).map((row: any) => ({
         page:        row.dimensionValues?.[0]?.value ?? '',
         pageTitle:   row.dimensionValues?.[1]?.value ?? '',
         views:       row.metricValues?.[0]?.value    ?? '0',
@@ -268,14 +266,13 @@ export async function getGA4Data() {
         avgDuration: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(0),
         bounceRate:  parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
         exits:       parseInt(row.metricValues?.[4]?.value   ?? '0'),
-        exitRate:    (
-    parseInt(row.metricValues?.[4]?.value ?? '0') /
-    Math.max(parseInt(row.metricValues?.[0]?.value ?? '1'), 1) * 100
-  ).toFixed(1),
+        exitRate: (
+          parseInt(row.metricValues?.[4]?.value ?? '0') /
+          Math.max(parseInt(row.metricValues?.[0]?.value ?? '1'), 1) * 100
+        ).toFixed(1),
       })),
 
-      // ── Daily Users ─────────────────────────────────────────────
-      ga4DailyUsers: (dailyUsers[0].rows ?? []).map((row) => ({
+      ga4DailyUsers: ((dailyUsers as any).rows ?? []).map((row: any) => ({
         date:           row.dimensionValues?.[0]?.value ?? '',
         users:          parseInt(row.metricValues?.[0]?.value ?? '0'),
         sessions:       parseInt(row.metricValues?.[1]?.value ?? '0'),
@@ -284,19 +281,17 @@ export async function getGA4Data() {
         engagementRate: parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(1),
       })),
 
-      // ── Traffic Sources — FIXED ─────────────────────────────────
-      ga4TrafficSources: (trafficSources[0].rows ?? []).map((row) => ({
-        source:          row.dimensionValues?.[0]?.value ?? '',
-        sessions:        parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        users:           parseInt(row.metricValues?.[1]?.value  ?? '0'),
-        bounceRate:      parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
-        engagementRate:  parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
-        avgDuration:     parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(0),
-        conversions:     parseInt(row.metricValues?.[5]?.value  ?? '0'),
+      ga4TrafficSources: ((trafficSources as any).rows ?? []).map((row: any) => ({
+        source:         row.dimensionValues?.[0]?.value ?? '',
+        sessions:       parseInt(row.metricValues?.[0]?.value  ?? '0'),
+        users:          parseInt(row.metricValues?.[1]?.value  ?? '0'),
+        bounceRate:     parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
+        engagementRate: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
+        avgDuration:    parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(0),
+        conversions:    parseInt(row.metricValues?.[5]?.value  ?? '0'),
       })),
 
-      // ── Device Breakdown ────────────────────────────────────────
-      ga4DeviceBreakdown: (deviceBreakdown[0].rows ?? []).map((row) => ({
+      ga4DeviceBreakdown: ((deviceBreakdown as any).rows ?? []).map((row: any) => ({
         device:          row.dimensionValues?.[0]?.value ?? '',
         sessions:        parseInt(row.metricValues?.[0]?.value  ?? '0'),
         users:           parseInt(row.metricValues?.[1]?.value  ?? '0'),
@@ -305,8 +300,7 @@ export async function getGA4Data() {
         pagesPerSession: parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(2),
       })),
 
-      // ── Countries ───────────────────────────────────────────────
-      ga4Countries: (countryData[0].rows ?? []).map((row) => ({
+      ga4Countries: ((countryData as any).rows ?? []).map((row: any) => ({
         country:     row.dimensionValues?.[0]?.value ?? '',
         users:       parseInt(row.metricValues?.[0]?.value  ?? '0'),
         sessions:    parseInt(row.metricValues?.[1]?.value  ?? '0'),
@@ -314,8 +308,7 @@ export async function getGA4Data() {
         avgDuration: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
       })),
 
-      // ── Landing Pages ───────────────────────────────────────────
-      ga4LandingPages: (landingPages[0].rows ?? []).map((row) => ({
+      ga4LandingPages: ((landingPages as any).rows ?? []).map((row: any) => ({
         page:        row.dimensionValues?.[0]?.value ?? '',
         sessions:    parseInt(row.metricValues?.[0]?.value  ?? '0'),
         bounceRate:  parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
@@ -324,38 +317,25 @@ export async function getGA4Data() {
         conversions: parseInt(row.metricValues?.[4]?.value  ?? '0'),
       })),
 
-      // ── New vs Returning — FIXED merge ──────────────────────────
       ga4NewVsReturning: (() => {
-        const rows = returningUsers[0].rows ?? []
-        const result: Record<string, {
-          type: string
-          users: number
-          sessions: number
-          bounceRate: number
-          avgDuration: number
-          count: number
-        }> = {}
-
+        const rows = (returningUsers as any).rows ?? []
+        const result: Record<string, any> = {}
         for (const row of rows) {
           const rawType    = row.dimensionValues?.[0]?.value ?? ''
           const users      = parseInt(row.metricValues?.[0]?.value ?? '0')
           const sessions   = parseInt(row.metricValues?.[1]?.value ?? '0')
           const bounceRate = parseFloat(row.metricValues?.[2]?.value ?? '0')
           const avgDur     = parseFloat(row.metricValues?.[3]?.value ?? '0')
-
-          const type = rawType === 'new' ? 'New Users' : 'Returning Users'
-
+          const type       = rawType === 'new' ? 'New Users' : 'Returning Users'
           if (!result[type]) {
             result[type] = { type, users: 0, sessions: 0, bounceRate: 0, avgDuration: 0, count: 0 }
           }
-
-          result[type].users      += users
-          result[type].sessions   += sessions
-          result[type].bounceRate += bounceRate
+          result[type].users       += users
+          result[type].sessions    += sessions
+          result[type].bounceRate  += bounceRate
           result[type].avgDuration += avgDur
-          result[type].count      += 1
+          result[type].count       += 1
         }
-
         return Object.values(result).map(({ count, bounceRate, avgDuration, ...rest }) => ({
           ...rest,
           bounceRate:  parseFloat((bounceRate  / count).toFixed(1)),
@@ -363,20 +343,18 @@ export async function getGA4Data() {
         }))
       })(),
 
-      // ── Exit Pages — NEW ────────────────────────────────────────
-      ga4ExitPages: (exitPages[0].rows ?? []).map((row) => ({
+      ga4ExitPages: ((exitPages as any).rows ?? []).map((row: any) => ({
         page:      row.dimensionValues?.[0]?.value ?? '',
         pageTitle: row.dimensionValues?.[1]?.value ?? '',
-        exits:     parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        exitRate:  (
-    parseInt(row.metricValues?.[0]?.value ?? '0') /
-    Math.max(parseInt(row.metricValues?.[1]?.value ?? '1'), 1) * 100
-  ).toFixed(1),
-        views:     parseInt(row.metricValues?.[2]?.value  ?? '0'),
+        exits:     parseInt(row.metricValues?.[0]?.value ?? '0'),
+        views:     parseInt(row.metricValues?.[1]?.value ?? '0'),
+        exitRate: (
+          parseInt(row.metricValues?.[0]?.value ?? '0') /
+          Math.max(parseInt(row.metricValues?.[1]?.value ?? '1'), 1) * 100
+        ).toFixed(1),
       })),
 
-      // ── Egypt Cities — NEW ──────────────────────────────────────
-      ga4Cities: (cityData[0].rows ?? []).map((row) => ({
+      ga4Cities: ((cityData as any).rows ?? []).map((row: any) => ({
         country:    row.dimensionValues?.[0]?.value ?? '',
         city:       row.dimensionValues?.[1]?.value ?? '',
         users:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
@@ -384,16 +362,14 @@ export async function getGA4Data() {
         bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
       })),
 
-      // ── Operating System — NEW ──────────────────────────────────
-      ga4OperatingSystems: (operatingSystem[0].rows ?? []).map((row) => ({
+      ga4OperatingSystems: ((operatingSystem as any).rows ?? []).map((row: any) => ({
         os:         row.dimensionValues?.[0]?.value ?? '',
         users:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
         sessions:   parseInt(row.metricValues?.[1]?.value  ?? '0'),
         bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
       })),
 
-      // ── Source / Medium detail — NEW ────────────────────────────
-      ga4SourceMedium: (sourcesMedium[0].rows ?? []).map((row) => ({
+      ga4SourceMedium: ((sourcesMedium as any).rows ?? []).map((row: any) => ({
         source:      row.dimensionValues?.[0]?.value ?? '',
         medium:      row.dimensionValues?.[1]?.value ?? '',
         sessions:    parseInt(row.metricValues?.[0]?.value  ?? '0'),
@@ -404,17 +380,7 @@ export async function getGA4Data() {
     }
 
   } catch (error: any) {
-    // ✅ الـ error logging الكامل
-    console.error('═══════════════════════════════')
-    console.error('GA4 ERROR FULL DETAILS:')
-    console.error('Message:', error?.message)
-    console.error('Code:',    error?.code)
-    console.error('Status:',  error?.status)
-    console.error('Details:', error?.details)
-    console.error('Stack:',   error?.stack)
-    console.error('Full:',    JSON.stringify(error, null, 2))
-    console.error('═══════════════════════════════')
-
+    console.error('GA4 FATAL ERROR:', error?.message)
     return {
       ga4:                 null,
       ga4TopPages:         [],
@@ -428,12 +394,9 @@ export async function getGA4Data() {
       ga4Cities:           [],
       ga4OperatingSystems: [],
       ga4SourceMedium:     [],
-      // ✅ كل الـ error details في الـ response
-      error:   error?.message            ?? 'Unknown error',
-      code:    error?.code               ?? 'No code',
-      status:  error?.status             ?? 'No status',
-      details: error?.details            ?? 'No details',
-      stack:   error?.stack?.split('\n')[0] ?? 'No stack',
+      error:   error?.message   ?? 'Unknown error',
+      code:    error?.code      ?? 'No code',
+      details: error?.toString() ?? 'No details',
     }
   }
 }
