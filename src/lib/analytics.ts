@@ -399,8 +399,18 @@ export async function getGA4Data() {
       })),
     }
 
-  } catch (error) {
-    console.error('GA4 Error:', error)
+  } catch (error: any) {
+    // ✅ الـ error logging الكامل
+    console.error('═══════════════════════════════')
+    console.error('GA4 ERROR FULL DETAILS:')
+    console.error('Message:', error?.message)
+    console.error('Code:',    error?.code)
+    console.error('Status:',  error?.status)
+    console.error('Details:', error?.details)
+    console.error('Stack:',   error?.stack)
+    console.error('Full:',    JSON.stringify(error, null, 2))
+    console.error('═══════════════════════════════')
+
     return {
       ga4:                 null,
       ga4TopPages:         [],
@@ -414,6 +424,12 @@ export async function getGA4Data() {
       ga4Cities:           [],
       ga4OperatingSystems: [],
       ga4SourceMedium:     [],
+      // ✅ كل الـ error details في الـ response
+      error:   error?.message            ?? 'Unknown error',
+      code:    error?.code               ?? 'No code',
+      status:  error?.status             ?? 'No status',
+      details: error?.details            ?? 'No details',
+      stack:   error?.stack?.split('\n')[0] ?? 'No stack',
     }
   }
 }

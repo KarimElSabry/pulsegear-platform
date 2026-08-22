@@ -1,34 +1,49 @@
 // src/app/api/leads/route.ts
 
-import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+export const dynamic    = 'force-dynamic'
+export const revalidate = 0
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+import { NextResponse } from 'next/server'
+import { getGA4Data }   from '@/lib/analytics'
 
 export async function GET() {
-  const [reservationsRes, requestsRes] = await Promise.all([
-    supabase
-      .from('reservations')
-      .select('*, product:products(id, title)')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('product_requests')
-      .select('*')
-      .order('created_at', { ascending: false }),
-  ])
+  try {
+    const data = await getGA4Data()
 
-  if (reservationsRes.error) {
-    return NextResponse.json({ error: reservationsRes.error.message }, { status: 500 })
-  }
-  if (requestsRes.error) {
-    return NextResponse.json({ error: requestsRes.error.message }, { status: 500 })
-  }
+    // ✅ لو الـ getGA4Data رجعت error field — لوج في الـ route كمان
+    if ((data as any).error) {
+      console.error('GA4 returned error in data:', (data as any).error)
+    }
 
-  return NextResponse.json({
-    reservations: reservationsRes.data ?? [],
-    requests: requestsRes.data ?? [],
-  })
+    return NextResponse.json(data, {
+      status: 200,
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    })
+
+  } catch (error: any) {
+    console.error('GA4 ROUTE LEVEL ERROR:', error)
+
+    return NextResponse.json(
+      {
+        ga4:                 null,
+        ga4TopPages:         [],
+        ga4DailyUsers:       [],
+        ga4TrafficSources:   [],
+        ga4DeviceBreakdown:  [],
+        ga4Countries:        [],
+        ga4LandingPages:     [],
+        ga4NewVsReturning:   [],
+        ga4ExitPages:        [],
+        ga4Cities:           [],
+        ga4OperatingSystems: [],
+        ga4SourceMedium:     [],
+        error:   error?.message            ?? 'Route level error',
+        code:    error?.code               ?? 'No code',
+        status:  error?.status             ?? 'No status',
+        details: error?.details            ?? 'No details',
+        stack:   error?.stack?.split('\n')[0] ?? 'No stack',
+      },
+      { status: 200 }
+    )
+  }
 }
