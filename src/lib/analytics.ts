@@ -1,3 +1,5 @@
+// src/lib/analytics.ts
+
 import { BetaAnalyticsDataClient } from '@google-analytics/data'
 import path from 'path'
 import fs from 'fs'
@@ -35,7 +37,6 @@ export async function getGA4Data() {
   try {
     const client = getClient()
 
-    // ✅ كل report لوحده — مش Promise.all
     const overview = await runSafe(client, 'overview', {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
@@ -56,12 +57,12 @@ export async function getGA4Data() {
     const topPages = await runSafe(client, 'topPages', {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-      dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+      dimensions: [{ name: 'pagePath' }],
       metrics: [
         { name: 'screenPageViews' },
         { name: 'activeUsers' },
         { name: 'averageSessionDuration' },
-        { name: 'exits' },
+        { name: 'bounceRate' },
       ],
       orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
       limit: 10,
@@ -153,12 +154,12 @@ export async function getGA4Data() {
     const exitPages = await runSafe(client, 'exitPages', {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
-      dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+      dimensions: [{ name: 'pagePath' }],
       metrics: [
-        { name: 'exits' },
         { name: 'screenPageViews' },
+        { name: 'bounceRate' },
       ],
-      orderBys: [{ metric: { metricName: 'exits' }, desc: true }],
+      orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
       limit: 8,
     })
 
@@ -208,7 +209,6 @@ export async function getGA4Data() {
       limit: 10,
     })
 
-    // ✅ قائمة الـ reports اللي فشلت
     const allReports = {
       overview, topPages, dailyUsers, trafficSources,
       deviceBreakdown, countryData, landingPages, returningUsers,
@@ -237,20 +237,17 @@ export async function getGA4Data() {
         conversions:        overviewRow[9]?.value ?? '0',
       } : null,
 
-      // ✅ أهم حاجة — شايف أيه الـ reports الفاشلة
       failedReports,
 
       ga4TopPages: (topPages.rows ?? []).map((row: any) => ({
         page:        row.dimensionValues?.[0]?.value ?? '',
-        pageTitle:   row.dimensionValues?.[1]?.value ?? '',
+        pageTitle:   row.dimensionValues?.[0]?.value ?? '',
         views:       row.metricValues?.[0]?.value    ?? '0',
         users:       row.metricValues?.[1]?.value    ?? '0',
         avgDuration: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(0),
-        exits:       parseInt(row.metricValues?.[3]?.value   ?? '0'),
-        exitRate: (
-          parseInt(row.metricValues?.[3]?.value ?? '0') /
-          Math.max(parseInt(row.metricValues?.[0]?.value ?? '1'), 1) * 100
-        ).toFixed(1),
+        bounceRate:  parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
+        exits:       0,
+        exitRate:    '0',
       })),
 
       ga4DailyUsers: (dailyUsers.rows ?? []).map((row: any) => ({
@@ -325,14 +322,12 @@ export async function getGA4Data() {
       })(),
 
       ga4ExitPages: (exitPages.rows ?? []).map((row: any) => ({
-        page:      row.dimensionValues?.[0]?.value ?? '',
-        pageTitle: row.dimensionValues?.[1]?.value ?? '',
-        exits:     parseInt(row.metricValues?.[0]?.value ?? '0'),
-        views:     parseInt(row.metricValues?.[1]?.value ?? '0'),
-        exitRate: (
-          parseInt(row.metricValues?.[0]?.value ?? '0') /
-          Math.max(parseInt(row.metricValues?.[1]?.value ?? '1'), 1) * 100
-        ).toFixed(1),
+        page:       row.dimensionValues?.[0]?.value ?? '',
+        pageTitle:  row.dimensionValues?.[0]?.value ?? '',
+        views:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
+        exits:      0,
+        exitRate:   '0',
       })),
 
       ga4Cities: (cityData.rows ?? []).map((row: any) => ({
@@ -375,8 +370,8 @@ export async function getGA4Data() {
       ga4Cities:           [],
       ga4OperatingSystems: [],
       ga4SourceMedium:     [],
-      error:   error?.message   ?? 'Unknown',
-      code:    error?.code      ?? 0,
+      error:   error?.message    ?? 'Unknown',
+      code:    error?.code       ?? 0,
       details: error?.toString() ?? '',
     }
   }
