@@ -1,3 +1,5 @@
+// app/admin/deals/actions.ts
+
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -60,48 +62,42 @@ export async function getOpenProductRequests() {
 
 // ─── Create Deal ──────────────────────────────────────────────────────────────
 export async function createDeal(formData: FormData) {
+  // ✅ Safe parse helpers
+  const getStr   = (key: string) => (formData.get(key) as string | null) || null
+  const getFloat = (key: string) => {
+    const v = formData.get(key) as string | null
+    return v && v.trim() !== '' ? parseFloat(v) : null
+  }
+  const getInt = (key: string) => {
+    const v = formData.get(key) as string | null
+    return v && v.trim() !== '' ? parseInt(v) : null
+  }
+
   const { error } = await supabase.from('deals').insert({
-    product_request_id: formData.get('product_request_id')
-      ? Number(formData.get('product_request_id'))
-      : null,
+    product_request_id:   getInt('product_request_id'),
 
-    customer_name:      formData.get('customer_name')      || null,
-    phone:              formData.get('phone')              || null,
-    customer_instagram: formData.get('customer_instagram') || null,
+    customer_name:        getStr('customer_name'),
+    phone:                getStr('phone'),
+    customer_instagram:   getStr('customer_instagram'),
 
-    status:             formData.get('status')             || 'deposit_pending',
-    source_link:        formData.get('source_link')        || null,
-    source_platform:    formData.get('source_platform')    || null,
+    status:               getStr('status')       ?? 'deposit_pending',
+    source_link:          getStr('source_link'),
+    source_platform:      getStr('source_platform'),
+    sale_channel:         getStr('sale_channel') ?? 'whatsapp',
+    notes:                getStr('notes'),
 
-    source_price_eur:   formData.get('source_price_eur')
-      ? parseFloat(formData.get('source_price_eur') as string)
-      : null,
-
-    exchange_rate:      formData.get('exchange_rate')
-      ? parseFloat(formData.get('exchange_rate') as string)
-      : null,
-
-    selling_price_egp:  formData.get('selling_price_egp')
-      ? parseFloat(formData.get('selling_price_egp') as string)
-      : null,
-
-    deposit_amount_egp: formData.get('deposit_amount_egp')
-      ? parseFloat(formData.get('deposit_amount_egp') as string)
-      : null,
-
-    remaining_amount_egp: formData.get('remaining_amount_egp')
-      ? parseFloat(formData.get('remaining_amount_egp') as string)
-      : null,
-
-    commission_egp:     formData.get('commission_egp')
-      ? parseFloat(formData.get('commission_egp') as string)
-      : 0,
-
-    sale_channel:       formData.get('sale_channel')       || 'whatsapp',
-    notes:              formData.get('notes')              || null,
+    source_price_eur:     getFloat('source_price_eur'),
+    exchange_rate:        getFloat('exchange_rate'),
+    selling_price_egp:    getFloat('selling_price_egp'),
+    deposit_amount_egp:   getFloat('deposit_amount_egp'),
+    remaining_amount_egp: getFloat('remaining_amount_egp'),
+    commission_egp:       getFloat('commission_egp') ?? 0,
   })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('createDeal error:', error)
+    throw new Error(error.message)
+  }
 
   revalidatePath('/admin/deals')
   revalidatePath('/admin/sales')
@@ -110,47 +106,49 @@ export async function createDeal(formData: FormData) {
 
 // ─── Update Deal ──────────────────────────────────────────────────────────────
 export async function updateDeal(id: string, formData: FormData) {
+  // ✅ Safe parse helpers
+  const getStr   = (key: string) => (formData.get(key) as string | null) || null
+  const getFloat = (key: string) => {
+    const v = formData.get(key) as string | null
+    return v && v.trim() !== '' ? parseFloat(v) : null
+  }
+  const getInt = (key: string) => {
+    const v = formData.get(key) as string | null
+    return v && v.trim() !== '' ? parseInt(v) : null
+  }
+
+  const updatePayload = {
+    product_request_id:   getInt('product_request_id'),
+
+    customer_name:        getStr('customer_name'),
+    phone:                getStr('phone'),
+    customer_instagram:   getStr('customer_instagram'),
+
+    status:               getStr('status')       ?? 'deposit_pending',
+    source_link:          getStr('source_link'),
+    source_platform:      getStr('source_platform'),
+    sale_channel:         getStr('sale_channel') ?? 'whatsapp',
+    notes:                getStr('notes'),
+
+    source_price_eur:     getFloat('source_price_eur'),
+    exchange_rate:        getFloat('exchange_rate'),
+    selling_price_egp:    getFloat('selling_price_egp'),
+    deposit_amount_egp:   getFloat('deposit_amount_egp'),
+    remaining_amount_egp: getFloat('remaining_amount_egp'),
+    commission_egp:       getFloat('commission_egp') ?? 0,
+  }
+
+  console.log('updateDeal payload:', updatePayload)
+
   const { error } = await supabase
     .from('deals')
-    .update({
-      customer_name:      formData.get('customer_name')      || null,
-      phone:              formData.get('phone')              || null,
-      customer_instagram: formData.get('customer_instagram') || null,
-
-      status:             formData.get('status'),
-      source_link:        formData.get('source_link')        || null,
-      source_platform:    formData.get('source_platform')    || null,
-
-      source_price_eur:   formData.get('source_price_eur')
-        ? parseFloat(formData.get('source_price_eur') as string)
-        : null,
-
-      exchange_rate:      formData.get('exchange_rate')
-        ? parseFloat(formData.get('exchange_rate') as string)
-        : null,
-
-      selling_price_egp:  formData.get('selling_price_egp')
-        ? parseFloat(formData.get('selling_price_egp') as string)
-        : null,
-
-      deposit_amount_egp: formData.get('deposit_amount_egp')
-        ? parseFloat(formData.get('deposit_amount_egp') as string)
-        : null,
-
-      remaining_amount_egp: formData.get('remaining_amount_egp')
-        ? parseFloat(formData.get('remaining_amount_egp') as string)
-        : null,
-
-      commission_egp:     formData.get('commission_egp')
-        ? parseFloat(formData.get('commission_egp') as string)
-        : 0,
-
-      sale_channel:       formData.get('sale_channel')       || 'whatsapp',
-      notes:              formData.get('notes')              || null,
-    })
+    .update(updatePayload)
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('updateDeal error:', error)
+    throw new Error(error.message)
+  }
 
   revalidatePath('/admin/deals')
   revalidatePath('/admin/sales')
@@ -174,7 +172,6 @@ export async function updateDealStatus(id: string, status: DealStatus) {
 
   if (error) throw new Error(error.message)
 
-  // ✅ AUTO-SYNC — when deal is completed, insert into sales automatically
   if (status === 'completed') {
     await syncDealToSales(id)
   }
@@ -186,7 +183,6 @@ export async function updateDealStatus(id: string, status: DealStatus) {
 
 // ─── Sync Completed Deal → Sales ──────────────────────────────────────────────
 async function syncDealToSales(dealId: string) {
-  // 1. fetch the full deal + linked product request
   const { data: deal, error: dealError } = await supabase
     .from('deals')
     .select(`
@@ -203,7 +199,6 @@ async function syncDealToSales(dealId: string) {
     return
   }
 
-  // 2. check if already synced — avoid duplicates
   const { data: existing } = await supabase
     .from('sales')
     .select('id')
@@ -215,13 +210,11 @@ async function syncDealToSales(dealId: string) {
     return
   }
 
-  // 3. derive product name — prefer linked request, fallback to customer name
   const productName =
     deal.product_request?.requested_product ??
     deal.customer_name                       ??
     'Unknown Product'
 
-  // 4. calculate financials
   const sourceEur  = deal.source_price_eur  ?? 0
   const rate       = deal.exchange_rate      ?? 0
   const costEgp    = sourceEur * rate
@@ -232,7 +225,6 @@ async function syncDealToSales(dealId: string) {
     ? parseFloat(((profitEgp / sellingEgp) * 100).toFixed(2))
     : 0
 
-  // 5. insert into sales
   const { error: insertError } = await supabase.from('sales').insert({
     deal_id:           dealId,
     product_name:      productName,
@@ -261,7 +253,6 @@ async function syncDealToSales(dealId: string) {
 
 // ─── Delete Deal ──────────────────────────────────────────────────────────────
 export async function deleteDeal(id: string) {
-  // ✅ also delete the linked sale if it was auto-synced
   await supabase
     .from('sales')
     .delete()

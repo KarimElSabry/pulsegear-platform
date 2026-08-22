@@ -1,4 +1,4 @@
-// src/app/admin/deals/DealsClient.tsx
+// app/admin/deals/DealsClient.tsx
 
 'use client'
 
@@ -60,7 +60,8 @@ function useEurToEgp() {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(false)
 
-  async function fetchRate() {
+  // ✅ FIX — returns the fetched value directly so callers don't rely on stale state
+  async function fetchRate(): Promise<number | null> {
     setLoading(true)
     setError(false)
 
@@ -90,14 +91,16 @@ function useEurToEgp() {
     for (const api of APIs) {
       try {
         const fetched = await api()
-        setRate(Math.round(fetched * 100) / 100)
+        const rounded = Math.round(fetched * 100) / 100
+        setRate(rounded)
         setLoading(false)
-        return
+        return rounded // ✅ return directly — no stale closure issue
       } catch { continue }
     }
 
     setError(true)
     setLoading(false)
+    return null
   }
 
   useEffect(() => { fetchRate() }, [])
@@ -110,26 +113,28 @@ function DealFormFields({
   deal,
   productRequests,
 }: {
-  deal?:            Deal
-  productRequests:  ProductRequest[]
+  deal?:           Deal
+  productRequests: ProductRequest[]
 }) {
   const { rate: liveRate, loading: rateLoading, error: rateError, refetch } = useEurToEgp()
 
-  // ✅ FIX 1 — use customer_phone (correct field name from Deal type)
-  const [customerName,      setCustomerName]      = useState(deal?.customer_name      ?? '')
-  const [customerPhone,     setCustomerPhone]      = useState(deal?.phone     ?? '')
-  const [customerInstagram, setCustomerInstagram]  = useState(deal?.customer_instagram ?? '')
-  const [sellingPrice,      setSellingPrice]       = useState(deal?.selling_price_egp?.toString()   ?? '')
-  const [depositAmount,     setDepositAmount]      = useState(deal?.deposit_amount_egp?.toString()  ?? '')
+  // ✅ All fields are fully controlled state
+  const [customerName,      setCustomerName]      = useState(deal?.customer_name          ?? '')
+  const [customerPhone,     setCustomerPhone]      = useState(deal?.phone                  ?? '')
+  const [customerInstagram, setCustomerInstagram]  = useState(deal?.customer_instagram     ?? '')
+  const [sellingPrice,      setSellingPrice]       = useState(deal?.selling_price_egp?.toString()    ?? '')
+  const [depositAmount,     setDepositAmount]      = useState(deal?.deposit_amount_egp?.toString()   ?? '')
   const [remainingAmount,   setRemainingAmount]    = useState(deal?.remaining_amount_egp?.toString() ?? '')
-  const [notes,             setNotes]              = useState(deal?.notes              ?? '')
+  const [commissionEgp,     setCommissionEgp]      = useState(deal?.commission_egp?.toString()       ?? '0')
+  const [notes,             setNotes]              = useState(deal?.notes                  ?? '')
+  const [sourcePriceEur,    setSourcePriceEur]     = useState(deal?.source_price_eur?.toString()     ?? '')
 
-  // ✅ FIX 2 — exchange rate: start with deal value if editing, else wait for live rate
-  const [exchangeRate,      setExchangeRate]       = useState(
+  // ✅ Exchange rate: use deal value when editing, wait for live rate when creating
+  const [exchangeRate, setExchangeRate] = useState(
     deal?.exchange_rate ? String(deal.exchange_rate) : ''
   )
 
-  // ✅ FIX 3 — inject live rate only when creating (not editing)
+  // ✅ Only inject live rate once on create (not on edit)
   const rateInjected = useRef(false)
   useEffect(() => {
     if (!deal && liveRate && !rateInjected.current) {
@@ -138,24 +143,20 @@ function DealFormFields({
     }
   }, [liveRate, deal])
 
-  // ✅ FIX 4 — source_price_eur state for live EGP calculation
-  const [sourcePriceEur, setSourcePriceEur] = useState(
-    deal?.source_price_eur?.toString() ?? ''
-  )
-
-  // ✅ FIX 5 — auto-calculate selling price from EUR × rate
+  // ✅ Live EGP calculation preview
   const calculatedEgp =
     sourcePriceEur && exchangeRate
       ? Math.round(parseFloat(sourcePriceEur) * parseFloat(exchangeRate))
       : null
 
+  // ✅ Auto-fill from linked product request
   function handleRequestChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const id  = Number(e.target.value)
     if (!id) return
     const req = productRequests.find((r) => r.id === id)
     if (!req) return
     if (req.customer_name)      setCustomerName(req.customer_name)
-    if (req.phone)              setCustomerPhone(req.phone)         // ✅ phone from request
+    if (req.phone)              setCustomerPhone(req.phone)
     if (req.customer_instagram) setCustomerInstagram(req.customer_instagram)
     if (req.budget)             setSellingPrice(String(req.budget))
     if (req.notes)              setNotes(req.notes)
@@ -216,7 +217,7 @@ function DealFormFields({
         />
       </Field>
 
-      {/* ✅ FIX — name="customer_phone" matches the DB column */}
+      {/* ✅ FIX — fully controlled, name="phone" matches DB column */}
       <Field label="Customer Phone">
         <input
           name="phone"
@@ -306,7 +307,6 @@ function DealFormFields({
         </p>
       </div>
 
-      {/* ✅ FIX — source price is now controlled state */}
       <Field label="Source Price (EUR)">
         <input
           name="source_price_eur"
@@ -317,7 +317,6 @@ function DealFormFields({
           className={inputClass}
           placeholder="0.00"
         />
-        {/* ✅ FIX — show live EGP equivalent */}
         {calculatedEgp !== null && exchangeRate && (
           <p className="text-xs text-indigo-400 mt-1">
             ≈ {calculatedEgp.toLocaleString()} EGP
@@ -326,7 +325,6 @@ function DealFormFields({
         )}
       </Field>
 
-      {/* ✅ FIX — exchange rate with refresh button */}
       <Field
         label="Exchange Rate (EUR to EGP)"
         hint={
@@ -349,12 +347,12 @@ function DealFormFields({
             className={`${inputClass} ${liveRate ? 'border-indigo-600' : ''}`}
             placeholder="0.00"
           />
-          {/* ✅ FIX — refresh button to get latest rate */}
+          {/* ✅ FIX — use returned value from refetch directly, no stale state */}
           <button
             type="button"
             onClick={async () => {
-              await refetch()
-              if (liveRate) setExchangeRate(String(liveRate))
+              const freshRate = await refetch()
+              if (freshRate) setExchangeRate(String(freshRate))
             }}
             className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 rounded-lg transition whitespace-nowrap"
             title="Refresh live rate"
@@ -362,7 +360,6 @@ function DealFormFields({
             🔄
           </button>
         </div>
-        {/* ✅ FIX — show edit mode warning */}
         {deal && (
           <p className="text-xs text-yellow-500 mt-1">
             ⚠️ Original rate: {deal.exchange_rate} — click 🔄 to use live rate
@@ -406,12 +403,14 @@ function DealFormFields({
         />
       </Field>
 
+      {/* ✅ FIX — commission is now fully controlled state, not defaultValue */}
       <Field label="Commission (EGP)">
         <input
           name="commission_egp"
           type="number"
           step="0.01"
-          defaultValue={deal?.commission_egp ?? 0}
+          value={commissionEgp}
+          onChange={(e) => setCommissionEgp(e.target.value)}
           className={inputClass}
           placeholder="0.00"
         />
@@ -459,7 +458,6 @@ function DealCard({
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-white text-sm">{productName}</p>
-          {/* ✅ FIX — show customer_phone (correct field) */}
           <p className="text-xs text-gray-500 mt-0.5">
             {deal.phone ?? deal.customer_instagram ?? 'No contact info'}
           </p>
@@ -472,19 +470,25 @@ function DealCard({
         {deal.selling_price_egp != null && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Selling </span>
-            <span className="font-semibold text-white">{deal.selling_price_egp.toLocaleString('en-EG')} EGP</span>
+            <span className="font-semibold text-white">
+              {deal.selling_price_egp.toLocaleString('en-EG')} EGP
+            </span>
           </div>
         )}
         {deal.deposit_amount_egp != null && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Deposit </span>
-            <span className="font-semibold text-white">{deal.deposit_amount_egp.toLocaleString('en-EG')} EGP</span>
+            <span className="font-semibold text-white">
+              {deal.deposit_amount_egp.toLocaleString('en-EG')} EGP
+            </span>
           </div>
         )}
         {deal.remaining_amount_egp != null && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Remaining </span>
-            <span className="font-semibold text-white">{deal.remaining_amount_egp.toLocaleString('en-EG')} EGP</span>
+            <span className="font-semibold text-white">
+              {deal.remaining_amount_egp.toLocaleString('en-EG')} EGP
+            </span>
           </div>
         )}
         {deal.source_price_eur != null && (
@@ -589,11 +593,11 @@ export default function DealsClient({
   deals:           Deal[]
   productRequests: ProductRequest[]
 }) {
-  const [deals,         setDeals]         = useState<Deal[]>(initialDeals)
-  const [showForm,      setShowForm]      = useState(false)
-  const [editingDeal,   setEditingDeal]   = useState<Deal | null>(null)
-  const [filterStatus,  setFilterStatus]  = useState<DealStatus | 'all'>('all')
-  const [loading,       setLoading]       = useState(false)
+  const [deals,        setDeals]        = useState<Deal[]>(initialDeals)
+  const [showForm,     setShowForm]     = useState(false)
+  const [editingDeal,  setEditingDeal]  = useState<Deal | null>(null)
+  const [filterStatus, setFilterStatus] = useState<DealStatus | 'all'>('all')
+  const [loading,      setLoading]      = useState(false)
 
   const activeDeals    = deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
   const completedDeals = deals.filter((d) => d.status === 'completed')
@@ -604,30 +608,52 @@ export default function DealsClient({
 
   async function handleCreate(formData: FormData) {
     setLoading(true)
-    await createDeal(formData)
-    setShowForm(false)
-    setLoading(false)
-    window.location.reload()
+    try {
+      await createDeal(formData)
+      setShowForm(false)
+      window.location.reload()
+    } catch (err) {
+      console.error('handleCreate error:', err)
+      alert('Failed to create deal. Check console for details.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleUpdate(formData: FormData) {
     if (!editingDeal) return
     setLoading(true)
-    await updateDeal(editingDeal.id, formData)
-    setEditingDeal(null)
-    setLoading(false)
-    window.location.reload()
+    try {
+      await updateDeal(editingDeal.id, formData)
+      setEditingDeal(null)
+      window.location.reload()
+    } catch (err) {
+      console.error('handleUpdate error:', err)
+      alert('Failed to update deal. Check console for details.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleStatusChange(id: string, status: DealStatus) {
-    await updateDealStatus(id, status)
-    window.location.reload()
+    try {
+      await updateDealStatus(id, status)
+      window.location.reload()
+    } catch (err) {
+      console.error('handleStatusChange error:', err)
+      alert('Failed to update status. Check console for details.')
+    }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Delete this deal? This cannot be undone.')) return
-    await deleteDeal(id)
-    setDeals((prev) => prev.filter((d) => d.id !== id))
+    try {
+      await deleteDeal(id)
+      setDeals((prev) => prev.filter((d) => d.id !== id))
+    } catch (err) {
+      console.error('handleDelete error:', err)
+      alert('Failed to delete deal. Check console for details.')
+    }
   }
 
   return (
