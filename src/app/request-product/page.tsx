@@ -1,3 +1,5 @@
+// src/app/request-product/page.tsx
+
 import ProductRequestForm from "@/components/ProductRequestForm";
 
 export default function RequestProductPage() {

@@ -81,12 +81,13 @@ export async function getOpenProductRequests() {
 
 // ─── Create Deal ──────────────────────────────────────────────────────────────
 export async function createDeal(formData: FormData) {
-  // ✅ Debug log
   console.log('createDeal formData entries:')
   for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
 
+  const productRequestId = getInt(formData, 'product_request_id')
+
   const payload = {
-    product_request_id:   getInt(formData,   'product_request_id'),
+    product_request_id:   productRequestId,
     customer_name:        getStr(formData,   'customer_name'),
     phone:                getStr(formData,   'phone'),
     customer_instagram:   getStr(formData,   'customer_instagram'),
@@ -105,26 +106,46 @@ export async function createDeal(formData: FormData) {
 
   console.log('createDeal payload:', payload)
 
-  const { error } = await supabase.from('deals').insert(payload)
+  const { data: deal, error } = await supabase
+    .from('deals')
+    .insert(payload)
+    .select('id')
+    .single()
 
   if (error) {
     console.error('createDeal error:', error)
     throw new Error(error.message)
   }
 
+  // ✅ Auto-update product_request status to 'deal_agreed' when a deal is created
+  if (productRequestId) {
+    const { error: updateError } = await supabase
+      .from('product_requests')
+      .update({ status: 'deal_agreed' })
+      .eq('id', productRequestId)
+
+    if (updateError) {
+      console.warn('Failed to update product_request status:', updateError.message)
+    } else {
+      console.log(`✅ product_request #${productRequestId} status → deal_agreed`)
+    }
+  }
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/requests')
   revalidatePath('/admin/sales')
   revalidatePath('/admin/analytics')
 }
 
 // ─── Update Deal ──────────────────────────────────────────────────────────────
 export async function updateDeal(id: string, formData: FormData) {
-  // ✅ Debug log
   console.log('updateDeal formData entries:')
   for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
 
+  const productRequestId = getInt(formData, 'product_request_id')
+
   const payload = {
-    product_request_id:   getInt(formData,   'product_request_id'),
+    product_request_id:   productRequestId,
     customer_name:        getStr(formData,   'customer_name'),
     phone:                getStr(formData,   'phone'),
     customer_instagram:   getStr(formData,   'customer_instagram'),
@@ -153,7 +174,22 @@ export async function updateDeal(id: string, formData: FormData) {
     throw new Error(error.message)
   }
 
+  // ✅ If product_request_id changed or set, update its status to 'deal_agreed'
+  if (productRequestId) {
+    const { error: updateError } = await supabase
+      .from('product_requests')
+      .update({ status: 'deal_agreed' })
+      .eq('id', productRequestId)
+
+    if (updateError) {
+      console.warn('Failed to update product_request status:', updateError.message)
+    } else {
+      console.log(`✅ product_request #${productRequestId} status → deal_agreed`)
+    }
+  }
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/requests')
   revalidatePath('/admin/sales')
   revalidatePath('/admin/analytics')
 }
@@ -168,6 +204,14 @@ export async function updateDealStatus(id: string, status: DealStatus) {
   if (status === 'delivered')      extra.delivered_at      = new Date().toISOString()
   if (status === 'completed')      extra.remaining_paid_at = new Date().toISOString()
 
+  const { data: deal, error: fetchError } = await supabase
+    .from('deals')
+    .select('id, product_request_id')
+    .eq('id', id)
+    .single()
+
+  if (fetchError) throw new Error(fetchError.message)
+
   const { error } = await supabase
     .from('deals')
     .update({ status, ...extra })
@@ -175,11 +219,34 @@ export async function updateDealStatus(id: string, status: DealStatus) {
 
   if (error) throw new Error(error.message)
 
+  // ✅ Sync product_request status based on deal status
+  if (deal?.product_request_id) {
+    let requestStatus: string | null = null
+
+    if (status === 'completed')  requestStatus = 'completed'
+    if (status === 'cancelled')  requestStatus = 'cancelled'
+    if (status === 'delivered')  requestStatus = 'deal_agreed'
+
+    if (requestStatus) {
+      const { error: reqError } = await supabase
+        .from('product_requests')
+        .update({ status: requestStatus })
+        .eq('id', deal.product_request_id)
+
+      if (reqError) {
+        console.warn('Failed to sync product_request status:', reqError.message)
+      } else {
+        console.log(`✅ product_request #${deal.product_request_id} status → ${requestStatus}`)
+      }
+    }
+  }
+
   if (status === 'completed') {
     await syncDealToSales(id)
   }
 
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/requests')
   revalidatePath('/admin/sales')
   revalidatePath('/admin/analytics')
 }
@@ -256,6 +323,13 @@ async function syncDealToSales(dealId: string) {
 
 // ─── Delete Deal ──────────────────────────────────────────────────────────────
 export async function deleteDeal(id: string) {
+  // ✅ Fetch deal before deleting to get product_request_id
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('id, product_request_id')
+    .eq('id', id)
+    .single()
+
   await supabase
     .from('sales')
     .delete()
@@ -268,7 +342,22 @@ export async function deleteDeal(id: string) {
 
   if (error) throw new Error(error.message)
 
+  // ✅ Reset product_request status back to 'contacted' if deal is deleted
+  if (deal?.product_request_id) {
+    const { error: resetError } = await supabase
+      .from('product_requests')
+      .update({ status: 'contacted' })
+      .eq('id', deal.product_request_id)
+
+    if (resetError) {
+      console.warn('Failed to reset product_request status:', resetError.message)
+    } else {
+      console.log(`✅ product_request #${deal.product_request_id} status → contacted (deal deleted)`)
+    }
+  }
+
   revalidatePath('/admin/deals')
+  revalidatePath('/admin/requests')
   revalidatePath('/admin/sales')
   revalidatePath('/admin/analytics')
 }

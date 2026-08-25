@@ -1,68 +1,53 @@
 // src/app/api/submit/route.ts
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { NextResponse } from 'next/server'
+import { createClient }  from '@supabase/supabase-js'
+
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw_m5sS_5s9Us1vNA1MMeSobyMwg2NnJEJNcUCGa6Vlc-zOtdWeFXGCaCw1GgBDpEhDpg/exec'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    const {
-      name,
-      email,
-      phone,
-      governorate,
-      city,
-      street,
-      product,
-      budget,
-      notes,
-    } = body
+    // ✅ Field names match what deals/actions.ts expects
+    const { error } = await supabase.from('product_requests').insert([{
+      customer_name:     body.name,
+      email:             body.email,
+      phone:             body.phone,
+      instagram:         body.instagram    ?? null,
+      governorate:       body.governorate,
+      city:              body.city,
+      street:            body.street,
+      requested_product: body.product,
+      budget:            parseFloat(body.budget) || null,
+      notes:             body.notes        ?? null,
+      status:            'new',
+    }])
 
-    // ── Basic validation ──────────────────────────────────────────
-    if (!name || !email || !phone || !product || !budget) {
-      return NextResponse.json(
-        { status: 'error', message: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
+    if (error) throw error
 
-    // ── Insert into Supabase ──────────────────────────────────────
-    const { error } = await supabase.from('product_requests').insert([
-      {
-        customer_name: name,
-        email,
-        phone,
-        governorate,
-        city,
-        street,
-        requested_product: product,
-        budget: Number(budget), 
-        notes,
-        status: 'new',          // default status
-        created_at: new Date().toISOString(),
-      },
-    ])
-
-    if (error) {
-      console.error('Supabase error:', error.message)
-      return NextResponse.json(
-        { status: 'error', message: error.message },
-        { status: 500 }
-      )
+    // ✅ Also send to Google Sheets
+    try {
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ ...body, formType: 'product_request' }),
+      })
+    } catch (sheetErr) {
+      console.warn('Google Sheets sync failed (non-fatal):', sheetErr)
     }
 
     return NextResponse.json({ status: 'success' })
 
-  } catch (err) {
-    console.error('Unexpected error:', err)
+  } catch (err: any) {
+    console.error('Submit error:', err)
     return NextResponse.json(
-      { status: 'error', message: 'Unexpected server error' },
+      { status: 'error', message: err.message ?? 'Something went wrong' },
       { status: 500 }
     )
   }
