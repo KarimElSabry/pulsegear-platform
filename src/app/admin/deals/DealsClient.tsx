@@ -389,6 +389,9 @@ function DealFormFields({
           className={inputClass}
           placeholder="0.00"
         />
+        <p className="text-xs text-yellow-500 mt-1">
+    ⚠️ Enter the FULL selling price — not the deposit amount
+  </p>
       </Field>
 
       <Field label="Deposit Amount (EGP)">
