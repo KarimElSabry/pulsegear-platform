@@ -67,6 +67,9 @@ export interface Product {
 
   // 🖼️ Relations
   images?:           ProductImage[]
+
+  // 🏷️ Discount
+  discount_enabled?: boolean
 }
 
 // ─── Vinted Parser ────────────────────────────────────────────────────────────
