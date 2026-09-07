@@ -161,14 +161,23 @@ export async function updateDeal(id: string, formData: FormData) {
   revalidatePath('/admin/analytics')
 }
 
-export async function updateDealStatus(id: string, status: DealStatus) {
-  const extra: Record<string, string> = {}
+export async function updateDealStatus(
+  id: string,
+  status: DealStatus,
+  cancellationReason?: string  // ✅ NEW optional param
+) {
+  const extra: Record<string, string | null> = {}
 
-  if (status === 'deposit_paid')   extra.deposit_paid_at   = new Date().toISOString()
-  if (status === 'shipping')       extra.shipped_at        = new Date().toISOString()
-  if (status === 'arrived_egypt')  extra.arrived_egypt_at  = new Date().toISOString()
-  if (status === 'delivered')      extra.delivered_at      = new Date().toISOString()
-  if (status === 'completed')      extra.remaining_paid_at = new Date().toISOString()
+  if (status === 'deposit_paid')      extra.deposit_paid_at   = new Date().toISOString()
+  if (status === 'shipping')          extra.shipped_at        = new Date().toISOString()
+  if (status === 'arrived_egypt')     extra.arrived_egypt_at  = new Date().toISOString()
+  if (status === 'delivered')         extra.delivered_at      = new Date().toISOString()
+  if (status === 'completed')         extra.remaining_paid_at = new Date().toISOString()
+
+  // ✅ Save cancellation reason
+  if (status === 'cancelled') {
+    extra.cancellation_reason = cancellationReason ?? null
+  }
 
   const { data: deal, error: fetchError } = await supabase
     .from('deals')

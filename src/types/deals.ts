@@ -58,6 +58,7 @@ export interface Deal {
   // Meta
   notes:      string | null
   created_at: string
+  cancellation_reason: string | null
   updated_at: string
 
   // Relations

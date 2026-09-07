@@ -291,12 +291,111 @@ function DealFormFields({
   )
 }
 
-function DealCard({
-  deal, onEdit, onDelete, onStatusChange,
+// ── Cancellation Modal ────────────────────────────────────────────────────────
+function CancellationModal({
+  deal,
+  onClose,
+  onConfirm,
 }: {
-  deal: Deal; onEdit: (deal: Deal) => void; onDelete: (id: string) => void; onStatusChange: (id: string, status: DealStatus) => void
+  deal:      Deal
+  onClose:   () => void
+  onConfirm: (reason: string) => void
 }) {
-  const productName = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
+  const [reason, setReason] = useState('')
+
+  const productName =
+    deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-950 border border-red-800 rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
+          <h2 className="text-base font-bold text-red-400">❌ Cancel Deal</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg font-bold transition">✕</button>
+        </div>
+        <div className="p-6 flex flex-col gap-4">
+          <p className="text-sm text-gray-400">
+            You are cancelling: <span className="text-white font-bold">{productName}</span>
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+              Cancellation Reason <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={4}
+              placeholder="e.g. Customer changed their mind, Item no longer available..."
+              className="w-full bg-gray-800 border border-gray-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none transition resize-none"
+            />
+          </div>
+
+          {/* Quick Reasons */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-gray-600 uppercase tracking-wide">Quick select:</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                'Customer changed mind',
+                'Item not available',
+                'Price too high',
+                'Found elsewhere',
+                'No response from customer',
+                'Out of budget',
+              ].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setReason(r)}
+                  className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                    reason === r
+                      ? 'border-red-500 bg-red-500/20 text-red-300'
+                      : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500'
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg transition text-sm"
+            >
+              Keep Deal
+            </button>
+            <button
+              onClick={() => {
+                if (!reason.trim()) {
+                  alert('Please enter a cancellation reason')
+                  return
+                }
+                onConfirm(reason.trim())
+              }}
+              className="flex-1 bg-red-600 hover:bg-red-500 text-white font-semibold py-2 rounded-lg transition text-sm"
+            >
+              Confirm Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Deal Card ─────────────────────────────────────────────────────────────────
+function DealCard({
+  deal, onEdit, onDelete, onStatusChange, onCancel,
+}: {
+  deal:           Deal
+  onEdit:         (deal: Deal) => void
+  onDelete:       (id: string) => void
+  onStatusChange: (id: string, status: DealStatus) => void
+  onCancel:       (deal: Deal) => void
+}) {
+  const productName  = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
   const currentIndex = DEAL_STATUSES.findIndex((s) => s.value === deal.status)
   const nextStatus   = DEAL_STATUSES[currentIndex + 1]
 
@@ -359,17 +458,48 @@ function DealCard({
 
       {deal.notes && <p className="text-xs text-gray-500 italic">📝 {deal.notes}</p>}
 
+      {/* ✅ Cancellation Reason — يظهر بس لو cancelled */}
+      {deal.status === 'cancelled' && deal.cancellation_reason && (
+        <div className="bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-400 font-semibold mb-0.5">Cancellation Reason:</p>
+          <p className="text-xs text-gray-400">{deal.cancellation_reason}</p>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 pt-1 flex-wrap">
-        {nextStatus && deal.status !== 'cancelled' && (
-          <button onClick={() => onStatusChange(deal.id, nextStatus.value)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition">
+        {/* Next Status — بس لو مش cancelled أو completed */}
+        {nextStatus && deal.status !== 'cancelled' && deal.status !== 'completed' && (
+          <button
+            onClick={() => onStatusChange(deal.id, nextStatus.value)}
+            className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition"
+          >
             Next: {nextStatus.label}
           </button>
         )}
-        <button onClick={() => onEdit(deal)} className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-3 py-1.5 rounded-lg transition">
+
+        <button
+          onClick={() => onEdit(deal)}
+          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-3 py-1.5 rounded-lg transition"
+        >
           Edit
         </button>
-        <button onClick={() => onDelete(deal.id)} className="text-xs bg-red-900/40 hover:bg-red-900/70 text-red-400 font-medium px-3 py-1.5 rounded-lg transition">
-          Delete
+
+        {/* ✅ Cancel button — بيفتح الـ modal */}
+        {deal.status !== 'cancelled' && deal.status !== 'completed' && (
+          <button
+            onClick={() => onCancel(deal)}
+            className="text-xs bg-red-900/40 hover:bg-red-900/70 text-red-400 font-medium px-3 py-1.5 rounded-lg transition"
+          >
+            Cancel
+          </button>
+        )}
+
+        {/* Delete */}
+        <button
+          onClick={() => onDelete(deal.id)}
+          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-500 font-medium px-3 py-1.5 rounded-lg transition"
+        >
+          🗑️
         </button>
       </div>
 
@@ -378,6 +508,7 @@ function DealCard({
   )
 }
 
+// ── Modal Wrapper ─────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -392,25 +523,26 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   )
 }
 
+// ── Main Client Component ─────────────────────────────────────────────────────
 export default function DealsClient({
   deals: initialDeals,
   productRequests,
 }: {
-  deals: Deal[]
+  deals:           Deal[]
   productRequests: ProductRequest[]
 }) {
-  const [deals,        setDeals]        = useState<Deal[]>(initialDeals)
-  const [showForm,     setShowForm]     = useState(false)
-  const [editingDeal,  setEditingDeal]  = useState<Deal | null>(null)
-  const [filterStatus, setFilterStatus] = useState<FilterType>('active') // ✅ default = active
-  const [loading,      setLoading]      = useState(false)
+  const [deals,          setDeals]          = useState<Deal[]>(initialDeals)
+  const [showForm,       setShowForm]       = useState(false)
+  const [editingDeal,    setEditingDeal]    = useState<Deal | null>(null)
+  const [cancellingDeal, setCancellingDeal] = useState<Deal | null>(null) // ✅ NEW
+  const [filterStatus,   setFilterStatus]   = useState<FilterType>('active')
+  const [loading,        setLoading]        = useState(false)
 
   const activeDeals    = deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
   const completedDeals = deals.filter((d) => d.status === 'completed')
   const cancelledDeals = deals.filter((d) => d.status === 'cancelled')
   const totalRevenue   = completedDeals.reduce((s, d) => s + (d.selling_price_egp ?? 0), 0)
 
-  // ✅ Filter logic
   const filteredDeals =
     filterStatus === 'active'
       ? deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
@@ -457,6 +589,18 @@ export default function DealsClient({
     }
   }
 
+  // ✅ NEW — Cancel with reason
+  async function handleCancelWithReason(deal: Deal, reason: string) {
+    try {
+      await updateDealStatus(deal.id, 'cancelled', reason)
+      setCancellingDeal(null)
+      window.location.reload()
+    } catch (err) {
+      console.error('handleCancel error:', err)
+      alert('Failed to cancel deal.')
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Delete this deal? This cannot be undone.')) return
     try {
@@ -499,10 +643,8 @@ export default function DealsClient({
         ))}
       </div>
 
-      {/* ✅ Filter Buttons */}
+      {/* Filter Buttons */}
       <div className="flex gap-2 flex-wrap">
-
-        {/* Active — default */}
         <button
           onClick={() => setFilterStatus('active')}
           className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
@@ -512,7 +654,6 @@ export default function DealsClient({
           Active ({activeDeals.length})
         </button>
 
-        {/* Individual active statuses */}
         {DEAL_STATUSES
           .filter((s) => s.value !== 'cancelled' && s.value !== 'completed')
           .map((s) => {
@@ -531,7 +672,6 @@ export default function DealsClient({
             )
           })}
 
-        {/* Completed */}
         {completedDeals.length > 0 && (
           <button
             onClick={() => setFilterStatus('completed')}
@@ -543,7 +683,6 @@ export default function DealsClient({
           </button>
         )}
 
-        {/* Cancelled — منفصل في الآخر */}
         {cancelledDeals.length > 0 && (
           <button
             onClick={() => setFilterStatus('cancelled')}
@@ -555,7 +694,6 @@ export default function DealsClient({
           </button>
         )}
 
-        {/* All */}
         <button
           onClick={() => setFilterStatus('all')}
           className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
@@ -564,7 +702,6 @@ export default function DealsClient({
         >
           All ({deals.length})
         </button>
-
       </div>
 
       {/* Grid */}
@@ -584,6 +721,7 @@ export default function DealsClient({
               onEdit={setEditingDeal}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
+              onCancel={setCancellingDeal} // ✅ NEW
             />
           ))}
         </div>
@@ -618,6 +756,15 @@ export default function DealsClient({
             </div>
           </form>
         </Modal>
+      )}
+
+      {/* ✅ Cancellation Modal */}
+      {cancellingDeal && (
+        <CancellationModal
+          deal={cancellingDeal}
+          onClose={() => setCancellingDeal(null)}
+          onConfirm={(reason) => handleCancelWithReason(cancellingDeal, reason)}
+        />
       )}
 
     </div>

@@ -3,6 +3,15 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import AdminNav from './AdminNav'
+import type { Metadata } from 'next'
+
+// ✅ هنا — بيمنع Google من الـ indexing
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+}
 
 export default async function AdminLayout({
   children,
