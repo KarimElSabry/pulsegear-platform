@@ -10,7 +10,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// ── Safe parse helpers ────────────────────────────────────────────────────────
 function getStr(formData: FormData, key: string): string | null {
   const v = formData.get(key) as string | null
   return v && v.trim() !== '' ? v.trim() : null
@@ -30,7 +29,6 @@ function getInt(formData: FormData, key: string): number | null {
   return isNaN(n) ? null : n
 }
 
-// ─── Get All Deals ────────────────────────────────────────────────────────────
 export async function getDeals() {
   const { data: deals, error } = await supabase
     .from('deals')
@@ -67,23 +65,20 @@ export async function getDeals() {
   }))
 }
 
-// ─── Get Open Product Requests ────────────────────────────────────────────────
+// ✅ بس الـ requests اللي مش مرتبطة بـ deal خالص
 export async function getOpenProductRequests() {
   const { data, error } = await supabase
     .from('product_requests')
     .select('id, requested_product, customer_name, phone, instagram, budget, status, notes')
     .in('status', ['new', 'contacted', 'deal_agreed'])
+    .is('deal_id', null)
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
   return data ?? []
 }
 
-// ─── Create Deal ──────────────────────────────────────────────────────────────
 export async function createDeal(formData: FormData) {
-  console.log('createDeal formData entries:')
-  for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
-
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
@@ -103,8 +98,6 @@ export async function createDeal(formData: FormData) {
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
     commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
   }
-
-  console.log('createDeal payload:', payload)
 
   const { data: deal, error } = await supabase
     .from('deals')
@@ -112,22 +105,13 @@ export async function createDeal(formData: FormData) {
     .select('id')
     .single()
 
-  if (error) {
-    console.error('createDeal error:', error)
-    throw new Error(error.message)
-  }
+  if (error) throw new Error(error.message)
 
   if (productRequestId) {
-    const { error: updateError } = await supabase
+    await supabase
       .from('product_requests')
       .update({ status: 'deal_agreed' })
       .eq('id', productRequestId)
-
-    if (updateError) {
-      console.warn('Failed to update product_request status:', updateError.message)
-    } else {
-      console.log(`✅ product_request #${productRequestId} status → deal_agreed`)
-    }
   }
 
   revalidatePath('/admin/deals')
@@ -136,11 +120,7 @@ export async function createDeal(formData: FormData) {
   revalidatePath('/admin/analytics')
 }
 
-// ─── Update Deal ──────────────────────────────────────────────────────────────
 export async function updateDeal(id: string, formData: FormData) {
-  console.log('updateDeal formData entries:')
-  for (const [k, v] of formData.entries()) console.log(' ', k, '=', v)
-
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
@@ -161,29 +141,18 @@ export async function updateDeal(id: string, formData: FormData) {
     commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
   }
 
-  console.log('updateDeal payload:', payload)
-
   const { error } = await supabase
     .from('deals')
     .update(payload)
     .eq('id', id)
 
-  if (error) {
-    console.error('updateDeal error:', error)
-    throw new Error(error.message)
-  }
+  if (error) throw new Error(error.message)
 
   if (productRequestId) {
-    const { error: updateError } = await supabase
+    await supabase
       .from('product_requests')
       .update({ status: 'deal_agreed' })
       .eq('id', productRequestId)
-
-    if (updateError) {
-      console.warn('Failed to update product_request status:', updateError.message)
-    } else {
-      console.log(`✅ product_request #${productRequestId} status → deal_agreed`)
-    }
   }
 
   revalidatePath('/admin/deals')
@@ -192,7 +161,6 @@ export async function updateDeal(id: string, formData: FormData) {
   revalidatePath('/admin/analytics')
 }
 
-// ─── Update Deal Status Only ──────────────────────────────────────────────────
 export async function updateDealStatus(id: string, status: DealStatus) {
   const extra: Record<string, string> = {}
 
@@ -219,22 +187,15 @@ export async function updateDealStatus(id: string, status: DealStatus) {
 
   if (deal?.product_request_id) {
     let requestStatus: string | null = null
-
     if (status === 'completed')  requestStatus = 'completed'
     if (status === 'cancelled')  requestStatus = 'cancelled'
     if (status === 'delivered')  requestStatus = 'deal_agreed'
 
     if (requestStatus) {
-      const { error: reqError } = await supabase
+      await supabase
         .from('product_requests')
         .update({ status: requestStatus })
         .eq('id', deal.product_request_id)
-
-      if (reqError) {
-        console.warn('Failed to sync product_request status:', reqError.message)
-      } else {
-        console.log(`✅ product_request #${deal.product_request_id} status → ${requestStatus}`)
-      }
     }
   }
 
@@ -248,23 +209,14 @@ export async function updateDealStatus(id: string, status: DealStatus) {
   revalidatePath('/admin/analytics')
 }
 
-// ─── Sync Completed Deal → Sales ──────────────────────────────────────────────
 async function syncDealToSales(dealId: string) {
   const { data: deal, error: dealError } = await supabase
     .from('deals')
-    .select(`
-      *,
-      product_request:product_requests (
-        requested_product
-      )
-    `)
+    .select(`*, product_request:product_requests(requested_product)`)
     .eq('id', dealId)
     .single()
 
-  if (dealError || !deal) {
-    console.error('syncDealToSales: could not fetch deal', dealError)
-    return
-  }
+  if (dealError || !deal) return
 
   const { data: existing } = await supabase
     .from('sales')
@@ -272,15 +224,10 @@ async function syncDealToSales(dealId: string) {
     .eq('deal_id', dealId)
     .maybeSingle()
 
-  if (existing) {
-    console.log('syncDealToSales: already synced, skipping')
-    return
-  }
+  if (existing) return
 
   const productName =
-    deal.product_request?.requested_product ??
-    deal.customer_name                       ??
-    'Unknown Product'
+    deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Product'
 
   const sourceEur  = deal.source_price_eur  ?? 0
   const rate       = deal.exchange_rate      ?? 0
@@ -292,7 +239,7 @@ async function syncDealToSales(dealId: string) {
     ? parseFloat(((profitEgp / sellingEgp) * 100).toFixed(2))
     : 0
 
-  const { error: insertError } = await supabase.from('sales').insert({
+  await supabase.from('sales').insert({
     deal_id:           dealId,
     product_name:      productName,
     original_eur:      sourceEur,
@@ -310,36 +257,25 @@ async function syncDealToSales(dealId: string) {
     notes:             deal.notes           ?? null,
     discount_code:     null,
   })
-
-  if (insertError) {
-    console.error('syncDealToSales: insert failed', insertError)
-  } else {
-    console.log('syncDealToSales: ✅ synced deal', dealId, 'to sales')
-  }
 }
 
-// ─── Delete Deal ──────────────────────────────────────────────────────────────
 export async function deleteDeal(id: string) {
-  // ✅ 1. Fetch deal before deleting
   const { data: deal } = await supabase
     .from('deals')
     .select('id, product_request_id')
     .eq('id', id)
     .single()
 
-  // ✅ 2. Clear deal_id reference in product_requests (fixes FK constraint)
   await supabase
     .from('product_requests')
     .update({ deal_id: null })
     .eq('deal_id', id)
 
-  // ✅ 3. Delete related sales
   await supabase
     .from('sales')
     .delete()
     .eq('deal_id', id)
 
-  // ✅ 4. Now delete the deal
   const { error } = await supabase
     .from('deals')
     .delete()
@@ -347,18 +283,11 @@ export async function deleteDeal(id: string) {
 
   if (error) throw new Error(error.message)
 
-  // ✅ 5. Reset product_request status back to 'contacted'
   if (deal?.product_request_id) {
-    const { error: resetError } = await supabase
+    await supabase
       .from('product_requests')
       .update({ status: 'contacted' })
       .eq('id', deal.product_request_id)
-
-    if (resetError) {
-      console.warn('Failed to reset product_request status:', resetError.message)
-    } else {
-      console.log(`✅ product_request #${deal.product_request_id} status → contacted (deal deleted)`)
-    }
   }
 
   revalidatePath('/admin/deals')
