@@ -117,7 +117,6 @@ export async function createDeal(formData: FormData) {
     throw new Error(error.message)
   }
 
-  // ✅ Auto-update product_request status to 'deal_agreed' when a deal is created
   if (productRequestId) {
     const { error: updateError } = await supabase
       .from('product_requests')
@@ -174,7 +173,6 @@ export async function updateDeal(id: string, formData: FormData) {
     throw new Error(error.message)
   }
 
-  // ✅ If product_request_id changed or set, update its status to 'deal_agreed'
   if (productRequestId) {
     const { error: updateError } = await supabase
       .from('product_requests')
@@ -219,7 +217,6 @@ export async function updateDealStatus(id: string, status: DealStatus) {
 
   if (error) throw new Error(error.message)
 
-  // ✅ Sync product_request status based on deal status
   if (deal?.product_request_id) {
     let requestStatus: string | null = null
 
@@ -323,18 +320,26 @@ async function syncDealToSales(dealId: string) {
 
 // ─── Delete Deal ──────────────────────────────────────────────────────────────
 export async function deleteDeal(id: string) {
-  // ✅ Fetch deal before deleting to get product_request_id
+  // ✅ 1. Fetch deal before deleting
   const { data: deal } = await supabase
     .from('deals')
     .select('id, product_request_id')
     .eq('id', id)
     .single()
 
+  // ✅ 2. Clear deal_id reference in product_requests (fixes FK constraint)
+  await supabase
+    .from('product_requests')
+    .update({ deal_id: null })
+    .eq('deal_id', id)
+
+  // ✅ 3. Delete related sales
   await supabase
     .from('sales')
     .delete()
     .eq('deal_id', id)
 
+  // ✅ 4. Now delete the deal
   const { error } = await supabase
     .from('deals')
     .delete()
@@ -342,7 +347,7 @@ export async function deleteDeal(id: string) {
 
   if (error) throw new Error(error.message)
 
-  // ✅ Reset product_request status back to 'contacted' if deal is deleted
+  // ✅ 5. Reset product_request status back to 'contacted'
   if (deal?.product_request_id) {
     const { error: resetError } = await supabase
       .from('product_requests')

@@ -17,6 +17,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  // ✅ أضيف هنا
+  async redirects() {
+    return [
+      {
+        source: '/blog/zone-2-training',
+        destination: '/blog/training-guide/zone-2-training',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
