@@ -16,12 +16,12 @@ const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_m5sS_5s9Us
 async function sendTelegram(message: string) {
   try {
     await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
+      `https://api.telegram.org/bot${process.env.TELEGRAM_NOTIFIER_BOT_TOKEN}/sendMessage`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_CHAT_ID,
+          chat_id: process.env.TELEGRAM_NOTIFIER_CHAT_ID,
           text: message,
           parse_mode: "Markdown",
         }),

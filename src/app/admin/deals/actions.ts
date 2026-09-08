@@ -1,4 +1,3 @@
-// app/admin/deals/actions.ts
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -65,7 +64,6 @@ export async function getDeals() {
   }))
 }
 
-// ✅ بس الـ requests اللي مش مرتبطة بـ deal خالص
 export async function getOpenProductRequests() {
   const { data, error } = await supabase
     .from('product_requests')
@@ -92,6 +90,7 @@ export async function createDeal(formData: FormData) {
     sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
     notes:                getStr(formData,   'notes'),
     source_price_eur:     getFloat(formData, 'source_price_eur'),
+    shipping_eur:         getFloat(formData, 'shipping_eur') ?? 0,  // ✅ NEW
     exchange_rate:        getFloat(formData, 'exchange_rate'),
     selling_price_egp:    getFloat(formData, 'selling_price_egp'),
     deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
@@ -134,6 +133,7 @@ export async function updateDeal(id: string, formData: FormData) {
     sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
     notes:                getStr(formData,   'notes'),
     source_price_eur:     getFloat(formData, 'source_price_eur'),
+    shipping_eur:         getFloat(formData, 'shipping_eur') ?? 0,  // ✅ NEW
     exchange_rate:        getFloat(formData, 'exchange_rate'),
     selling_price_egp:    getFloat(formData, 'selling_price_egp'),
     deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
@@ -164,7 +164,7 @@ export async function updateDeal(id: string, formData: FormData) {
 export async function updateDealStatus(
   id: string,
   status: DealStatus,
-  cancellationReason?: string  // ✅ NEW optional param
+  cancellationReason?: string
 ) {
   const extra: Record<string, string | null> = {}
 
@@ -174,7 +174,6 @@ export async function updateDealStatus(
   if (status === 'delivered')         extra.delivered_at      = new Date().toISOString()
   if (status === 'completed')         extra.remaining_paid_at = new Date().toISOString()
 
-  // ✅ Save cancellation reason
   if (status === 'cancelled') {
     extra.cancellation_reason = cancellationReason ?? null
   }
@@ -238,13 +237,14 @@ async function syncDealToSales(dealId: string) {
   const productName =
     deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Product'
 
-  const sourceEur  = deal.source_price_eur  ?? 0
-  const rate       = deal.exchange_rate      ?? 0
-  const costEgp    = sourceEur * rate
-  const sellingEgp = deal.selling_price_egp  ?? 0
-  const commission = deal.commission_egp     ?? 0
-  const profitEgp  = sellingEgp - costEgp - commission
-  const marginPct  = sellingEgp > 0
+  const sourceEur   = deal.source_price_eur ?? 0
+  const shippingEur = deal.shipping_eur     ?? 0  // ✅ NEW
+  const rate        = deal.exchange_rate    ?? 0
+  const costEgp     = (sourceEur + shippingEur) * rate  // ✅ UPDATED — يشمل الـ shipping
+  const sellingEgp  = deal.selling_price_egp ?? 0
+  const commission  = deal.commission_egp    ?? 0
+  const profitEgp   = sellingEgp - costEgp - commission
+  const marginPct   = sellingEgp > 0
     ? parseFloat(((profitEgp / sellingEgp) * 100).toFixed(2))
     : 0
 
@@ -252,7 +252,7 @@ async function syncDealToSales(dealId: string) {
     deal_id:           dealId,
     product_name:      productName,
     original_eur:      sourceEur,
-    shipping_eur:      0,
+    shipping_eur:      shippingEur,  // ✅ UPDATED — مش 0 ثابت
     exchange_rate:     rate,
     cost_egp:          costEgp,
     selling_price_egp: sellingEgp,

@@ -1,4 +1,3 @@
-// src/app/admin/deals/DealsClient.tsx
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
@@ -94,6 +93,7 @@ function useEurToEgp() {
   return { rate, loading, error, refetch: fetchRate }
 }
 
+// ── Deal Form Fields ──────────────────────────────────────────────────────────
 function DealFormFields({
   deal, productRequests,
 }: {
@@ -110,6 +110,7 @@ function DealFormFields({
   const [commissionEgp,     setCommissionEgp]     = useState(deal?.commission_egp?.toString() ?? '0')
   const [notes,             setNotes]             = useState(deal?.notes ?? '')
   const [sourcePriceEur,    setSourcePriceEur]    = useState(deal?.source_price_eur?.toString() ?? '')
+  const [shippingEur,       setShippingEur]       = useState(deal?.shipping_eur?.toString() ?? '0')  // ✅ NEW
   const [status,            setStatus]            = useState<DealStatusValue>((deal?.status as DealStatusValue) ?? 'deposit_pending')
   const [sourcePlatform,    setSourcePlatform]    = useState<string>(deal?.source_platform ?? '')
   const [saleChannel,       setSaleChannel]       = useState<SaleChannel>((deal?.sale_channel as SaleChannel) ?? 'whatsapp')
@@ -124,9 +125,20 @@ function DealFormFields({
     }
   }, [liveRate, deal])
 
+  // ✅ Total cost = source + shipping
+  const totalSourceEur =
+    sourcePriceEur || shippingEur
+      ? (parseFloat(sourcePriceEur || '0') + parseFloat(shippingEur || '0'))
+      : null
+
   const calculatedEgp =
-    sourcePriceEur && exchangeRate
-      ? Math.round(parseFloat(sourcePriceEur) * parseFloat(exchangeRate))
+    totalSourceEur !== null && exchangeRate
+      ? Math.round(totalSourceEur * parseFloat(exchangeRate))
+      : null
+
+  const shippingEgp =
+    shippingEur && exchangeRate && parseFloat(shippingEur) > 0
+      ? Math.round(parseFloat(shippingEur) * parseFloat(exchangeRate))
       : null
 
   function handleRequestChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -157,6 +169,7 @@ function DealFormFields({
 
   return (
     <>
+      {/* ── Linked Request ── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2">
           Linked Request
@@ -174,6 +187,7 @@ function DealFormFields({
         </Field>
       </div>
 
+      {/* ── Customer Info ── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2">
           Customer Info
@@ -201,6 +215,7 @@ function DealFormFields({
         </select>
       </Field>
 
+      {/* ── Deal Info ── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2 mt-2">
           Deal Info
@@ -232,29 +247,65 @@ function DealFormFields({
         </Field>
       </div>
 
+      {/* ── Financials ── */}
       <div className="col-span-2">
         <p className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 border-b border-gray-700 pb-2 mt-2">
           Financials
         </p>
       </div>
 
+      {/* Source Price */}
       <Field label="Source Price (EUR)">
-        <input name="source_price_eur" type="number" step="0.01" value={sourcePriceEur} onChange={(e) => setSourcePriceEur(e.target.value)} className={inputClass} placeholder="0.00" />
-        {calculatedEgp !== null && exchangeRate && (
-          <p className="text-xs text-indigo-400 mt-1">
-            ≈ {calculatedEgp.toLocaleString()} EGP
-            <span className="text-gray-600 ml-1">(at {exchangeRate} EGP/EUR)</span>
+        <input
+          name="source_price_eur"
+          type="number"
+          step="0.01"
+          value={sourcePriceEur}
+          onChange={(e) => setSourcePriceEur(e.target.value)}
+          className={inputClass}
+          placeholder="0.00"
+        />
+      </Field>
+
+      {/* ✅ NEW — Shipping Price */}
+      <Field label="Shipping Price (EUR)" optional>
+        <input
+          name="shipping_eur"
+          type="number"
+          step="0.01"
+          value={shippingEur}
+          onChange={(e) => setShippingEur(e.target.value)}
+          className={inputClass}
+          placeholder="0.00"
+        />
+        {shippingEgp !== null && (
+          <p className="text-xs text-cyan-400 mt-1">
+            ≈ {shippingEgp.toLocaleString()} EGP shipping cost
           </p>
         )}
       </Field>
 
+      {/* Exchange Rate */}
       <Field
         label="Exchange Rate (EUR to EGP)"
         hint={rateLoading ? 'جاري تحميل السعر...' : rateError ? 'تعذر تحميل السعر' : liveRate ? `السعر الحالي: ${liveRate}` : ''}
       >
         <div className="flex gap-2">
-          <input name="exchange_rate" type="number" step="0.01" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} className={`${inputClass} ${liveRate ? 'border-indigo-600' : ''}`} placeholder="0.00" />
-          <button type="button" onClick={async () => { const r = await refetch(); if (r) setExchangeRate(String(r)) }} className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 rounded-lg transition whitespace-nowrap" title="Refresh live rate">
+          <input
+            name="exchange_rate"
+            type="number"
+            step="0.01"
+            value={exchangeRate}
+            onChange={(e) => setExchangeRate(e.target.value)}
+            className={`${inputClass} ${liveRate ? 'border-indigo-600' : ''}`}
+            placeholder="0.00"
+          />
+          <button
+            type="button"
+            onClick={async () => { const r = await refetch(); if (r) setExchangeRate(String(r)) }}
+            className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 rounded-lg transition whitespace-nowrap"
+            title="Refresh live rate"
+          >
             🔄
           </button>
         </div>
@@ -265,8 +316,41 @@ function DealFormFields({
         )}
       </Field>
 
+      {/* ✅ Total Cost Summary */}
+      {calculatedEgp !== null && exchangeRate && (
+        <div className="col-span-2 bg-indigo-900/20 border border-indigo-700/30 rounded-lg px-4 py-3">
+          <p className="text-xs text-indigo-300 font-semibold mb-1">Total Cost Breakdown</p>
+          <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+            {sourcePriceEur && parseFloat(sourcePriceEur) > 0 && (
+              <span>
+                Product: <span className="text-white">€{sourcePriceEur}</span>
+                {' '}≈ <span className="text-white">{Math.round(parseFloat(sourcePriceEur) * parseFloat(exchangeRate)).toLocaleString()} EGP</span>
+              </span>
+            )}
+            {shippingEur && parseFloat(shippingEur) > 0 && (
+              <span>
+                Shipping: <span className="text-cyan-400">€{shippingEur}</span>
+                {' '}≈ <span className="text-cyan-400">{shippingEgp?.toLocaleString()} EGP</span>
+              </span>
+            )}
+            <span className="font-bold text-indigo-300">
+              Total: {calculatedEgp.toLocaleString()} EGP
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Selling Price */}
       <Field label="Selling Price (EGP)">
-        <input name="selling_price_egp" type="number" step="0.01" value={sellingPrice} onChange={handleSellingChange} className={inputClass} placeholder="0.00" />
+        <input
+          name="selling_price_egp"
+          type="number"
+          step="0.01"
+          value={sellingPrice}
+          onChange={handleSellingChange}
+          className={inputClass}
+          placeholder="0.00"
+        />
         <p className="text-xs text-yellow-500 mt-1">⚠️ Enter the FULL selling price — not the deposit amount</p>
       </Field>
 
@@ -293,18 +377,12 @@ function DealFormFields({
 
 // ── Cancellation Modal ────────────────────────────────────────────────────────
 function CancellationModal({
-  deal,
-  onClose,
-  onConfirm,
+  deal, onClose, onConfirm,
 }: {
-  deal:      Deal
-  onClose:   () => void
-  onConfirm: (reason: string) => void
+  deal: Deal; onClose: () => void; onConfirm: (reason: string) => void
 }) {
   const [reason, setReason] = useState('')
-
-  const productName =
-    deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
+  const productName = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -317,7 +395,6 @@ function CancellationModal({
           <p className="text-sm text-gray-400">
             You are cancelling: <span className="text-white font-bold">{productName}</span>
           </p>
-
           <div className="flex flex-col gap-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
               Cancellation Reason <span className="text-red-400">*</span>
@@ -330,27 +407,16 @@ function CancellationModal({
               className="w-full bg-gray-800 border border-gray-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none transition resize-none"
             />
           </div>
-
-          {/* Quick Reasons */}
           <div className="flex flex-col gap-2">
             <p className="text-xs text-gray-600 uppercase tracking-wide">Quick select:</p>
             <div className="flex flex-wrap gap-2">
-              {[
-                'Customer changed mind',
-                'Item not available',
-                'Price too high',
-                'Found elsewhere',
-                'No response from customer',
-                'Out of budget',
-              ].map((r) => (
+              {['Customer changed mind', 'Item not available', 'Price too high', 'Found elsewhere', 'No response from customer', 'Out of budget'].map((r) => (
                 <button
                   key={r}
                   type="button"
                   onClick={() => setReason(r)}
                   className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                    reason === r
-                      ? 'border-red-500 bg-red-500/20 text-red-300'
-                      : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500'
+                    reason === r ? 'border-red-500 bg-red-500/20 text-red-300' : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500'
                   }`}
                 >
                   {r}
@@ -358,20 +424,13 @@ function CancellationModal({
               ))}
             </div>
           </div>
-
           <div className="flex gap-3 pt-2">
-            <button
-              onClick={onClose}
-              className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg transition text-sm"
-            >
+            <button onClick={onClose} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg transition text-sm">
               Keep Deal
             </button>
             <button
               onClick={() => {
-                if (!reason.trim()) {
-                  alert('Please enter a cancellation reason')
-                  return
-                }
+                if (!reason.trim()) { alert('Please enter a cancellation reason'); return }
                 onConfirm(reason.trim())
               }}
               className="flex-1 bg-red-600 hover:bg-red-500 text-white font-semibold py-2 rounded-lg transition text-sm"
@@ -389,11 +448,8 @@ function CancellationModal({
 function DealCard({
   deal, onEdit, onDelete, onStatusChange, onCancel,
 }: {
-  deal:           Deal
-  onEdit:         (deal: Deal) => void
-  onDelete:       (id: string) => void
-  onStatusChange: (id: string, status: DealStatus) => void
-  onCancel:       (deal: Deal) => void
+  deal: Deal; onEdit: (deal: Deal) => void; onDelete: (id: string) => void
+  onStatusChange: (id: string, status: DealStatus) => void; onCancel: (deal: Deal) => void
 }) {
   const productName  = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
   const currentIndex = DEAL_STATUSES.findIndex((s) => s.value === deal.status)
@@ -434,8 +490,15 @@ function DealCard({
         )}
         {deal.source_price_eur != null && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Cost </span>
+            <span className="text-gray-500">Product </span>
             <span className="font-semibold text-white">€{deal.source_price_eur}</span>
+          </div>
+        )}
+        {/* ✅ NEW — Shipping display */}
+        {deal.shipping_eur != null && deal.shipping_eur > 0 && (
+          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
+            <span className="text-gray-500">Shipping </span>
+            <span className="font-semibold text-cyan-400">€{deal.shipping_eur}</span>
           </div>
         )}
         {deal.source_platform && (
@@ -458,7 +521,6 @@ function DealCard({
 
       {deal.notes && <p className="text-xs text-gray-500 italic">📝 {deal.notes}</p>}
 
-      {/* ✅ Cancellation Reason — يظهر بس لو cancelled */}
       {deal.status === 'cancelled' && deal.cancellation_reason && (
         <div className="bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
           <p className="text-xs text-red-400 font-semibold mb-0.5">Cancellation Reason:</p>
@@ -467,38 +529,20 @@ function DealCard({
       )}
 
       <div className="flex items-center gap-2 pt-1 flex-wrap">
-        {/* Next Status — بس لو مش cancelled أو completed */}
         {nextStatus && deal.status !== 'cancelled' && deal.status !== 'completed' && (
-          <button
-            onClick={() => onStatusChange(deal.id, nextStatus.value)}
-            className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition"
-          >
+          <button onClick={() => onStatusChange(deal.id, nextStatus.value)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition">
             Next: {nextStatus.label}
           </button>
         )}
-
-        <button
-          onClick={() => onEdit(deal)}
-          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-3 py-1.5 rounded-lg transition"
-        >
+        <button onClick={() => onEdit(deal)} className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-3 py-1.5 rounded-lg transition">
           Edit
         </button>
-
-        {/* ✅ Cancel button — بيفتح الـ modal */}
         {deal.status !== 'cancelled' && deal.status !== 'completed' && (
-          <button
-            onClick={() => onCancel(deal)}
-            className="text-xs bg-red-900/40 hover:bg-red-900/70 text-red-400 font-medium px-3 py-1.5 rounded-lg transition"
-          >
+          <button onClick={() => onCancel(deal)} className="text-xs bg-red-900/40 hover:bg-red-900/70 text-red-400 font-medium px-3 py-1.5 rounded-lg transition">
             Cancel
           </button>
         )}
-
-        {/* Delete */}
-        <button
-          onClick={() => onDelete(deal.id)}
-          className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-500 font-medium px-3 py-1.5 rounded-lg transition"
-        >
+        <button onClick={() => onDelete(deal.id)} className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-500 font-medium px-3 py-1.5 rounded-lg transition">
           🗑️
         </button>
       </div>
@@ -528,13 +572,13 @@ export default function DealsClient({
   deals: initialDeals,
   productRequests,
 }: {
-  deals:           Deal[]
+  deals: Deal[]
   productRequests: ProductRequest[]
 }) {
   const [deals,          setDeals]          = useState<Deal[]>(initialDeals)
   const [showForm,       setShowForm]       = useState(false)
   const [editingDeal,    setEditingDeal]    = useState<Deal | null>(null)
-  const [cancellingDeal, setCancellingDeal] = useState<Deal | null>(null) // ✅ NEW
+  const [cancellingDeal, setCancellingDeal] = useState<Deal | null>(null)
   const [filterStatus,   setFilterStatus]   = useState<FilterType>('active')
   const [loading,        setLoading]        = useState(false)
 
@@ -589,7 +633,6 @@ export default function DealsClient({
     }
   }
 
-  // ✅ NEW — Cancel with reason
   async function handleCancelWithReason(deal: Deal, reason: string) {
     try {
       await updateDealStatus(deal.id, 'cancelled', reason)
@@ -615,21 +658,16 @@ export default function DealsClient({
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Deals Pipeline</h1>
           <p className="text-sm text-gray-500 mt-1">Track every deal from deposit to delivery</p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg transition text-sm"
-        >
+        <button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg transition text-sm">
           + New Deal
         </button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Active Deals',    value: activeDeals.length,                   suffix: '' },
@@ -643,74 +681,38 @@ export default function DealsClient({
         ))}
       </div>
 
-      {/* Filter Buttons */}
       <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => setFilterStatus('active')}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
-            filterStatus === 'active' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
+        <button onClick={() => setFilterStatus('active')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'active' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
           Active ({activeDeals.length})
         </button>
-
-        {DEAL_STATUSES
-          .filter((s) => s.value !== 'cancelled' && s.value !== 'completed')
-          .map((s) => {
-            const count = deals.filter((d) => d.status === s.value).length
-            if (count === 0) return null
-            return (
-              <button
-                key={s.value}
-                onClick={() => setFilterStatus(s.value)}
-                className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
-                  filterStatus === s.value ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                }`}
-              >
-                {s.label} ({count})
-              </button>
-            )
-          })}
-
+        {DEAL_STATUSES.filter((s) => s.value !== 'cancelled' && s.value !== 'completed').map((s) => {
+          const count = deals.filter((d) => d.status === s.value).length
+          if (count === 0) return null
+          return (
+            <button key={s.value} onClick={() => setFilterStatus(s.value)} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === s.value ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+              {s.label} ({count})
+            </button>
+          )
+        })}
         {completedDeals.length > 0 && (
-          <button
-            onClick={() => setFilterStatus('completed')}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
-              filterStatus === 'completed' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
+          <button onClick={() => setFilterStatus('completed')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'completed' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
             ✅ Completed ({completedDeals.length})
           </button>
         )}
-
         {cancelledDeals.length > 0 && (
-          <button
-            onClick={() => setFilterStatus('cancelled')}
-            className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
-              filterStatus === 'cancelled' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-            }`}
-          >
+          <button onClick={() => setFilterStatus('cancelled')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'cancelled' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
             ❌ Cancelled ({cancelledDeals.length})
           </button>
         )}
-
-        <button
-          onClick={() => setFilterStatus('all')}
-          className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${
-            filterStatus === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
+        <button onClick={() => setFilterStatus('all')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
           All ({deals.length})
         </button>
       </div>
 
-      {/* Grid */}
       {filteredDeals.length === 0 ? (
         <div className="text-center py-16 text-gray-600">
           <p className="text-4xl mb-3">🤝</p>
-          <p className="font-medium">
-            {filterStatus === 'active' ? 'No active deals — create your first one!' : 'No deals found.'}
-          </p>
+          <p className="font-medium">{filterStatus === 'active' ? 'No active deals — create your first one!' : 'No deals found.'}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -721,13 +723,12 @@ export default function DealsClient({
               onEdit={setEditingDeal}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
-              onCancel={setCancellingDeal} // ✅ NEW
+              onCancel={setCancellingDeal}
             />
           ))}
         </div>
       )}
 
-      {/* Create Modal */}
       {showForm && (
         <Modal title="New Deal" onClose={() => setShowForm(false)}>
           <form action={handleCreate} className="grid grid-cols-2 gap-4">
@@ -741,7 +742,6 @@ export default function DealsClient({
         </Modal>
       )}
 
-      {/* Edit Modal */}
       {editingDeal && (
         <Modal title="Edit Deal" onClose={() => setEditingDeal(null)}>
           <form action={handleUpdate} className="grid grid-cols-2 gap-4">
@@ -758,7 +758,6 @@ export default function DealsClient({
         </Modal>
       )}
 
-      {/* ✅ Cancellation Modal */}
       {cancellingDeal && (
         <CancellationModal
           deal={cancellingDeal}

@@ -39,6 +39,7 @@ export interface Deal {
   source_link:      string | null
   source_platform:  string | null
   source_price_eur: number | null
+  shipping_eur:     number | null 
 
   // Financials
   exchange_rate:        number | null
@@ -54,6 +55,8 @@ export interface Deal {
   shipped_at:       string | null
   arrived_egypt_at: string | null
   delivered_at:     string | null
+  
+
 
   // Meta
   notes:      string | null
