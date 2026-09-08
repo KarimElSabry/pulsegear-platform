@@ -8,55 +8,33 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw_m5sS_5s9Us1vNA1MMeSobyMwg2NnJEJNcUCGa6Vlc-zOtdWeFXGCaCw1GgBDpEhDpg/exec"
-
 // ============================
 // 📨 SEND TELEGRAM
 // ============================
 async function sendTelegram(message: string) {
+  const token  = process.env.TELEGRAM_BOT_NOTIFIER_TOKEN  // ✅ الاسم الصح
+  const chatId = process.env.TELEGRAM_NOTIFIER_CHAT_ID    // ✅ الاسم الصح
+
+  console.log('TOKEN exists:', !!token)
+  console.log('CHAT_ID:', chatId)
+
   try {
-    await fetch(
-      `https://api.telegram.org/bot${process.env.TELEGRAM_NOTIFIER_BOT_TOKEN}/sendMessage`,
+    const res = await fetch(
+      `https://api.telegram.org/bot${token}/sendMessage`,
       {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          chat_id: process.env.TELEGRAM_NOTIFIER_CHAT_ID,
-          text: message,
+          chat_id:    chatId,
+          text:       message,
           parse_mode: "Markdown",
         }),
       }
     )
+    const data = await res.json()
+    console.log('Telegram response:', JSON.stringify(data))
   } catch (err) {
     console.error("Telegram error:", err)
-  }
-}
-
-// ============================
-// 📊 SEND TO GOOGLE SHEET
-// ============================
-async function sendToGoogleSheet(data: {
-  name: string
-  email: string
-  phone: string
-  governorate: string
-  city: string
-  street: string
-  product: string
-  budget: string
-  notes: string
-}) {
-  try {
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        formType: "product",
-        ...data,
-      }),
-    })
-  } catch (err) {
-    console.error("Google Sheet error:", err)
   }
 }
 
@@ -68,18 +46,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     const {
-      name,
-      email,
-      phone,
-      governorate,
-      city,
-      street,
-      product,
-      budget,
-      notes,
+      name, email, phone,
+      governorate, city, street,
+      product, budget, notes,
     } = body
 
-    // ── Basic validation ──────────────────────────────────────────
     if (!name || !email || !phone || !product || !budget) {
       return NextResponse.json(
         { status: 'error', message: 'Missing required fields' },
@@ -87,22 +58,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── 1️⃣ Insert into Supabase ──────────────────────────────────
-    const { error } = await supabase.from('product_requests').insert([
-      {
-        customer_name: name,
-        email,
-        phone,
-        governorate,
-        city,
-        street,
-        requested_product: product,
-        budget: Number(budget),
-        notes,
-        status: 'new',
-        created_at: new Date().toISOString(),
-      },
-    ])
+    // ── 1️⃣ Insert into Supabase ──
+    const { error } = await supabase.from('product_requests').insert([{
+      customer_name:     name,
+      email,
+      phone,
+      governorate,
+      city,
+      street,
+      requested_product: product,
+      budget:            Number(budget),
+      notes,
+      status:            'new',
+      created_at:        new Date().toISOString(),
+    }])
 
     if (error) {
       console.error('Supabase error:', error.message)
@@ -112,7 +81,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── 2️⃣ Send Telegram Notification ────────────────────────────
+    // ── 2️⃣ Send Telegram ──
     await sendTelegram(
       `📦 *New Product Request!*\n\n` +
       `👤 *Name:* ${name}\n` +
@@ -123,19 +92,6 @@ export async function POST(req: NextRequest) {
       `💰 *Budget:* ${budget} EGP\n\n` +
       `📝 *Notes:* ${notes || 'N/A'}`
     )
-
-    // ── 3️⃣ Send to Google Sheet ──────────────────────────────────
-    await sendToGoogleSheet({
-      name,
-      email,
-      phone,
-      governorate,
-      city,
-      street,
-      product,
-      budget,
-      notes,
-    })
 
     return NextResponse.json({ status: 'success' })
 
