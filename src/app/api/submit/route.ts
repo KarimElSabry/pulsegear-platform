@@ -27,14 +27,14 @@ export async function POST(req: Request) {
 
     if (error) throw error
 
-    // ── 2️⃣ Telegram — hardcoded ──
+    // ── 2️⃣ Telegram ──
     await fetch(
-      `https://api.telegram.org/bot8997188424:AAHOqxvt7IRT0Q671yRfSksb_Jfdj6a5mmg/sendMessage`,
+      `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_NOTIFIER_TOKEN}/sendMessage`,
       {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id:    '2016864226',
+          chat_id:    process.env.TELEGRAM_NOTIFIER_CHAT_ID,
           text:
             `📦 *New Product Request!*\n\n` +
             `👤 *Name:* ${body.name}\n` +
