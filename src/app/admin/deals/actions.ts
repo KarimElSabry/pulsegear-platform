@@ -1,3 +1,5 @@
+// src/app/admin/deals/actions.ts
+
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -9,24 +11,33 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// ── Safe parse helpers ────────────────────────────────────────────────────────
+
 function getStr(formData: FormData, key: string): string | null {
-  const v = formData.get(key) as string | null
-  return v && v.trim() !== '' ? v.trim() : null
+  const value = formData.get(key) as string | null
+
+  return value && value.trim() !== '' ? value.trim() : null
 }
 
 function getFloat(formData: FormData, key: string): number | null {
-  const v = formData.get(key) as string | null
-  if (!v || v.trim() === '') return null
-  const n = parseFloat(v)
-  return isNaN(n) ? null : n
+  const value = formData.get(key) as string | null
+
+  if (!value || value.trim() === '') return null
+
+  const number = parseFloat(value)
+  return Number.isNaN(number) ? null : number
 }
 
 function getInt(formData: FormData, key: string): number | null {
-  const v = formData.get(key) as string | null
-  if (!v || v.trim() === '') return null
-  const n = parseInt(v)
-  return isNaN(n) ? null : n
+  const value = formData.get(key) as string | null
+
+  if (!value || value.trim() === '') return null
+
+  const number = parseInt(value, 10)
+  return Number.isNaN(number) ? null : number
 }
+
+// ─── Get All Deals ────────────────────────────────────────────────────────────
 
 export async function getDeals() {
   const { data: deals, error } = await supabase
@@ -34,25 +45,39 @@ export async function getDeals() {
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
-  if (!deals || deals.length === 0) return []
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (!deals || deals.length === 0) {
+    return []
+  }
 
   const requestIds = deals
-    .map((d) => d.product_request_id)
+    .map((deal) => deal.product_request_id)
     .filter(Boolean) as number[]
 
   let requestsMap: Record<number, any> = {}
 
   if (requestIds.length > 0) {
-    const { data: requests, error: reqError } = await supabase
+    const { data: requests, error: requestsError } = await supabase
       .from('product_requests')
-      .select('id, requested_product, budget, customer_name, phone, instagram')
+      .select(`
+        id,
+        requested_product,
+        budget,
+        customer_name,
+        phone,
+        instagram
+      `)
       .in('id', requestIds)
 
-    if (reqError) throw new Error(reqError.message)
+    if (requestsError) {
+      throw new Error(requestsError.message)
+    }
 
     requestsMap = Object.fromEntries(
-      (requests ?? []).map((r) => [r.id, r])
+      (requests ?? []).map((request) => [request.id, request])
     )
   }
 
@@ -64,81 +89,113 @@ export async function getDeals() {
   }))
 }
 
+// ─── Get Available Product Requests ───────────────────────────────────────────
+
 export async function getOpenProductRequests() {
   const { data, error } = await supabase
     .from('product_requests')
-    .select('id, requested_product, customer_name, phone, instagram, budget, status, notes')
+    .select(`
+      id,
+      requested_product,
+      customer_name,
+      phone,
+      instagram,
+      budget,
+      status,
+      notes
+    `)
     .in('status', ['new', 'contacted', 'deal_agreed'])
     .is('deal_id', null)
     .order('created_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    throw new Error(error.message)
+  }
+
   return data ?? []
 }
+
+// ─── Create Deal ──────────────────────────────────────────────────────────────
 
 export async function createDeal(formData: FormData) {
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
-    product_request_id:   productRequestId,
-    customer_name:        getStr(formData,   'customer_name'),
-    phone:                getStr(formData,   'phone'),
-    customer_instagram:   getStr(formData,   'customer_instagram'),
-    status:               getStr(formData,   'status')       ?? 'deposit_pending',
-    source_link:          getStr(formData,   'source_link'),
-    source_platform:      getStr(formData,   'source_platform'),
-    sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
-    notes:                getStr(formData,   'notes'),
-    source_price_eur:     getFloat(formData, 'source_price_eur'),
-    shipping_eur:         getFloat(formData, 'shipping_eur') ?? 0,  // ✅ NEW
-    exchange_rate:        getFloat(formData, 'exchange_rate'),
-    selling_price_egp:    getFloat(formData, 'selling_price_egp'),
-    deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
+    product_request_id: productRequestId,
+    customer_name: getStr(formData, 'customer_name'),
+    phone: getStr(formData, 'phone'),
+    customer_instagram: getStr(formData, 'customer_instagram'),
+    status: getStr(formData, 'status') ?? 'deposit_pending',
+    source_link: getStr(formData, 'source_link'),
+    source_platform: getStr(formData, 'source_platform'),
+    sale_channel: getStr(formData, 'sale_channel') ?? 'whatsapp',
+    notes: getStr(formData, 'notes'),
+
+    source_price_eur: getFloat(formData, 'source_price_eur'),
+    shipping_eur: getFloat(formData, 'shipping_eur') ?? 0,
+    exchange_rate: getFloat(formData, 'exchange_rate'),
+
+    selling_price_egp: getFloat(formData, 'selling_price_egp'),
+    deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
-    commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
+    commission_egp: getFloat(formData, 'commission_egp') ?? 0,
   }
 
-  const { data: deal, error } = await supabase
+  const { error } = await supabase
     .from('deals')
     .insert(payload)
     .select('id')
     .single()
 
-  if (error) throw new Error(error.message)
-
-  if (productRequestId) {
-    await supabase
-      .from('product_requests')
-      .update({ status: 'deal_agreed' })
-      .eq('id', productRequestId)
+  if (error) {
+    console.error('createDeal error:', error)
+    throw new Error(error.message)
   }
 
-  revalidatePath('/admin/deals')
-  revalidatePath('/admin/requests')
-  revalidatePath('/admin/sales')
-  revalidatePath('/admin/analytics')
+  if (productRequestId) {
+    const { error: requestError } = await supabase
+      .from('product_requests')
+      .update({
+        status: 'deal_agreed',
+        deal_id: null,
+      })
+      .eq('id', productRequestId)
+
+    if (requestError) {
+      console.warn(
+        'Failed to update product request after creating deal:',
+        requestError.message
+      )
+    }
+  }
+
+  revalidateDealPaths()
 }
+
+// ─── Update Deal ──────────────────────────────────────────────────────────────
 
 export async function updateDeal(id: string, formData: FormData) {
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
-    product_request_id:   productRequestId,
-    customer_name:        getStr(formData,   'customer_name'),
-    phone:                getStr(formData,   'phone'),
-    customer_instagram:   getStr(formData,   'customer_instagram'),
-    status:               getStr(formData,   'status')       ?? 'deposit_pending',
-    source_link:          getStr(formData,   'source_link'),
-    source_platform:      getStr(formData,   'source_platform'),
-    sale_channel:         getStr(formData,   'sale_channel') ?? 'whatsapp',
-    notes:                getStr(formData,   'notes'),
-    source_price_eur:     getFloat(formData, 'source_price_eur'),
-    shipping_eur:         getFloat(formData, 'shipping_eur') ?? 0,  // ✅ NEW
-    exchange_rate:        getFloat(formData, 'exchange_rate'),
-    selling_price_egp:    getFloat(formData, 'selling_price_egp'),
-    deposit_amount_egp:   getFloat(formData, 'deposit_amount_egp'),
+    product_request_id: productRequestId,
+    customer_name: getStr(formData, 'customer_name'),
+    phone: getStr(formData, 'phone'),
+    customer_instagram: getStr(formData, 'customer_instagram'),
+    status: getStr(formData, 'status') ?? 'deposit_pending',
+    source_link: getStr(formData, 'source_link'),
+    source_platform: getStr(formData, 'source_platform'),
+    sale_channel: getStr(formData, 'sale_channel') ?? 'whatsapp',
+    notes: getStr(formData, 'notes'),
+
+    source_price_eur: getFloat(formData, 'source_price_eur'),
+    shipping_eur: getFloat(formData, 'shipping_eur') ?? 0,
+    exchange_rate: getFloat(formData, 'exchange_rate'),
+
+    selling_price_egp: getFloat(formData, 'selling_price_egp'),
+    deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
-    commission_egp:       getFloat(formData, 'commission_egp') ?? 0,
+    commission_egp: getFloat(formData, 'commission_egp') ?? 0,
   }
 
   const { error } = await supabase
@@ -146,20 +203,35 @@ export async function updateDeal(id: string, formData: FormData) {
     .update(payload)
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    console.error('updateDeal error:', error)
+    throw new Error(error.message)
+  }
 
   if (productRequestId) {
-    await supabase
+    const { error: requestError } = await supabase
       .from('product_requests')
       .update({ status: 'deal_agreed' })
       .eq('id', productRequestId)
+
+    if (requestError) {
+      console.warn(
+        'Failed to update product request after updating deal:',
+        requestError.message
+      )
+    }
   }
 
-  revalidatePath('/admin/deals')
-  revalidatePath('/admin/requests')
-  revalidatePath('/admin/sales')
-  revalidatePath('/admin/analytics')
+  /*
+   * لو الـ deal كان متسجل قبل كده في sales واتعدلت بياناته،
+   * نحدّث الـ sale المرتبطة فورًا.
+   */
+  await syncExistingSaleFromDeal(id)
+
+  revalidateDealPaths()
 }
+
+// ─── Update Deal Status ───────────────────────────────────────────────────────
 
 export async function updateDealStatus(
   id: string,
@@ -168,105 +240,251 @@ export async function updateDealStatus(
 ) {
   const extra: Record<string, string | null> = {}
 
-  if (status === 'deposit_paid')      extra.deposit_paid_at   = new Date().toISOString()
-  if (status === 'shipping')          extra.shipped_at        = new Date().toISOString()
-  if (status === 'arrived_egypt')     extra.arrived_egypt_at  = new Date().toISOString()
-  if (status === 'delivered')         extra.delivered_at      = new Date().toISOString()
-  if (status === 'completed')         extra.remaining_paid_at = new Date().toISOString()
+  if (status === 'deposit_paid') {
+    extra.deposit_paid_at = new Date().toISOString()
+  }
+
+  if (status === 'shipping') {
+    extra.shipped_at = new Date().toISOString()
+  }
+
+  if (status === 'arrived_egypt') {
+    extra.arrived_egypt_at = new Date().toISOString()
+  }
+
+  if (status === 'delivered') {
+    extra.delivered_at = new Date().toISOString()
+  }
+
+  if (status === 'completed') {
+    extra.remaining_paid_at = new Date().toISOString()
+  }
 
   if (status === 'cancelled') {
-    extra.cancellation_reason = cancellationReason ?? null
+    extra.cancellation_reason = cancellationReason?.trim() || null
   }
 
   const { data: deal, error: fetchError } = await supabase
     .from('deals')
-    .select('id, product_request_id')
+    .select('id, product_request_id, status')
     .eq('id', id)
     .single()
 
-  if (fetchError) throw new Error(fetchError.message)
+  if (fetchError || !deal) {
+    throw new Error(fetchError?.message ?? 'Deal not found')
+  }
 
-  const { error } = await supabase
+  const { data: updatedDeal, error: updateError } = await supabase
     .from('deals')
-    .update({ status, ...extra })
+    .update({
+      status,
+      ...extra,
+    })
     .eq('id', id)
+    .select('id, status, cancellation_reason')
+    .single()
 
-  if (error) throw new Error(error.message)
+  if (updateError) {
+    console.error('updateDealStatus error:', updateError)
+    throw new Error(updateError.message)
+  }
 
-  if (deal?.product_request_id) {
+  console.log('Deal status updated:', updatedDeal)
+
+  if (deal.product_request_id) {
     let requestStatus: string | null = null
-    if (status === 'completed')  requestStatus = 'completed'
-    if (status === 'cancelled')  requestStatus = 'cancelled'
-    if (status === 'delivered')  requestStatus = 'deal_agreed'
+
+    if (status === 'completed') {
+      requestStatus = 'completed'
+    }
+
+    if (status === 'cancelled') {
+      requestStatus = 'cancelled'
+    }
+
+    if (status === 'delivered') {
+      requestStatus = 'deal_agreed'
+    }
 
     if (requestStatus) {
-      await supabase
+      const { error: requestError } = await supabase
         .from('product_requests')
         .update({ status: requestStatus })
         .eq('id', deal.product_request_id)
+
+      if (requestError) {
+        console.error(
+          'Product request status update failed:',
+          requestError.message
+        )
+      }
     }
   }
 
+  /*
+   * لو الـ deal اتحول إلى Completed:
+   * - ينشئ Sale لو مش موجودة
+   * - أو يحدث Sale الموجودة
+   */
   if (status === 'completed') {
     await syncDealToSales(id)
   }
 
-  revalidatePath('/admin/deals')
-  revalidatePath('/admin/requests')
-  revalidatePath('/admin/sales')
-  revalidatePath('/admin/analytics')
+  revalidateDealPaths()
 }
+
+// ─── Sync Deal To Sales ───────────────────────────────────────────────────────
 
 async function syncDealToSales(dealId: string) {
   const { data: deal, error: dealError } = await supabase
     .from('deals')
-    .select(`*, product_request:product_requests(requested_product)`)
+    .select(`
+      *,
+      product_request:product_requests(
+        id,
+        requested_product,
+        customer_name
+      )
+    `)
     .eq('id', dealId)
     .single()
 
-  if (dealError || !deal) return
+  if (dealError || !deal) {
+    console.error('syncDealToSales: could not fetch deal', {
+      dealId,
+      error: dealError,
+    })
 
-  const { data: existing } = await supabase
+    throw new Error(dealError?.message ?? 'Deal not found')
+  }
+
+  const request = Array.isArray(deal.product_request)
+    ? deal.product_request[0]
+    : deal.product_request
+
+  const productName =
+    request?.requested_product?.trim() ||
+    request?.customer_name?.trim() ||
+    deal.customer_name?.trim() ||
+    deal.notes?.trim() ||
+    `Deal ${dealId}`
+
+  const sourceEur = Number(deal.source_price_eur ?? 0)
+  const shippingEur = Number(deal.shipping_eur ?? 0)
+  const exchangeRate = Number(deal.exchange_rate ?? 0)
+  const sellingPrice = Number(deal.selling_price_egp ?? 0)
+  const commission = Number(deal.commission_egp ?? 0)
+
+  const costEgp = (sourceEur + shippingEur) * exchangeRate
+  const profitEgp = sellingPrice - costEgp - commission
+  const profitMarginPct =
+    sellingPrice > 0
+      ? Number(((profitEgp / sellingPrice) * 100).toFixed(2))
+      : 0
+
+  const { data: existingSale, error: existingSaleError } = await supabase
     .from('sales')
     .select('id')
     .eq('deal_id', dealId)
     .maybeSingle()
 
-  if (existing) return
+  if (existingSaleError) {
+    console.error(
+      'syncDealToSales: failed checking existing sale:',
+      existingSaleError
+    )
 
-  const productName =
-    deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Product'
+    throw new Error(existingSaleError.message)
+  }
 
-  const sourceEur   = deal.source_price_eur ?? 0
-  const shippingEur = deal.shipping_eur     ?? 0  // ✅ NEW
-  const rate        = deal.exchange_rate    ?? 0
-  const costEgp     = (sourceEur + shippingEur) * rate  // ✅ UPDATED — يشمل الـ shipping
-  const sellingEgp  = deal.selling_price_egp ?? 0
-  const commission  = deal.commission_egp    ?? 0
-  const profitEgp   = sellingEgp - costEgp - commission
-  const marginPct   = sellingEgp > 0
-    ? parseFloat(((profitEgp / sellingEgp) * 100).toFixed(2))
-    : 0
+  const salePayload = {
+    deal_id: dealId,
+    product_name: productName,
 
-  await supabase.from('sales').insert({
-    deal_id:           dealId,
-    product_name:      productName,
-    original_eur:      sourceEur,
-    shipping_eur:      shippingEur,  // ✅ UPDATED — مش 0 ثابت
-    exchange_rate:     rate,
-    cost_egp:          costEgp,
-    selling_price_egp: sellingEgp,
-    profit_egp:        profitEgp,
-    profit_margin_pct: marginPct,
-    commission_egp:    commission,
-    sale_channel:      deal.sale_channel    ?? 'whatsapp',
-    sale_date:         new Date().toISOString().split('T')[0],
-    source_platform:   deal.source_platform ?? null,
-    source_url:        deal.source_link     ?? null,
-    notes:             deal.notes           ?? null,
-    discount_code:     null,
+    original_eur: sourceEur,
+    shipping_eur: shippingEur,
+    exchange_rate: exchangeRate,
+
+    cost_egp: costEgp,
+    selling_price_egp: sellingPrice,
+    profit_egp: profitEgp,
+    profit_margin_pct: profitMarginPct,
+    commission_egp: commission,
+
+    sale_channel: deal.sale_channel ?? 'whatsapp',
+    sale_date: new Date().toISOString().split('T')[0],
+
+    source_platform: deal.source_platform ?? null,
+    source_url: deal.source_link ?? null,
+    notes: deal.notes ?? null,
+    discount_code: null,
+  }
+
+  if (existingSale) {
+    const { error: updateSaleError } = await supabase
+      .from('sales')
+      .update(salePayload)
+      .eq('id', existingSale.id)
+
+    if (updateSaleError) {
+      console.error(
+        'syncDealToSales: failed updating existing sale:',
+        updateSaleError
+      )
+
+      throw new Error(updateSaleError.message)
+    }
+
+    console.log('syncDealToSales: existing sale updated', {
+      dealId,
+      saleId: existingSale.id,
+      productName,
+    })
+
+    return
+  }
+
+  const { error: insertError } = await supabase
+    .from('sales')
+    .insert(salePayload)
+
+  if (insertError) {
+    console.error('syncDealToSales: insert failed', {
+      dealId,
+      productName,
+      insertError,
+    })
+
+    throw new Error(insertError.message)
+  }
+
+  console.log('syncDealToSales: sale created', {
+    dealId,
+    productName,
   })
 }
+
+// ─── Sync Existing Sale When Deal Is Edited ───────────────────────────────────
+
+async function syncExistingSaleFromDeal(dealId: string) {
+  const { data: existingSale, error: saleLookupError } = await supabase
+    .from('sales')
+    .select('id')
+    .eq('deal_id', dealId)
+    .maybeSingle()
+
+  if (saleLookupError) {
+    throw new Error(saleLookupError.message)
+  }
+
+  if (!existingSale) {
+    return
+  }
+
+  await syncDealToSales(dealId)
+}
+
+// ─── Delete Deal ──────────────────────────────────────────────────────────────
 
 export async function deleteDeal(id: string) {
   const { data: deal } = await supabase
@@ -275,30 +493,56 @@ export async function deleteDeal(id: string) {
     .eq('id', id)
     .single()
 
-  await supabase
+  // فك الربط قبل حذف الـ deal
+  const { error: unlinkError } = await supabase
     .from('product_requests')
     .update({ deal_id: null })
     .eq('deal_id', id)
 
-  await supabase
+  if (unlinkError) {
+    throw new Error(unlinkError.message)
+  }
+
+  // حذف الـ sale المرتبطة
+  const { error: saleDeleteError } = await supabase
     .from('sales')
     .delete()
     .eq('deal_id', id)
 
-  const { error } = await supabase
+  if (saleDeleteError) {
+    throw new Error(saleDeleteError.message)
+  }
+
+  // حذف الـ deal
+  const { error: dealDeleteError } = await supabase
     .from('deals')
     .delete()
     .eq('id', id)
 
-  if (error) throw new Error(error.message)
+  if (dealDeleteError) {
+    throw new Error(dealDeleteError.message)
+  }
 
   if (deal?.product_request_id) {
-    await supabase
+    const { error: requestResetError } = await supabase
       .from('product_requests')
       .update({ status: 'contacted' })
       .eq('id', deal.product_request_id)
+
+    if (requestResetError) {
+      console.warn(
+        'Failed to reset product request status:',
+        requestResetError.message
+      )
+    }
   }
 
+  revalidateDealPaths()
+}
+
+// ─── Revalidation ─────────────────────────────────────────────────────────────
+
+function revalidateDealPaths() {
   revalidatePath('/admin/deals')
   revalidatePath('/admin/requests')
   revalidatePath('/admin/sales')
