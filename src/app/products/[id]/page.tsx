@@ -21,11 +21,9 @@ export default async function ProductDetailsPage({ params }: Props) {
   return (
     <main className="max-w-6xl mx-auto px-6 py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-
         <ProductImageGallery images={images} title={product.title} />
 
         <div className="flex flex-col justify-center gap-6">
-
           <div className="flex gap-3">
             {product.brand && (
               <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase">
@@ -67,10 +65,10 @@ export default async function ProductDetailsPage({ params }: Props) {
             originalPrice={product.price_egp ?? 0}
             productId={product.id!}
             productTitle={product.title}
-            isReservable={product.is_reservable ?? false}  // ✅ من الـ DB مباشرة
+            isReservable={product.is_reservable ?? false}
+            discountEnabled={product.discount_enabled ?? true}
             status={product.status ?? 'available'}
           />
-
         </div>
       </div>
     </main>

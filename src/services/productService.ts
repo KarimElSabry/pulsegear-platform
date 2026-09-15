@@ -168,8 +168,7 @@ export class ProductService {
       .from('products')
       .select(`
         *,
-        images:product_images(*),
-        count()
+        images:product_images(*)
       `, { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(from, to)
@@ -177,12 +176,14 @@ export class ProductService {
     if (filters?.brand) query = query.ilike('brand', filters.brand)
     if (filters?.category) query = query.ilike('category', filters.category)
     if (filters?.status) query = query.eq('status', filters.status)
-    if (filters?.featured !== undefined)
+    if (filters?.featured !== undefined) {
       query = query.eq('featured', filters.featured)
-    if (filters?.search)
+    }
+    if (filters?.search) {
       query = query.or(
         `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
       )
+    }
 
     const { data, error, count } = await query
 
@@ -215,21 +216,23 @@ export class ProductService {
       .from('products')
       .insert({
         slug,
-        title:           product.title,
-        description:     product.description     ?? null,
-        brand:           product.brand           ?? null,
-        category:        product.category        ?? null,
-        size:            product.size            ?? null,
-        price_egp:       product.price_egp,
-        original_price:  product.original_price  ?? null,
-        condition:       product.condition       ?? null,
-        status:          product.status          ?? 'available',
-        featured:        product.featured        ?? false,
-        source:          product.source          ?? null,
-        source_url:      product.source_url      ?? null,
-        source_platform: product.source_platform ?? null,
-        is_reservable:   product.is_reservable   ?? false,
-        vinted_id:       product.vinted_id       ?? null, // ✅ NEW
+        title:            product.title,
+        description:      product.description ?? null,
+        brand:            product.brand ?? null,
+        category:         product.category ?? null,
+        size:             product.size ?? null,
+        price_egp:        product.price_egp,
+        original_price:   product.original_price ?? null,
+        condition:        product.condition ?? null,
+        status:           product.status ?? 'available',
+        featured:         product.featured ?? false,
+        source:           product.source ?? null,
+        source_url:       product.source_url ?? null,
+        source_platform:  product.source_platform ?? null,
+        is_reservable:    product.is_reservable ?? false,
+        is_deal:          product.is_deal ?? false,
+        discount_enabled: product.discount_enabled ?? true,
+        vinted_id:        product.vinted_id ?? null,
       })
       .select()
       .single()
@@ -244,9 +247,9 @@ export class ProductService {
 
     if (imageUrls.length > 0) {
       const images = imageUrls.map((url, index) => ({
-        product_id:    data.id,
-        image_url:     url,
-        is_primary:    index === 0,
+        product_id: data.id,
+        image_url: url,
+        is_primary: index === 0,
         display_order: index,
       }))
 

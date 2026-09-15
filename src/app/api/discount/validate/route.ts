@@ -10,17 +10,48 @@ const supabase = createClient(
 
 export async function POST(req: NextRequest) {
   try {
-    const { code } = await req.json()
+    const { code, productId } = await req.json()
 
-    if (!code || typeof code !== 'string') {
+    const normalizedCode = String(code ?? '').trim().toUpperCase()
+    const normalizedProductId = Number(productId)
+
+    if (!normalizedCode) {
       return NextResponse.json({ error: 'Code is required' }, { status: 400 })
+    }
+
+    if (!normalizedProductId) {
+      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
+    }
+
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('id, discount_enabled, status')
+      .eq('id', normalizedProductId)
+      .single()
+
+    if (productError || !product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    if (product.status !== 'available') {
+      return NextResponse.json(
+        { error: 'Discounts are only allowed for available products' },
+        { status: 400 }
+      )
+    }
+
+    if (!product.discount_enabled) {
+      return NextResponse.json(
+        { error: 'Discount codes are disabled for this product' },
+        { status: 403 }
+      )
     }
 
     const { data, error } = await supabase
       .from('discount_codes')
       .select('id, code, discount_percent, is_active')
-      .ilike('code', code.trim())
-      .maybeSingle() // ✅ بدل .single() — مش بيرمي error لو مفيش نتيجة
+      .eq('code', normalizedCode)
+      .maybeSingle()
 
     if (error) {
       return NextResponse.json({ error: 'Database error' }, { status: 500 })
