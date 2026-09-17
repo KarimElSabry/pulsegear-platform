@@ -11,10 +11,15 @@ function getClient(): BetaAnalyticsDataClient {
     const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
     return new BetaAnalyticsDataClient({ credentials })
   }
+
   const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
     ? path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
     : path.join(process.cwd(), 'secrets', 'pulsegear-analytics.json')
-  if (!fs.existsSync(keyPath)) throw new Error(`GA4 key file not found at: ${keyPath}`)
+
+  if (!fs.existsSync(keyPath)) {
+    throw new Error(`GA4 key file not found at: ${keyPath}`)
+  }
+
   return new BetaAnalyticsDataClient({ keyFilename: keyPath })
 }
 
@@ -155,10 +160,7 @@ export async function getGA4Data() {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'pagePath' }],
-      metrics: [
-        { name: 'screenPageViews' },
-        { name: 'bounceRate' },
-      ],
+      metrics: [{ name: 'screenPageViews' }, { name: 'bounceRate' }],
       orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
       limit: 8,
     })
@@ -167,11 +169,7 @@ export async function getGA4Data() {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'country' }, { name: 'city' }],
-      metrics: [
-        { name: 'activeUsers' },
-        { name: 'sessions' },
-        { name: 'bounceRate' },
-      ],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }, { name: 'bounceRate' }],
       dimensionFilter: {
         filter: {
           fieldName: 'country',
@@ -186,11 +184,7 @@ export async function getGA4Data() {
       property: `properties/${PROPERTY_ID}`,
       dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
       dimensions: [{ name: 'operatingSystem' }],
-      metrics: [
-        { name: 'activeUsers' },
-        { name: 'sessions' },
-        { name: 'bounceRate' },
-      ],
+      metrics: [{ name: 'activeUsers' }, { name: 'sessions' }, { name: 'bounceRate' }],
       orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
       limit: 8,
     })
@@ -210,9 +204,18 @@ export async function getGA4Data() {
     })
 
     const allReports = {
-      overview, topPages, dailyUsers, trafficSources,
-      deviceBreakdown, countryData, landingPages, returningUsers,
-      exitPages, cityData, operatingSystem, sourcesMedium,
+      overview,
+      topPages,
+      dailyUsers,
+      trafficSources,
+      deviceBreakdown,
+      countryData,
+      landingPages,
+      returningUsers,
+      exitPages,
+      cityData,
+      operatingSystem,
+      sourcesMedium,
     }
 
     const failedReports = Object.entries(allReports)
@@ -224,154 +227,162 @@ export async function getGA4Data() {
     const overviewRow = overview?.rows?.[0]?.metricValues
 
     return {
-      ga4: overviewRow ? {
-        activeUsers:        overviewRow[0]?.value ?? '0',
-        sessions:           overviewRow[1]?.value ?? '0',
-        pageViews:          overviewRow[2]?.value ?? '0',
-        bounceRate:         parseFloat(overviewRow[3]?.value ?? '0').toFixed(1),
-        avgSessionDuration: parseFloat(overviewRow[4]?.value ?? '0').toFixed(0),
-        newUsers:           overviewRow[5]?.value ?? '0',
-        pagesPerSession:    parseFloat(overviewRow[6]?.value ?? '0').toFixed(2),
-        engagementRate:     parseFloat(overviewRow[7]?.value ?? '0').toFixed(1),
-        totalUsers:         overviewRow[8]?.value ?? '0',
-        conversions:        overviewRow[9]?.value ?? '0',
-      } : null,
+      ga4: overviewRow
+        ? {
+            activeUsers: overviewRow[0]?.value ?? '0',
+            sessions: overviewRow[1]?.value ?? '0',
+            pageViews: overviewRow[2]?.value ?? '0',
+            bounceRate: parseFloat(overviewRow[3]?.value ?? '0').toFixed(1),
+            avgSessionDuration: parseFloat(overviewRow[4]?.value ?? '0').toFixed(0),
+            newUsers: overviewRow[5]?.value ?? '0',
+            pagesPerSession: parseFloat(overviewRow[6]?.value ?? '0').toFixed(2),
+            engagementRate: parseFloat(overviewRow[7]?.value ?? '0').toFixed(1),
+            totalUsers: overviewRow[8]?.value ?? '0',
+            conversions: overviewRow[9]?.value ?? '0',
+          }
+        : null,
 
       failedReports,
 
       ga4TopPages: (topPages.rows ?? []).map((row: any) => ({
-        page:        row.dimensionValues?.[0]?.value ?? '',
-        pageTitle:   row.dimensionValues?.[0]?.value ?? '',
-        views:       row.metricValues?.[0]?.value    ?? '0',
-        users:       row.metricValues?.[1]?.value    ?? '0',
+        page: row.dimensionValues?.[0]?.value ?? '',
+        pageTitle: row.dimensionValues?.[0]?.value ?? '',
+        views: row.metricValues?.[0]?.value ?? '0',
+        users: row.metricValues?.[1]?.value ?? '0',
         avgDuration: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(0),
-        bounceRate:  parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
-        exits:       0,
-        exitRate:    '0',
+        bounceRate: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
+        exits: 0,
+        exitRate: '0',
       })),
 
       ga4DailyUsers: (dailyUsers.rows ?? []).map((row: any) => ({
-        date:           row.dimensionValues?.[0]?.value ?? '',
-        users:          parseInt(row.metricValues?.[0]?.value ?? '0'),
-        sessions:       parseInt(row.metricValues?.[1]?.value ?? '0'),
-        views:          parseInt(row.metricValues?.[2]?.value ?? '0'),
-        newUsers:       parseInt(row.metricValues?.[3]?.value ?? '0'),
+        date: row.dimensionValues?.[0]?.value ?? '',
+        users: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        sessions: parseInt(row.metricValues?.[1]?.value ?? '0'),
+        views: parseInt(row.metricValues?.[2]?.value ?? '0'),
+        newUsers: parseInt(row.metricValues?.[3]?.value ?? '0'),
         engagementRate: parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(1),
       })),
 
       ga4TrafficSources: (trafficSources.rows ?? []).map((row: any) => ({
-        source:         row.dimensionValues?.[0]?.value ?? '',
-        sessions:       parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        users:          parseInt(row.metricValues?.[1]?.value  ?? '0'),
-        bounceRate:     parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
+        source: row.dimensionValues?.[0]?.value ?? '',
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        users: parseInt(row.metricValues?.[1]?.value ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
         engagementRate: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(1),
-        avgDuration:    parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(0),
-        conversions:    parseInt(row.metricValues?.[5]?.value  ?? '0'),
+        avgDuration: parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(0),
+        conversions: parseInt(row.metricValues?.[5]?.value ?? '0'),
       })),
 
       ga4DeviceBreakdown: (deviceBreakdown.rows ?? []).map((row: any) => ({
-        device:          row.dimensionValues?.[0]?.value ?? '',
-        sessions:        parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        users:           parseInt(row.metricValues?.[1]?.value  ?? '0'),
-        bounceRate:      parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
-        avgDuration:     parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
+        device: row.dimensionValues?.[0]?.value ?? '',
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        users: parseInt(row.metricValues?.[1]?.value ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
+        avgDuration: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
         pagesPerSession: parseFloat(row.metricValues?.[4]?.value ?? '0').toFixed(2),
       })),
 
       ga4Countries: (countryData.rows ?? []).map((row: any) => ({
-        country:     row.dimensionValues?.[0]?.value ?? '',
-        users:       parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        sessions:    parseInt(row.metricValues?.[1]?.value  ?? '0'),
-        bounceRate:  parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
+        country: row.dimensionValues?.[0]?.value ?? '',
+        users: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        sessions: parseInt(row.metricValues?.[1]?.value ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
         avgDuration: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
       })),
 
       ga4LandingPages: (landingPages.rows ?? []).map((row: any) => ({
-        page:        row.dimensionValues?.[0]?.value ?? '',
-        sessions:    parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        bounceRate:  parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
-        users:       parseInt(row.metricValues?.[2]?.value  ?? '0'),
+        page: row.dimensionValues?.[0]?.value ?? '',
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
+        users: parseInt(row.metricValues?.[2]?.value ?? '0'),
         avgDuration: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
-        conversions: parseInt(row.metricValues?.[4]?.value  ?? '0'),
+        conversions: parseInt(row.metricValues?.[4]?.value ?? '0'),
       })),
 
       ga4NewVsReturning: (() => {
         const rows = returningUsers.rows ?? []
         const result: Record<string, any> = {}
         for (const row of rows) {
-          const rawType    = row.dimensionValues?.[0]?.value ?? ''
-          const users      = parseInt(row.metricValues?.[0]?.value ?? '0')
-          const sessions   = parseInt(row.metricValues?.[1]?.value ?? '0')
+          const rawType = row.dimensionValues?.[0]?.value ?? ''
+          const users = parseInt(row.metricValues?.[0]?.value ?? '0')
+          const sessions = parseInt(row.metricValues?.[1]?.value ?? '0')
           const bounceRate = parseFloat(row.metricValues?.[2]?.value ?? '0')
-          const avgDur     = parseFloat(row.metricValues?.[3]?.value ?? '0')
-          const type       = rawType === 'new' ? 'New Users' : 'Returning Users'
+          const avgDur = parseFloat(row.metricValues?.[3]?.value ?? '0')
+          const type = rawType === 'new' ? 'New Users' : 'Returning Users'
           if (!result[type]) {
-            result[type] = { type, users: 0, sessions: 0, bounceRate: 0, avgDuration: 0, count: 0 }
+            result[type] = {
+              type,
+              users: 0,
+              sessions: 0,
+              bounceRate: 0,
+              avgDuration: 0,
+              count: 0,
+            }
           }
-          result[type].users       += users
-          result[type].sessions    += sessions
-          result[type].bounceRate  += bounceRate
+          result[type].users += users
+          result[type].sessions += sessions
+          result[type].bounceRate += bounceRate
           result[type].avgDuration += avgDur
-          result[type].count       += 1
+          result[type].count += 1
         }
         return Object.values(result).map(({ count, bounceRate, avgDuration, ...rest }) => ({
           ...rest,
-          bounceRate:  parseFloat((bounceRate  / count).toFixed(1)),
+          bounceRate: parseFloat((bounceRate / count).toFixed(1)),
           avgDuration: parseFloat((avgDuration / count).toFixed(0)),
         }))
       })(),
 
       ga4ExitPages: (exitPages.rows ?? []).map((row: any) => ({
-        page:       row.dimensionValues?.[0]?.value ?? '',
-        pageTitle:  row.dimensionValues?.[0]?.value ?? '',
-        views:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
+        page: row.dimensionValues?.[0]?.value ?? '',
+        pageTitle: row.dimensionValues?.[0]?.value ?? '',
+        views: parseInt(row.metricValues?.[0]?.value ?? '0'),
         bounceRate: parseFloat(row.metricValues?.[1]?.value ?? '0').toFixed(1),
-        exits:      0,
-        exitRate:   '0',
+        exits: 0,
+        exitRate: '0',
       })),
 
       ga4Cities: (cityData.rows ?? []).map((row: any) => ({
-        country:    row.dimensionValues?.[0]?.value ?? '',
-        city:       row.dimensionValues?.[1]?.value ?? '',
-        users:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        sessions:   parseInt(row.metricValues?.[1]?.value  ?? '0'),
+        country: row.dimensionValues?.[0]?.value ?? '',
+        city: row.dimensionValues?.[1]?.value ?? '',
+        users: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        sessions: parseInt(row.metricValues?.[1]?.value ?? '0'),
         bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
       })),
 
       ga4OperatingSystems: (operatingSystem.rows ?? []).map((row: any) => ({
-        os:         row.dimensionValues?.[0]?.value ?? '',
-        users:      parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        sessions:   parseInt(row.metricValues?.[1]?.value  ?? '0'),
+        os: row.dimensionValues?.[0]?.value ?? '',
+        users: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        sessions: parseInt(row.metricValues?.[1]?.value ?? '0'),
         bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
       })),
 
       ga4SourceMedium: (sourcesMedium.rows ?? []).map((row: any) => ({
-        source:      row.dimensionValues?.[0]?.value ?? '',
-        medium:      row.dimensionValues?.[1]?.value ?? '',
-        sessions:    parseInt(row.metricValues?.[0]?.value  ?? '0'),
-        users:       parseInt(row.metricValues?.[1]?.value  ?? '0'),
-        bounceRate:  parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
+        source: row.dimensionValues?.[0]?.value ?? '',
+        medium: row.dimensionValues?.[1]?.value ?? '',
+        sessions: parseInt(row.metricValues?.[0]?.value ?? '0'),
+        users: parseInt(row.metricValues?.[1]?.value ?? '0'),
+        bounceRate: parseFloat(row.metricValues?.[2]?.value ?? '0').toFixed(1),
         avgDuration: parseFloat(row.metricValues?.[3]?.value ?? '0').toFixed(0),
       })),
     }
-
   } catch (error: any) {
     console.error('GA4 FATAL:', error?.message)
     return {
-      ga4:                 null,
-      ga4TopPages:         [],
-      ga4DailyUsers:       [],
-      ga4TrafficSources:   [],
-      ga4DeviceBreakdown:  [],
-      ga4Countries:        [],
-      ga4LandingPages:     [],
-      ga4NewVsReturning:   [],
-      ga4ExitPages:        [],
-      ga4Cities:           [],
+      ga4: null,
+      ga4TopPages: [],
+      ga4DailyUsers: [],
+      ga4TrafficSources: [],
+      ga4DeviceBreakdown: [],
+      ga4Countries: [],
+      ga4LandingPages: [],
+      ga4NewVsReturning: [],
+      ga4ExitPages: [],
+      ga4Cities: [],
       ga4OperatingSystems: [],
-      ga4SourceMedium:     [],
-      error:   error?.message    ?? 'Unknown',
-      code:    error?.code       ?? 0,
+      ga4SourceMedium: [],
+      error: error?.message ?? 'Unknown',
+      code: error?.code ?? 0,
       details: error?.toString() ?? '',
     }
   }

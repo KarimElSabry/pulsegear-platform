@@ -1,14 +1,14 @@
 // src/app/admin/analytics/page.tsx
 
-export const dynamic    = 'force-dynamic'  // ✅ FIX — disable Next.js cache
-export const revalidate = 0                // ✅ FIX — always fetch fresh data
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 import { createServerClient } from '@/lib/supabase'
-import { cookies }            from 'next/headers'
-import { redirect }           from 'next/navigation'
-import Link                   from 'next/link'
-import AnalyticsClient        from './AnalyticsClient'
-import { getGA4Data }         from '@/lib/analytics'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import AnalyticsClient from './AnalyticsClient'
+import { getGA4Data } from '@/lib/analytics'
 
 async function checkAuth() {
   const cookieStore = await cookies()
@@ -19,7 +19,11 @@ async function checkAuth() {
 async function getAnalyticsData() {
   const supabase = createServerClient()
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const thirtyDaysAgoDateTime = new Date(
+    Date.now() - 30 * 24 * 60 * 60 * 1000
+  ).toISOString()
+
+  const thirtyDaysAgoDateOnly = thirtyDaysAgoDateTime.split('T')[0]
 
   const [
     productsRes,
@@ -33,7 +37,6 @@ async function getAnalyticsData() {
     salesTimeRes,
     ga4Data,
   ] = await Promise.all([
-
     supabase
       .from('products')
       .select('id, status, price_egp, category, brand'),
@@ -64,12 +67,12 @@ async function getAnalyticsData() {
     supabase
       .from('reservations')
       .select('created_at, status, discounted_price, product:products(price_egp)')
-      .gte('created_at', thirtyDaysAgo),
+      .gte('created_at', thirtyDaysAgoDateTime),
 
     supabase
       .from('products')
       .select('created_at')
-      .gte('created_at', thirtyDaysAgo),
+      .gte('created_at', thirtyDaysAgoDateTime),
 
     supabase
       .from('sales')
@@ -79,19 +82,44 @@ async function getAnalyticsData() {
     supabase
       .from('sales')
       .select('sale_date, selling_price_egp, profit_egp')
-      .gte('sale_date', thirtyDaysAgo)
+      .gte('sale_date', thirtyDaysAgoDateOnly)
       .order('sale_date', { ascending: true }),
 
     getGA4Data(),
   ])
 
+  const criticalErrors = [
+    productsRes.error,
+    reservationsRes.error,
+    discountCodesRes.error,
+    likesRes.error,
+    mostLikedRes.error,
+    reservationsTimeRes.error,
+    productsTimeRes.error,
+    salesRes.error,
+    salesTimeRes.error,
+  ].filter(Boolean)
+
+  if (criticalErrors.length > 0) {
+    console.error(
+      'Analytics query errors:',
+      criticalErrors.map((e: any) => ({
+        message: e.message,
+        details: e.details,
+        hint: e.hint,
+        code: e.code,
+      }))
+    )
+    throw new Error(criticalErrors.map((e: any) => e.message).join(' | '))
+  }
+
   // ── Products ──────────────────────────────────────────────────────
   const products = productsRes.data ?? []
 
-  const totalProducts      = products.length
-  const availableProducts  = products.filter((p) => p.status === 'available').length
-  const soldProducts       = products.filter((p) => p.status === 'sold').length
-  const reservedProducts   = products.filter((p) => p.status === 'reserved').length
+  const totalProducts = products.length
+  const availableProducts = products.filter((p) => p.status === 'available').length
+  const soldProducts = products.filter((p) => p.status === 'sold').length
+  const reservedProducts = products.filter((p) => p.status === 'reserved').length
   const outOfStockProducts = products.filter((p) => p.status === 'out_of_stock').length
 
   const avgProductPrice =
@@ -122,8 +150,8 @@ async function getAnalyticsData() {
   // ── Reservations ──────────────────────────────────────────────────
   const reservations = reservationsRes.data ?? []
 
-  const totalReservations     = reservations.length
-  const pendingReservations   = reservations.filter((r) => r.status === 'pending').length
+  const totalReservations = reservations.length
+  const pendingReservations = reservations.filter((r) => r.status === 'pending').length
   const confirmedReservations = reservations.filter((r) => r.status === 'confirmed').length
   const cancelledReservations = reservations.filter((r) => r.status === 'cancelled').length
 
@@ -136,7 +164,7 @@ async function getAnalyticsData() {
 
   const discountedRevenue = confirmedRes.reduce((sum, r) => {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
-    const price   = r.discounted_price ?? product?.price_egp ?? 0
+    const price = r.discounted_price ?? product?.price_egp ?? 0
     return sum + price
   }, 0)
 
@@ -151,7 +179,9 @@ async function getAnalyticsData() {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
     if (!product) return
     const existing = productReservationMap.get(product.id) ?? {
-      title: product.title, reservations: 0, revenue: 0,
+      title: product.title,
+      reservations: 0,
+      revenue: 0,
     }
     existing.reservations += 1
     if (r.status === 'confirmed') {
@@ -169,7 +199,10 @@ async function getAnalyticsData() {
   const timeMap = new Map<string, { reservations: number; revenue: number }>()
 
   reservationsTimeData.forEach((r) => {
-    const date     = new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+    const date = new Date(r.created_at).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+    })
     const existing = timeMap.get(date) ?? { reservations: 0, revenue: 0 }
     existing.reservations += 1
     if (r.status === 'confirmed') {
@@ -179,27 +212,37 @@ async function getAnalyticsData() {
     timeMap.set(date, existing)
   })
 
-  const reservationsOverTime = [...timeMap.entries()].map(([date, val]) => ({ date, ...val }))
+  const reservationsOverTime = [...timeMap.entries()].map(([date, val]) => ({
+    date,
+    ...val,
+  }))
 
   // ── Products Over Time ────────────────────────────────────────────
   const productsTimeData = productsTimeRes.data ?? []
-  const productsTimeMap  = new Map<string, number>()
+  const productsTimeMap = new Map<string, number>()
 
   productsTimeData.forEach((p) => {
-    const date = new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+    const date = new Date(p.created_at).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+    })
     productsTimeMap.set(date, (productsTimeMap.get(date) ?? 0) + 1)
   })
 
-  const productsOverTime = [...productsTimeMap.entries()].map(([date, count]) => ({ date, count }))
+  const productsOverTime = [...productsTimeMap.entries()].map(([date, count]) => ({
+    date,
+    count,
+  }))
 
   // ── Likes ─────────────────────────────────────────────────────────
   const totalLikes = likesRes.count ?? 0
-  const likesData  = mostLikedRes.data ?? []
-  const likesMap   = new Map<string, number>()
+  const likesData = mostLikedRes.data ?? []
+  const likesMap = new Map<string, number>()
 
   likesData.forEach((like: any) => {
     const title =
-      (Array.isArray(like.products) ? like.products[0]?.title : like.products?.title) ?? 'Unknown'
+      (Array.isArray(like.products) ? like.products[0]?.title : like.products?.title) ??
+      'Unknown'
     likesMap.set(title, (likesMap.get(title) ?? 0) + 1)
   })
 
@@ -211,52 +254,74 @@ async function getAnalyticsData() {
   // ── Sales ─────────────────────────────────────────────────────────
   const sales = salesRes.data ?? []
 
-  const totalSalesCount   = sales.length
-  const totalSalesRevenue = sales.reduce((sum, s) => sum + (Number(s.selling_price_egp) || 0), 0)
-  const totalSalesProfit  = sales.reduce((sum, s) => sum + (Number(s.profit_egp)        || 0), 0)
-  const totalSalesCost    = sales.reduce((sum, s) => sum + (Number(s.cost_egp)          || 0), 0)
-  const avgProfitMargin   =
+  const totalSalesCount = sales.length
+  const totalSalesRevenue = sales.reduce(
+    (sum, s) => sum + (Number(s.selling_price_egp) || 0),
+    0
+  )
+  const totalSalesProfit = sales.reduce(
+    (sum, s) => sum + (Number(s.profit_egp) || 0),
+    0
+  )
+  const totalSalesCost = sales.reduce(
+    (sum, s) => sum + (Number(s.cost_egp) || 0),
+    0
+  )
+  const avgProfitMargin =
     totalSalesCount > 0
-      ? sales.reduce((sum, s) => sum + (Number(s.profit_margin_pct) || 0), 0) / totalSalesCount
+      ? sales.reduce((sum, s) => sum + (Number(s.profit_margin_pct) || 0), 0) /
+        totalSalesCount
       : 0
 
   const channelMap = new Map<string, { count: number; revenue: number; profit: number }>()
   sales.forEach((s) => {
-    const ch       = s.sale_channel ?? 'unknown'
+    const ch = s.sale_channel ?? 'unknown'
     const existing = channelMap.get(ch) ?? { count: 0, revenue: 0, profit: 0 }
-    existing.count   += 1
+    existing.count += 1
     existing.revenue += Number(s.selling_price_egp) || 0
-    existing.profit  += Number(s.profit_egp)        || 0
+    existing.profit += Number(s.profit_egp) || 0
     channelMap.set(ch, existing)
   })
-  const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({ channel, ...val }))
+  const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({
+    channel,
+    ...val,
+  }))
 
   const salesTimeMap = new Map<string, { revenue: number; profit: number; count: number }>()
   ;(salesTimeRes.data ?? []).forEach((s) => {
-    const date     = new Date(s.sale_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+    const date = s.sale_date
+      ? new Date(s.sale_date).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+        })
+      : 'Unknown'
+
     const existing = salesTimeMap.get(date) ?? { revenue: 0, profit: 0, count: 0 }
     existing.revenue += Number(s.selling_price_egp) || 0
-    existing.profit  += Number(s.profit_egp)        || 0
-    existing.count   += 1
+    existing.profit += Number(s.profit_egp) || 0
+    existing.count += 1
     salesTimeMap.set(date, existing)
   })
-  const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({ date, ...val }))
+  const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({
+    date,
+    ...val,
+  }))
 
   const recentSales = sales.slice(0, 10).map((s) => ({
-    id:                String(s.id),
-    product_name:      s.product_name             ?? 'Unknown',
+    id: String(s.id),
+    product_name: s.product_name ?? 'Unknown',
     selling_price_egp: Number(s.selling_price_egp) || 0,
-    profit_egp:        Number(s.profit_egp)        || 0,
+    profit_egp: Number(s.profit_egp) || 0,
     profit_margin_pct: Number(s.profit_margin_pct) || 0,
-    sale_channel:      s.sale_channel              ?? 'other',
-    sale_date:         s.sale_date                 ?? '',
-    cost_egp:          Number(s.cost_egp)          || 0,
-    commission_egp:    Number(s.commission_egp)    || 0,
-    original_eur:      Number(s.original_eur)      || 0,
-    shipping_eur:      Number(s.shipping_eur)      || 0,
-    exchange_rate:     Number(s.exchange_rate)     || 0,
-    notes:             s.notes                     ?? undefined,
-    discount_code:     s.discount_code             ?? null,
+    sale_channel: s.sale_channel ?? 'other',
+    sale_date: s.sale_date ?? '',
+    cost_egp: Number(s.cost_egp) || 0,
+    commission_egp: Number(s.commission_egp) || 0,
+    original_eur: Number(s.original_eur) || 0,
+    shipping_eur: Number(s.shipping_eur) || 0,
+    exchange_rate: Number(s.exchange_rate) || 0,
+    notes: s.notes ?? undefined,
+    discount_code: s.discount_code ?? null,
   }))
 
   return {
@@ -273,7 +338,7 @@ async function getAnalyticsData() {
     pendingReservations,
     confirmedReservations,
     cancelledReservations,
-    discountCodes:       discountCodesRes.data ?? [],
+    discountCodes: discountCodesRes.data ?? [],
     topReservedProducts,
     byCategory,
     byBrand,
@@ -289,7 +354,7 @@ async function getAnalyticsData() {
     salesByChannel,
     salesOverTime,
     recentSales,
-    ...ga4Data,
+    ...(ga4Data ?? {}),
   }
 }
 
@@ -300,7 +365,6 @@ export default async function AnalyticsPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-10">
-
         <div className="flex items-center justify-between mb-10">
           <div>
             <h1 className="text-3xl font-black text-white">📊 Analytics</h1>
@@ -312,7 +376,6 @@ export default async function AnalyticsPage() {
         </div>
 
         <AnalyticsClient data={data} />
-
       </div>
     </div>
   )
