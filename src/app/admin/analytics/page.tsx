@@ -30,7 +30,7 @@ async function getAnalyticsData() {
     reservationsRes,
     discountCodesRes,
     likesRes,
-    mostLikedRes,
+    rawLikesRes,
     reservationsTimeRes,
     productsTimeRes,
     salesRes,
@@ -61,7 +61,7 @@ async function getAnalyticsData() {
 
     supabase
       .from('product_likes')
-      .select('product_id, products(title)')
+      .select('product_id')
       .limit(500),
 
     supabase
@@ -93,7 +93,7 @@ async function getAnalyticsData() {
     reservationsRes.error,
     discountCodesRes.error,
     likesRes.error,
-    mostLikedRes.error,
+    rawLikesRes.error,
     reservationsTimeRes.error,
     productsTimeRes.error,
     salesRes.error,
@@ -131,7 +131,9 @@ async function getAnalyticsData() {
 
   const categoryMap = new Map<string, number>()
   products.forEach((p) => {
-    if (p.category) categoryMap.set(p.category, (categoryMap.get(p.category) ?? 0) + 1)
+    if (p.category) {
+      categoryMap.set(p.category, (categoryMap.get(p.category) ?? 0) + 1)
+    }
   })
   const byCategory = [...categoryMap.entries()]
     .map(([category, count]) => ({ category, count }))
@@ -140,7 +142,9 @@ async function getAnalyticsData() {
 
   const brandMap = new Map<string, number>()
   products.forEach((p) => {
-    if (p.brand) brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
+    if (p.brand) {
+      brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
+    }
   })
   const byBrand = [...brandMap.entries()]
     .map(([brand, count]) => ({ brand, count }))
@@ -178,15 +182,19 @@ async function getAnalyticsData() {
   reservations.forEach((r) => {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
     if (!product) return
+
     const existing = productReservationMap.get(product.id) ?? {
       title: product.title,
       reservations: 0,
       revenue: 0,
     }
+
     existing.reservations += 1
+
     if (r.status === 'confirmed') {
       existing.revenue += r.discounted_price ?? product.price_egp ?? 0
     }
+
     productReservationMap.set(product.id, existing)
   })
 
@@ -203,12 +211,15 @@ async function getAnalyticsData() {
       day: '2-digit',
       month: 'short',
     })
+
     const existing = timeMap.get(date) ?? { reservations: 0, revenue: 0 }
     existing.reservations += 1
+
     if (r.status === 'confirmed') {
       const product = Array.isArray(r.product) ? r.product[0] : r.product
       existing.revenue += r.discounted_price ?? product?.price_egp ?? 0
     }
+
     timeMap.set(date, existing)
   })
 
@@ -236,13 +247,34 @@ async function getAnalyticsData() {
 
   // ── Likes ─────────────────────────────────────────────────────────
   const totalLikes = likesRes.count ?? 0
-  const likesData = mostLikedRes.data ?? []
+  const rawLikes = rawLikesRes.data ?? []
+
+  const likedProductIds = [
+    ...new Set(rawLikes.map((like: any) => like.product_id).filter(Boolean)),
+  ]
+
+  let likedProductsMap = new Map<number, string>()
+
+  if (likedProductIds.length > 0) {
+    const { data: likedProducts, error: likedProductsError } = await supabase
+      .from('products')
+      .select('id, title')
+      .in('id', likedProductIds)
+
+    if (likedProductsError) {
+      console.error('Liked products fetch error:', likedProductsError)
+      throw new Error(likedProductsError.message)
+    }
+
+    likedProductsMap = new Map(
+      (likedProducts ?? []).map((product) => [product.id, product.title ?? 'Unknown'])
+    )
+  }
+
   const likesMap = new Map<string, number>()
 
-  likesData.forEach((like: any) => {
-    const title =
-      (Array.isArray(like.products) ? like.products[0]?.title : like.products?.title) ??
-      'Unknown'
+  rawLikes.forEach((like: any) => {
+    const title = likedProductsMap.get(like.product_id) ?? 'Unknown'
     likesMap.set(title, (likesMap.get(title) ?? 0) + 1)
   })
 
@@ -267,6 +299,7 @@ async function getAnalyticsData() {
     (sum, s) => sum + (Number(s.cost_egp) || 0),
     0
   )
+
   const avgProfitMargin =
     totalSalesCount > 0
       ? sales.reduce((sum, s) => sum + (Number(s.profit_margin_pct) || 0), 0) /
@@ -282,6 +315,7 @@ async function getAnalyticsData() {
     existing.profit += Number(s.profit_egp) || 0
     channelMap.set(ch, existing)
   })
+
   const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({
     channel,
     ...val,
@@ -302,6 +336,7 @@ async function getAnalyticsData() {
     existing.count += 1
     salesTimeMap.set(date, existing)
   })
+
   const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({
     date,
     ...val,
@@ -370,6 +405,7 @@ export default async function AnalyticsPage() {
             <h1 className="text-3xl font-black text-white">📊 Analytics</h1>
             <p className="text-zinc-500 text-sm mt-1">Real-time insights from your store</p>
           </div>
+
           <Link href="/admin" className="text-zinc-400 hover:text-white text-sm transition">
             ← Back to Admin
           </Link>
