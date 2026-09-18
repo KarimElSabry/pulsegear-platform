@@ -1,3 +1,5 @@
+// src/app/admin/analytics/page.tsx
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -12,6 +14,11 @@ async function checkAuth() {
   const cookieStore = await cookies()
   const token = cookieStore.get('admin_token')?.value
   if (token !== process.env.ADMIN_SECRET) redirect('/admin-login')
+}
+
+function safeDiv(numerator: number, denominator: number) {
+  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator <= 0) return 0
+  return numerator / denominator
 }
 
 async function getAnalyticsData() {
@@ -182,9 +189,15 @@ async function getAnalyticsData() {
   let likedProductsMap = new Map<number, string>()
 
   if (likedProductIds.length > 0) {
-    const likedProductsRes = await supabase.from('products').select('id, title').in('id', likedProductIds)
+    const likedProductsRes = await supabase
+      .from('products')
+      .select('id, title')
+      .in('id', likedProductIds)
+
     const likedProducts = safe(likedProductsRes, [])
-    likedProductsMap = new Map((likedProducts ?? []).map((product: any) => [product.id, product.title ?? 'Unknown']))
+    likedProductsMap = new Map(
+      (likedProducts ?? []).map((product: any) => [product.id, product.title ?? 'Unknown'])
+    )
   }
 
   const likesMap = new Map<string, number>()
@@ -198,12 +211,39 @@ async function getAnalyticsData() {
     .slice(0, 10)
 
   const totalSalesCount = sales.length
-  const totalSalesRevenue = sales.reduce((sum: number, s: any) => sum + (Number(s.selling_price_egp) || 0), 0)
-  const totalSalesProfit = sales.reduce((sum: number, s: any) => sum + (Number(s.profit_egp) || 0), 0)
-  const totalSalesCost = sales.reduce((sum: number, s: any) => sum + (Number(s.cost_egp) || 0), 0)
+  const totalSalesRevenue = sales.reduce(
+    (sum: number, s: any) => sum + (Number(s.selling_price_egp) || 0),
+    0
+  )
+  const totalSalesProfit = sales.reduce(
+    (sum: number, s: any) => sum + (Number(s.profit_egp) || 0),
+    0
+  )
+  const totalSalesCost = sales.reduce(
+    (sum: number, s: any) => sum + (Number(s.cost_egp) || 0),
+    0
+  )
+
+  const totalSalesRevenueEur = sales.reduce(
+    (sum: number, s: any) =>
+      sum + safeDiv(Number(s.selling_price_egp) || 0, Number(s.exchange_rate) || 0),
+    0
+  )
+  const totalSalesProfitEur = sales.reduce(
+    (sum: number, s: any) =>
+      sum + safeDiv(Number(s.profit_egp) || 0, Number(s.exchange_rate) || 0),
+    0
+  )
+  const totalSalesCostEur = sales.reduce(
+    (sum: number, s: any) =>
+      sum + safeDiv(Number(s.cost_egp) || 0, Number(s.exchange_rate) || 0),
+    0
+  )
+
   const avgProfitMargin =
     totalSalesCount > 0
-      ? sales.reduce((sum: number, s: any) => sum + (Number(s.profit_margin_pct) || 0), 0) / totalSalesCount
+      ? sales.reduce((sum: number, s: any) => sum + (Number(s.profit_margin_pct) || 0), 0) /
+        totalSalesCount
       : 0
 
   const channelMap = new Map<string, { count: number; revenue: number; profit: number }>()
@@ -230,22 +270,32 @@ async function getAnalyticsData() {
   })
   const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
-  const recentSales = sales.slice(0, 10).map((s: any) => ({
-    id: String(s.id),
-    product_name: s.product_name ?? 'Unknown',
-    selling_price_egp: Number(s.selling_price_egp) || 0,
-    profit_egp: Number(s.profit_egp) || 0,
-    profit_margin_pct: Number(s.profit_margin_pct) || 0,
-    sale_channel: s.sale_channel ?? 'other',
-    sale_date: s.sale_date ?? '',
-    cost_egp: Number(s.cost_egp) || 0,
-    commission_egp: Number(s.commission_egp) || 0,
-    original_eur: Number(s.original_eur) || 0,
-    shipping_eur: Number(s.shipping_eur) || 0,
-    exchange_rate: Number(s.exchange_rate) || 0,
-    notes: s.notes ?? undefined,
-    discount_code: s.discount_code ?? null,
-  }))
+  const recentSales = sales.slice(0, 10).map((s: any) => {
+    const exchangeRate = Number(s.exchange_rate) || 0
+    const sellingPriceEgp = Number(s.selling_price_egp) || 0
+    const profitEgp = Number(s.profit_egp) || 0
+    const costEgp = Number(s.cost_egp) || 0
+
+    return {
+      id: String(s.id),
+      product_name: s.product_name ?? 'Unknown',
+      selling_price_egp: sellingPriceEgp,
+      selling_price_eur: safeDiv(sellingPriceEgp, exchangeRate),
+      profit_egp: profitEgp,
+      profit_eur: safeDiv(profitEgp, exchangeRate),
+      profit_margin_pct: Number(s.profit_margin_pct) || 0,
+      sale_channel: s.sale_channel ?? 'other',
+      sale_date: s.sale_date ?? '',
+      cost_egp: costEgp,
+      cost_eur: safeDiv(costEgp, exchangeRate),
+      commission_egp: Number(s.commission_egp) || 0,
+      original_eur: Number(s.original_eur) || 0,
+      shipping_eur: Number(s.shipping_eur) || 0,
+      exchange_rate: exchangeRate,
+      notes: s.notes ?? undefined,
+      discount_code: s.discount_code ?? null,
+    }
+  })
 
   return {
     totalProducts,
@@ -271,8 +321,11 @@ async function getAnalyticsData() {
     mostLikedProducts,
     totalSalesCount,
     totalSalesRevenue,
+    totalSalesRevenueEur,
     totalSalesProfit,
+    totalSalesProfitEur,
     totalSalesCost,
+    totalSalesCostEur,
     avgProfitMargin,
     salesByChannel,
     salesOverTime,

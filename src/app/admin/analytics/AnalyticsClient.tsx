@@ -1,7 +1,8 @@
 // src/app/admin/analytics/AnalyticsClient.tsx
+
 'use client'
 
-import { formatEGP } from '@/lib/format'
+import { formatEGP, formatEUR } from '@/lib/format'
 import { useRouter } from 'next/navigation'
 import { useRef, useState, useTransition, useEffect } from 'react'
 import { addSale, updateSale, deleteSale } from '../sales/actions'
@@ -55,8 +56,11 @@ interface AnalyticsData {
   mostLikedProducts: { title: string; likes: number }[]
   totalSalesCount: number
   totalSalesRevenue: number
+  totalSalesRevenueEur: number
   totalSalesProfit: number
+  totalSalesProfitEur: number
   totalSalesCost: number
+  totalSalesCostEur: number
   avgProfitMargin: number
   salesByChannel: {
     channel: string
@@ -74,11 +78,14 @@ interface AnalyticsData {
     id: string
     product_name: string
     selling_price_egp: number
+    selling_price_eur: number
     profit_egp: number
+    profit_eur: number
     profit_margin_pct: number
     sale_channel: string
     sale_date: string
     cost_egp: number
+    cost_eur: number
     commission_egp: number
     original_eur: number
     shipping_eur: number
@@ -356,38 +363,6 @@ function ManualSaleForm({
                 />
                 <span className="text-gray-400 text-sm whitespace-nowrap">EGP / EUR</span>
               </div>
-              {!isEditing && (
-                <p className="text-xs text-gray-500">
-                  Check on{' '}
-                  <a
-                    href="https://www.google.com/search?q=EUR+to+EGP"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-purple-400 underline"
-                  >
-                    Google
-                  </a>
-                </p>
-              )}
-            </div>
-          )}
-
-          {isEditing && (
-            <div className="flex items-center gap-3 bg-gray-800/60 rounded-xl px-4 py-3">
-              <span className="text-xs text-gray-400">
-                Rate used in original sale:
-                <strong className="text-white ml-1">{editSale?.exchange_rate} EGP</strong>
-              </span>
-              <button
-                type="button"
-                onClick={async () => {
-                  await fetchRate()
-                  if (eurRate) setManualRate(eurRate.toFixed(2))
-                }}
-                className="ml-auto text-xs text-purple-400 bg-gray-700 hover:bg-gray-600 px-3 py-1 rounded-full transition"
-              >
-                🔄 Use Live Rate
-              </button>
             </div>
           )}
 
@@ -404,11 +379,6 @@ function ManualSaleForm({
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
               placeholder="e.g. 49.99"
             />
-            {effectiveRate && originalEur && (
-              <p className="text-xs text-purple-400 mt-1">
-                ≈ {(parseFloat(originalEur) * effectiveRate).toFixed(0)} EGP
-              </p>
-            )}
           </div>
 
           <div className="space-y-1">
@@ -425,19 +395,7 @@ function ManualSaleForm({
                 className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
               />
               <span className="text-gray-400 text-sm">EUR</span>
-              <button
-                type="button"
-                onClick={() => setShippingEur(String(DEFAULT_SHIPPING_EUR))}
-                className="text-xs text-purple-400 bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-xl transition whitespace-nowrap"
-              >
-                Reset to {DEFAULT_SHIPPING_EUR}€
-              </button>
             </div>
-            {effectiveRate && shippingEur && (
-              <p className="text-xs text-gray-500 mt-1">
-                📦 ≈ {(parseFloat(shippingEur) * effectiveRate).toFixed(0)} EGP
-              </p>
-            )}
           </div>
 
           <div className="space-y-1">
@@ -472,73 +430,8 @@ function ManualSaleForm({
                 placeholder="0"
               />
               <span className="text-gray-300 text-base font-semibold">% of selling price</span>
-              {commissionAmt > 0 && (
-                <span className="ml-auto text-pink-400 font-bold text-sm">
-                  = {Math.round(commissionAmt).toLocaleString()} EGP
-                </span>
-              )}
             </div>
           </div>
-
-          {costEgp !== null && sellingEgp && (
-            <div className="bg-gray-800 rounded-xl px-5 py-4 space-y-2 text-sm border border-zinc-700">
-              <div className="flex justify-between text-gray-400">
-                <span>🛒 Product price</span>
-                <span>{parseFloat(originalEur).toFixed(2)} EUR</span>
-              </div>
-              <div className="flex justify-between text-gray-400">
-                <span>📦 Shipping</span>
-                <span>+ {parseFloat(shippingEur || '0').toFixed(2)} EUR</span>
-              </div>
-              <div className="flex justify-between text-gray-400 border-t border-gray-700 pt-2">
-                <span>💸 Total cost (× {effectiveRate?.toFixed(2)})</span>
-                <span className="text-white font-semibold">
-                  − {Math.round(costEgp).toLocaleString()} EGP
-                </span>
-              </div>
-              <div className="flex justify-between text-gray-400">
-                <span>🏷️ Selling price</span>
-                <span className="text-white font-semibold">
-                  {parseFloat(sellingEgp).toLocaleString()} EGP
-                </span>
-              </div>
-              {commissionAmt > 0 && (
-                <div className="flex justify-between text-pink-400">
-                  <span>🤝 Commission ({commissionPct}%)</span>
-                  <span>− {Math.round(commissionAmt).toLocaleString()} EGP</span>
-                </div>
-              )}
-              <div
-                className={`flex justify-between items-center font-black text-lg border-t-2 pt-3 mt-1 ${
-                  profitEgp !== null && profitEgp >= 0
-                    ? 'border-green-500 text-green-400'
-                    : 'border-red-500 text-red-400'
-                }`}
-              >
-                <span>
-                  {profitEgp !== null && profitEgp >= 0 ? '✅ Final Profit' : '❌ Net Loss'}
-                </span>
-                <span className="text-2xl">
-                  {profitEgp !== null ? `${Math.round(profitEgp).toLocaleString()} EGP` : '—'}
-                </span>
-              </div>
-              {profitMarginPct !== null && (
-                <div className="flex justify-end pt-1">
-                  <span
-                    className={`text-xs font-bold px-3 py-1 rounded-full ${
-                      profitMarginPct >= 20
-                        ? 'bg-green-500/20 text-green-400'
-                        : profitMarginPct >= 10
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-red-500/20 text-red-400'
-                    }`}
-                  >
-                    Margin: {profitMarginPct.toFixed(1)}%
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <input type="hidden" name="selling_price_egp" value={sellingEgp || '0'} />
@@ -581,6 +474,7 @@ function ManualSaleForm({
               <option value="other">📦 Other</option>
             </select>
           </div>
+
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
               Sale Date <span className="text-purple-400">*</span>
@@ -740,28 +634,28 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
           <StatCard
             title="Sales Revenue"
             value={formatEGP(data.totalSalesRevenue)}
-            subtitle="Total selling price"
+            subtitle={formatEUR(data.totalSalesRevenueEur)}
             icon="💵"
             color="green"
           />
           <StatCard
             title="Total Profit"
             value={formatEGP(data.totalSalesProfit)}
-            subtitle="Revenue minus cost"
+            subtitle={formatEUR(data.totalSalesProfitEur)}
             icon="📈"
             color="blue"
           />
           <StatCard
             title="Total Cost"
             value={formatEGP(data.totalSalesCost)}
-            subtitle="Purchase + shipping"
+            subtitle={formatEUR(data.totalSalesCostEur)}
             icon="🧾"
             color="yellow"
           />
           <StatCard
             title="Avg Margin"
             value={`${data.avgProfitMargin.toFixed(1)}%`}
-            subtitle="Average profit margin"
+            subtitle="Based on saved historical FX rate"
             icon="📊"
             color="pink"
           />
@@ -1094,6 +988,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-right py-3 pr-4">Cost</th>
                   <th className="text-right py-3 pr-4">Revenue</th>
                   <th className="text-right py-3 pr-4">Profit</th>
+                  <th className="text-right py-3 pr-4">Rate</th>
                   <th className="text-right py-3 pr-4">Margin</th>
                   <th className="text-right py-3 pr-4">Code</th>
                   <th className="text-right py-3 pr-4">Edit</th>
@@ -1123,13 +1018,30 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         {s.sale_channel}
                       </span>
                     </td>
-                    <td className="py-3 pr-4 text-right text-zinc-400">{formatEGP(s.cost_egp)}</td>
+
+                    <td className="py-3 pr-4 text-right text-zinc-400">
+                      <div>{formatEGP(s.cost_egp)}</div>
+                      <div className="text-xs text-zinc-500">{formatEUR(s.cost_eur)}</div>
+                    </td>
+
                     <td className="py-3 pr-4 text-right text-green-400 font-bold">
-                      {formatEGP(s.selling_price_egp)}
+                      <div>{formatEGP(s.selling_price_egp)}</div>
+                      <div className="text-xs text-zinc-500 font-normal">
+                        {formatEUR(s.selling_price_eur)}
+                      </div>
                     </td>
+
                     <td className="py-3 pr-4 text-right text-blue-400 font-bold">
-                      {formatEGP(s.profit_egp)}
+                      <div>{formatEGP(s.profit_egp)}</div>
+                      <div className="text-xs text-zinc-500 font-normal">
+                        {formatEUR(s.profit_eur)}
+                      </div>
                     </td>
+
+                    <td className="py-3 pr-4 text-right text-zinc-400">
+                      {s.exchange_rate > 0 ? `${s.exchange_rate.toFixed(2)} EGP/EUR` : '—'}
+                    </td>
+
                     <td className="py-3 pr-4 text-right">
                       <span
                         className={`text-xs font-bold px-2 py-1 rounded-full ${
@@ -1143,6 +1055,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         {s.profit_margin_pct.toFixed(1)}%
                       </span>
                     </td>
+
                     <td className="py-3 pr-4 text-right">
                       {s.discount_code ? (
                         <span className="text-xs font-bold bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full font-mono">
@@ -1152,6 +1065,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         <span className="text-zinc-600 text-xs">—</span>
                       )}
                     </td>
+
                     <td className="py-3 pr-4 text-right">
                       <button
                         onClick={() => setEditingSale(s)}
@@ -1161,6 +1075,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                         ✏️
                       </button>
                     </td>
+
                     <td className="py-3 text-right">
                       <button
                         onClick={() => handleDelete(s.id, s.product_name)}
