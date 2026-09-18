@@ -1,3 +1,5 @@
+//src/app/admin/deals/actions.ts
+
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -233,15 +235,13 @@ export async function updateDealStatus(
     throw new Error(fetchError?.message ?? 'Deal not found')
   }
 
-  const { data: updatedDeal, error: updateError } = await supabase
+  const { error: updateError } = await supabase
     .from('deals')
     .update({
       status,
       ...extra,
     })
     .eq('id', id)
-    .select('id, status, cancellation_reason, remaining_paid_at')
-    .single()
 
   if (updateError) {
     console.error('updateDealStatus error:', updateError)
@@ -283,25 +283,42 @@ export async function updateDealStatus(
 async function syncDealToSales(dealId: string) {
   const { data: deal, error: dealError } = await supabase
     .from('deals')
-    .select(`
-      *,
-      product_request:product_requests(
-        id,
-        requested_product,
-        customer_name
-      )
-    `)
+    .select('*')
     .eq('id', dealId)
     .single()
 
   if (dealError || !deal) {
-    console.error('syncDealToSales: could not fetch deal', { dealId, dealError })
+    console.error('syncDealToSales: could not fetch deal', {
+      dealId,
+      dealError,
+    })
     throw new Error(dealError?.message ?? 'Deal not found')
   }
 
-  const request = Array.isArray(deal.product_request)
-    ? deal.product_request[0]
-    : deal.product_request
+  let request: {
+    id: number
+    requested_product: string | null
+    customer_name: string | null
+  } | null = null
+
+  if (deal.product_request_id) {
+    const { data: requestData, error: requestError } = await supabase
+      .from('product_requests')
+      .select('id, requested_product, customer_name')
+      .eq('id', deal.product_request_id)
+      .maybeSingle()
+
+    if (requestError) {
+      console.error('syncDealToSales: could not fetch product request', {
+        dealId,
+        product_request_id: deal.product_request_id,
+        requestError,
+      })
+      throw new Error(requestError.message)
+    }
+
+    request = requestData
+  }
 
   const productName =
     request?.requested_product?.trim() ||
@@ -365,6 +382,12 @@ async function syncDealToSales(dealId: string) {
       throw new Error(updateSaleError.message)
     }
 
+    console.log('syncDealToSales: existing sale updated', {
+      dealId,
+      saleId: existingSale.id,
+      productName,
+    })
+
     return
   }
 
@@ -378,6 +401,11 @@ async function syncDealToSales(dealId: string) {
     })
     throw new Error(insertError.message)
   }
+
+  console.log('syncDealToSales: sale created', {
+    dealId,
+    productName,
+  })
 }
 
 async function syncExistingSaleFromDeal(dealId: string) {
@@ -413,10 +441,14 @@ export async function deleteDeal(id: string) {
   }
 
   const { error: saleDeleteError } = await supabase.from('sales').delete().eq('deal_id', id)
-  if (saleDeleteError) throw new Error(saleDeleteError.message)
+  if (saleDeleteError) {
+    throw new Error(saleDeleteError.message)
+  }
 
   const { error: dealDeleteError } = await supabase.from('deals').delete().eq('id', id)
-  if (dealDeleteError) throw new Error(dealDeleteError.message)
+  if (dealDeleteError) {
+    throw new Error(dealDeleteError.message)
+  }
 
   if (deal?.product_request_id) {
     const { error: requestResetError } = await supabase
