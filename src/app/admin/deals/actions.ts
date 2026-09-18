@@ -1,5 +1,3 @@
-// src/app/admin/deals/actions.ts
-
 'use server'
 
 import { createClient } from '@supabase/supabase-js'
@@ -28,6 +26,29 @@ function getInt(formData: FormData, key: string): number | null {
   if (!value || value.trim() === '') return null
   const number = parseInt(value, 10)
   return Number.isNaN(number) ? null : number
+}
+
+function safeNumber(value: unknown, fallback = 0): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
+function safeDateOnly(value: unknown): string {
+  if (typeof value === 'string' && value.includes('T')) return value.split('T')[0]
+  if (typeof value === 'string' && value.trim()) return value
+  return new Date().toISOString().split('T')[0]
+}
+
+function revalidateDealPathsSafely() {
+  const paths = ['/admin/deals', '/admin/requests', '/admin/sales', '/admin/analytics']
+
+  for (const path of paths) {
+    try {
+      revalidatePath(path)
+    } catch (err) {
+      console.error(`revalidatePath failed for ${path}:`, err)
+    }
+  }
 }
 
 export async function getDeals() {
@@ -141,7 +162,7 @@ export async function createDeal(formData: FormData) {
     }
   }
 
-  revalidateDealPaths()
+  revalidateDealPathsSafely()
 }
 
 export async function updateDeal(id: string, formData: FormData) {
@@ -185,7 +206,7 @@ export async function updateDeal(id: string, formData: FormData) {
   }
 
   await syncExistingSaleFromDeal(id)
-  revalidateDealPaths()
+  revalidateDealPathsSafely()
 }
 
 export async function updateDealStatus(
@@ -195,29 +216,12 @@ export async function updateDealStatus(
 ) {
   const extra: Record<string, string | null> = {}
 
-  if (status === 'deposit_paid') {
-    extra.deposit_paid_at = new Date().toISOString()
-  }
-
-  if (status === 'shipping') {
-    extra.shipped_at = new Date().toISOString()
-  }
-
-  if (status === 'arrived_egypt') {
-    extra.arrived_egypt_at = new Date().toISOString()
-  }
-
-  if (status === 'delivered') {
-    extra.delivered_at = new Date().toISOString()
-  }
-
-  if (status === 'completed') {
-    extra.remaining_paid_at = new Date().toISOString()
-  }
-
-  if (status === 'cancelled') {
-    extra.cancellation_reason = cancellationReason?.trim() || null
-  }
+  if (status === 'deposit_paid') extra.deposit_paid_at = new Date().toISOString()
+  if (status === 'shipping') extra.shipped_at = new Date().toISOString()
+  if (status === 'arrived_egypt') extra.arrived_egypt_at = new Date().toISOString()
+  if (status === 'delivered') extra.delivered_at = new Date().toISOString()
+  if (status === 'completed') extra.remaining_paid_at = new Date().toISOString()
+  if (status === 'cancelled') extra.cancellation_reason = cancellationReason?.trim() || null
 
   const { data: deal, error: fetchError } = await supabase
     .from('deals')
@@ -236,15 +240,13 @@ export async function updateDealStatus(
       ...extra,
     })
     .eq('id', id)
-    .select('id, status, cancellation_reason')
+    .select('id, status, cancellation_reason, remaining_paid_at')
     .single()
 
   if (updateError) {
     console.error('updateDealStatus error:', updateError)
     throw new Error(updateError.message)
   }
-
-  console.log('Deal status updated:', updatedDeal)
 
   if (deal.product_request_id) {
     let requestStatus: string | null = null
@@ -266,15 +268,16 @@ export async function updateDealStatus(
   }
 
   if (status === 'completed') {
-    try {
-      await syncDealToSales(id)
-    } catch (err) {
-      console.error('syncDealToSales failed:', err)
-      throw err
-    }
+    await syncDealToSales(id)
   }
 
-  revalidateDealPaths()
+  revalidateDealPathsSafely()
+
+  return {
+    ok: true,
+    id,
+    status,
+  }
 }
 
 async function syncDealToSales(dealId: string) {
@@ -292,10 +295,7 @@ async function syncDealToSales(dealId: string) {
     .single()
 
   if (dealError || !deal) {
-    console.error('syncDealToSales: could not fetch deal', {
-      dealId,
-      error: dealError,
-    })
+    console.error('syncDealToSales: could not fetch deal', { dealId, dealError })
     throw new Error(dealError?.message ?? 'Deal not found')
   }
 
@@ -310,14 +310,14 @@ async function syncDealToSales(dealId: string) {
     deal.notes?.trim() ||
     `Deal ${dealId}`
 
-  const sourceEur = Number(deal.source_price_eur ?? 0)
-  const shippingEur = Number(deal.shipping_eur ?? 0)
-  const exchangeRate = Number(deal.exchange_rate ?? 0)
-  const sellingPrice = Number(deal.selling_price_egp ?? 0)
-  const commission = Number(deal.commission_egp ?? 0)
+  const sourceEur = safeNumber(deal.source_price_eur, 0)
+  const shippingEur = safeNumber(deal.shipping_eur, 0)
+  const exchangeRate = safeNumber(deal.exchange_rate, 0)
+  const sellingPrice = safeNumber(deal.selling_price_egp, 0)
+  const commission = safeNumber(deal.commission_egp, 0)
 
-  const costEgp = (sourceEur + shippingEur) * exchangeRate
-  const profitEgp = sellingPrice - costEgp - commission
+  const costEgp = Number(((sourceEur + shippingEur) * exchangeRate).toFixed(2))
+  const profitEgp = Number((sellingPrice - costEgp - commission).toFixed(2))
   const profitMarginPct =
     sellingPrice > 0 ? Number(((profitEgp / sellingPrice) * 100).toFixed(2)) : 0
 
@@ -343,11 +343,9 @@ async function syncDealToSales(dealId: string) {
     profit_egp: profitEgp,
     profit_margin_pct: profitMarginPct,
     commission_egp: commission,
-    sale_channel: deal.sale_channel ?? 'whatsapp',
-    sale_date: deal.remaining_paid_at
-      ? deal.remaining_paid_at.split('T')[0]
-      : new Date().toISOString().split('T')[0],
-    source_platform: deal.source_platform ?? null,
+    sale_channel: deal.sale_channel ?? 'other',
+    sale_date: safeDateOnly(deal.remaining_paid_at),
+    source_platform: deal.source_platform ?? 'Other',
     source_url: deal.source_link ?? null,
     notes: deal.notes ?? null,
     discount_code: null,
@@ -360,15 +358,12 @@ async function syncDealToSales(dealId: string) {
       .eq('id', existingSale.id)
 
     if (updateSaleError) {
-      console.error('syncDealToSales: failed updating existing sale:', updateSaleError)
+      console.error('syncDealToSales: failed updating existing sale:', {
+        updateSaleError,
+        salePayload,
+      })
       throw new Error(updateSaleError.message)
     }
-
-    console.log('syncDealToSales: existing sale updated', {
-      dealId,
-      saleId: existingSale.id,
-      productName,
-    })
 
     return
   }
@@ -378,16 +373,11 @@ async function syncDealToSales(dealId: string) {
   if (insertError) {
     console.error('syncDealToSales: insert failed', {
       dealId,
-      productName,
+      salePayload,
       insertError,
     })
     throw new Error(insertError.message)
   }
-
-  console.log('syncDealToSales: sale created', {
-    dealId,
-    productName,
-  })
 }
 
 async function syncExistingSaleFromDeal(dealId: string) {
@@ -423,16 +413,10 @@ export async function deleteDeal(id: string) {
   }
 
   const { error: saleDeleteError } = await supabase.from('sales').delete().eq('deal_id', id)
-
-  if (saleDeleteError) {
-    throw new Error(saleDeleteError.message)
-  }
+  if (saleDeleteError) throw new Error(saleDeleteError.message)
 
   const { error: dealDeleteError } = await supabase.from('deals').delete().eq('id', id)
-
-  if (dealDeleteError) {
-    throw new Error(dealDeleteError.message)
-  }
+  if (dealDeleteError) throw new Error(dealDeleteError.message)
 
   if (deal?.product_request_id) {
     const { error: requestResetError } = await supabase
@@ -445,12 +429,5 @@ export async function deleteDeal(id: string) {
     }
   }
 
-  revalidateDealPaths()
-}
-
-function revalidateDealPaths() {
-  revalidatePath('/admin/deals')
-  revalidatePath('/admin/requests')
-  revalidatePath('/admin/sales')
-  revalidatePath('/admin/analytics')
+  revalidateDealPathsSafely()
 }

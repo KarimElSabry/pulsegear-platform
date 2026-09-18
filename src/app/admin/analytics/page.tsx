@@ -1,5 +1,3 @@
-// src/app/admin/analytics/page.tsx
-
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -25,6 +23,14 @@ async function getAnalyticsData() {
 
   const thirtyDaysAgoDateOnly = thirtyDaysAgoDateTime.split('T')[0]
 
+  const safe = <T,>(res: { data: T | null; error: any }, fallback: T): T => {
+    if (res.error) {
+      console.error('Analytics query failed:', res.error)
+      return fallback
+    }
+    return (res.data ?? fallback) as T
+  }
+
   const [
     productsRes,
     reservationsRes,
@@ -37,10 +43,7 @@ async function getAnalyticsData() {
     salesTimeRes,
     ga4Data,
   ] = await Promise.all([
-    supabase
-      .from('products')
-      .select('id, status, price_egp, category, brand'),
-
+    supabase.from('products').select('id, title, status, price_egp, category, brand'),
     supabase
       .from('reservations')
       .select(`
@@ -49,91 +52,53 @@ async function getAnalyticsData() {
         product:products(id, title, price_egp)
       `)
       .order('created_at', { ascending: true }),
-
     supabase
       .from('discount_codes')
       .select('code, discount_percent, usage_count, is_active')
       .order('usage_count', { ascending: false }),
-
-    supabase
-      .from('product_likes')
-      .select('*', { count: 'exact', head: true }),
-
-    supabase
-      .from('product_likes')
-      .select('product_id')
-      .limit(500),
-
+    supabase.from('product_likes').select('*', { count: 'exact', head: true }),
+    supabase.from('product_likes').select('product_id').limit(500),
     supabase
       .from('reservations')
       .select('created_at, status, discounted_price, product:products(price_egp)')
       .gte('created_at', thirtyDaysAgoDateTime),
-
-    supabase
-      .from('products')
-      .select('created_at')
-      .gte('created_at', thirtyDaysAgoDateTime),
-
-    supabase
-      .from('sales')
-      .select('*')
-      .order('sale_date', { ascending: false }),
-
+    supabase.from('products').select('created_at').gte('created_at', thirtyDaysAgoDateTime),
+    supabase.from('sales').select('*').order('sale_date', { ascending: false }),
     supabase
       .from('sales')
       .select('sale_date, selling_price_egp, profit_egp')
       .gte('sale_date', thirtyDaysAgoDateOnly)
       .order('sale_date', { ascending: true }),
-
     getGA4Data(),
   ])
 
-  const criticalErrors = [
-    productsRes.error,
-    reservationsRes.error,
-    discountCodesRes.error,
-    likesRes.error,
-    rawLikesRes.error,
-    reservationsTimeRes.error,
-    productsTimeRes.error,
-    salesRes.error,
-    salesTimeRes.error,
-  ].filter(Boolean)
-
-  if (criticalErrors.length > 0) {
-    console.error(
-      'Analytics query errors:',
-      criticalErrors.map((e: any) => ({
-        message: e.message,
-        details: e.details,
-        hint: e.hint,
-        code: e.code,
-      }))
-    )
-    throw new Error(criticalErrors.map((e: any) => e.message).join(' | '))
-  }
-
-  // ── Products ──────────────────────────────────────────────────────
-  const products = productsRes.data ?? []
+  const products = safe(productsRes, [])
+  const reservations = safe(reservationsRes, [])
+  const discountCodes = safe(discountCodesRes, [])
+  const reservationsTimeData = safe(reservationsTimeRes, [])
+  const productsTimeData = safe(productsTimeRes, [])
+  const sales = safe(salesRes, [])
+  const salesTimeData = safe(salesTimeRes, [])
+  const rawLikes = safe(rawLikesRes, [])
+  const totalLikes = likesRes.error ? 0 : likesRes.count ?? 0
 
   const totalProducts = products.length
-  const availableProducts = products.filter((p) => p.status === 'available').length
-  const soldProducts = products.filter((p) => p.status === 'sold').length
-  const reservedProducts = products.filter((p) => p.status === 'reserved').length
-  const outOfStockProducts = products.filter((p) => p.status === 'out_of_stock').length
+  const availableProducts = products.filter((p: any) => p.status === 'available').length
+  const soldProducts = products.filter((p: any) => p.status === 'sold').length
+  const reservedProducts = products.filter((p: any) => p.status === 'reserved').length
+  const outOfStockProducts = products.filter((p: any) => p.status === 'out_of_stock').length
 
   const avgProductPrice =
     totalProducts > 0
       ? Math.round(
-          products.reduce((sum, p) => sum + (p.price_egp ?? 0), 0) / totalProducts
+          products.reduce((sum: number, p: any) => sum + (Number(p.price_egp) || 0), 0) /
+            totalProducts
         )
       : 0
 
   const categoryMap = new Map<string, number>()
-  products.forEach((p) => {
-    if (p.category) {
-      categoryMap.set(p.category, (categoryMap.get(p.category) ?? 0) + 1)
-    }
+  products.forEach((p: any) => {
+    if (p.category) categoryMap.set(p.category, (categoryMap.get(p.category) ?? 0) + 1)
   })
   const byCategory = [...categoryMap.entries()]
     .map(([category, count]) => ({ category, count }))
@@ -141,60 +106,47 @@ async function getAnalyticsData() {
     .slice(0, 10)
 
   const brandMap = new Map<string, number>()
-  products.forEach((p) => {
-    if (p.brand) {
-      brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
-    }
+  products.forEach((p: any) => {
+    if (p.brand) brandMap.set(p.brand, (brandMap.get(p.brand) ?? 0) + 1)
   })
   const byBrand = [...brandMap.entries()]
     .map(([brand, count]) => ({ brand, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
-  // ── Reservations ──────────────────────────────────────────────────
-  const reservations = reservationsRes.data ?? []
-
   const totalReservations = reservations.length
-  const pendingReservations = reservations.filter((r) => r.status === 'pending').length
-  const confirmedReservations = reservations.filter((r) => r.status === 'confirmed').length
-  const cancelledReservations = reservations.filter((r) => r.status === 'cancelled').length
+  const pendingReservations = reservations.filter((r: any) => r.status === 'pending').length
+  const confirmedReservations = reservations.filter((r: any) => r.status === 'confirmed').length
+  const cancelledReservations = reservations.filter((r: any) => r.status === 'cancelled').length
 
-  const confirmedRes = reservations.filter((r) => r.status === 'confirmed')
+  const confirmedRes = reservations.filter((r: any) => r.status === 'confirmed')
 
-  const totalRevenue = confirmedRes.reduce((sum, r) => {
+  const totalRevenue = confirmedRes.reduce((sum: number, r: any) => {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
-    return sum + (product?.price_egp ?? 0)
+    return sum + (Number(product?.price_egp) || 0)
   }, 0)
 
-  const discountedRevenue = confirmedRes.reduce((sum, r) => {
+  const discountedRevenue = confirmedRes.reduce((sum: number, r: any) => {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
-    const price = r.discounted_price ?? product?.price_egp ?? 0
+    const price = Number(r.discounted_price ?? product?.price_egp ?? 0) || 0
     return sum + price
   }, 0)
 
   const totalSavingsGiven = totalRevenue - discountedRevenue
 
-  const productReservationMap = new Map<
-    number,
-    { title: string; reservations: number; revenue: number }
-  >()
-
-  reservations.forEach((r) => {
+  const productReservationMap = new Map<number, { title: string; reservations: number; revenue: number }>()
+  reservations.forEach((r: any) => {
     const product = Array.isArray(r.product) ? r.product[0] : r.product
     if (!product) return
-
     const existing = productReservationMap.get(product.id) ?? {
-      title: product.title,
+      title: product.title ?? 'Unknown',
       reservations: 0,
       revenue: 0,
     }
-
     existing.reservations += 1
-
     if (r.status === 'confirmed') {
-      existing.revenue += r.discounted_price ?? product.price_egp ?? 0
+      existing.revenue += Number(r.discounted_price ?? product.price_egp ?? 0) || 0
     }
-
     productReservationMap.set(product.id, existing)
   })
 
@@ -202,112 +154,60 @@ async function getAnalyticsData() {
     .sort((a, b) => b.reservations - a.reservations)
     .slice(0, 10)
 
-  // ── Reservations Over Time ────────────────────────────────────────
-  const reservationsTimeData = reservationsTimeRes.data ?? []
   const timeMap = new Map<string, { reservations: number; revenue: number }>()
-
-  reservationsTimeData.forEach((r) => {
-    const date = new Date(r.created_at).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-    })
-
+  reservationsTimeData.forEach((r: any) => {
+    const date = r.created_at
+      ? new Date(r.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+      : 'Unknown'
     const existing = timeMap.get(date) ?? { reservations: 0, revenue: 0 }
     existing.reservations += 1
-
     if (r.status === 'confirmed') {
       const product = Array.isArray(r.product) ? r.product[0] : r.product
-      existing.revenue += r.discounted_price ?? product?.price_egp ?? 0
+      existing.revenue += Number(r.discounted_price ?? product?.price_egp ?? 0) || 0
     }
-
     timeMap.set(date, existing)
   })
+  const reservationsOverTime = [...timeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
-  const reservationsOverTime = [...timeMap.entries()].map(([date, val]) => ({
-    date,
-    ...val,
-  }))
-
-  // ── Products Over Time ────────────────────────────────────────────
-  const productsTimeData = productsTimeRes.data ?? []
   const productsTimeMap = new Map<string, number>()
-
-  productsTimeData.forEach((p) => {
-    const date = new Date(p.created_at).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-    })
+  productsTimeData.forEach((p: any) => {
+    const date = p.created_at
+      ? new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+      : 'Unknown'
     productsTimeMap.set(date, (productsTimeMap.get(date) ?? 0) + 1)
   })
+  const productsOverTime = [...productsTimeMap.entries()].map(([date, count]) => ({ date, count }))
 
-  const productsOverTime = [...productsTimeMap.entries()].map(([date, count]) => ({
-    date,
-    count,
-  }))
-
-  // ── Likes ─────────────────────────────────────────────────────────
-  const totalLikes = likesRes.count ?? 0
-  const rawLikes = rawLikesRes.data ?? []
-
-  const likedProductIds = [
-    ...new Set(rawLikes.map((like: any) => like.product_id).filter(Boolean)),
-  ]
-
+  const likedProductIds = [...new Set(rawLikes.map((like: any) => like.product_id).filter(Boolean))]
   let likedProductsMap = new Map<number, string>()
 
   if (likedProductIds.length > 0) {
-    const { data: likedProducts, error: likedProductsError } = await supabase
-      .from('products')
-      .select('id, title')
-      .in('id', likedProductIds)
-
-    if (likedProductsError) {
-      console.error('Liked products fetch error:', likedProductsError)
-      throw new Error(likedProductsError.message)
-    }
-
-    likedProductsMap = new Map(
-      (likedProducts ?? []).map((product) => [product.id, product.title ?? 'Unknown'])
-    )
+    const likedProductsRes = await supabase.from('products').select('id, title').in('id', likedProductIds)
+    const likedProducts = safe(likedProductsRes, [])
+    likedProductsMap = new Map((likedProducts ?? []).map((product: any) => [product.id, product.title ?? 'Unknown']))
   }
 
   const likesMap = new Map<string, number>()
-
   rawLikes.forEach((like: any) => {
     const title = likedProductsMap.get(like.product_id) ?? 'Unknown'
     likesMap.set(title, (likesMap.get(title) ?? 0) + 1)
   })
-
   const mostLikedProducts = [...likesMap.entries()]
     .map(([title, likes]) => ({ title, likes }))
     .sort((a, b) => b.likes - a.likes)
     .slice(0, 10)
 
-  // ── Sales ─────────────────────────────────────────────────────────
-  const sales = salesRes.data ?? []
-
   const totalSalesCount = sales.length
-  const totalSalesRevenue = sales.reduce(
-    (sum, s) => sum + (Number(s.selling_price_egp) || 0),
-    0
-  )
-  const totalSalesProfit = sales.reduce(
-    (sum, s) => sum + (Number(s.profit_egp) || 0),
-    0
-  )
-  const totalSalesCost = sales.reduce(
-    (sum, s) => sum + (Number(s.cost_egp) || 0),
-    0
-  )
-
+  const totalSalesRevenue = sales.reduce((sum: number, s: any) => sum + (Number(s.selling_price_egp) || 0), 0)
+  const totalSalesProfit = sales.reduce((sum: number, s: any) => sum + (Number(s.profit_egp) || 0), 0)
+  const totalSalesCost = sales.reduce((sum: number, s: any) => sum + (Number(s.cost_egp) || 0), 0)
   const avgProfitMargin =
     totalSalesCount > 0
-      ? sales.reduce((sum, s) => sum + (Number(s.profit_margin_pct) || 0), 0) /
-        totalSalesCount
+      ? sales.reduce((sum: number, s: any) => sum + (Number(s.profit_margin_pct) || 0), 0) / totalSalesCount
       : 0
 
   const channelMap = new Map<string, { count: number; revenue: number; profit: number }>()
-  sales.forEach((s) => {
+  sales.forEach((s: any) => {
     const ch = s.sale_channel ?? 'unknown'
     const existing = channelMap.get(ch) ?? { count: 0, revenue: 0, profit: 0 }
     existing.count += 1
@@ -315,34 +215,22 @@ async function getAnalyticsData() {
     existing.profit += Number(s.profit_egp) || 0
     channelMap.set(ch, existing)
   })
-
-  const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({
-    channel,
-    ...val,
-  }))
+  const salesByChannel = [...channelMap.entries()].map(([channel, val]) => ({ channel, ...val }))
 
   const salesTimeMap = new Map<string, { revenue: number; profit: number; count: number }>()
-  ;(salesTimeRes.data ?? []).forEach((s) => {
+  salesTimeData.forEach((s: any) => {
     const date = s.sale_date
-      ? new Date(s.sale_date).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-        })
+      ? new Date(s.sale_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
       : 'Unknown'
-
     const existing = salesTimeMap.get(date) ?? { revenue: 0, profit: 0, count: 0 }
     existing.revenue += Number(s.selling_price_egp) || 0
     existing.profit += Number(s.profit_egp) || 0
     existing.count += 1
     salesTimeMap.set(date, existing)
   })
+  const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
-  const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({
-    date,
-    ...val,
-  }))
-
-  const recentSales = sales.slice(0, 10).map((s) => ({
+  const recentSales = sales.slice(0, 10).map((s: any) => ({
     id: String(s.id),
     product_name: s.product_name ?? 'Unknown',
     selling_price_egp: Number(s.selling_price_egp) || 0,
@@ -373,7 +261,7 @@ async function getAnalyticsData() {
     pendingReservations,
     confirmedReservations,
     cancelledReservations,
-    discountCodes: discountCodesRes.data ?? [],
+    discountCodes,
     topReservedProducts,
     byCategory,
     byBrand,
@@ -402,12 +290,11 @@ export default async function AnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-black text-white">📊 Analytics</h1>
+            <h1 className="text-3xl font-black text-white">Analytics</h1>
             <p className="text-zinc-500 text-sm mt-1">Real-time insights from your store</p>
           </div>
-
           <Link href="/admin" className="text-zinc-400 hover:text-white text-sm transition">
-            ← Back to Admin
+            Back to Admin
           </Link>
         </div>
 
