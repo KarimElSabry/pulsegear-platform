@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -22,7 +22,7 @@ function safeDiv(numerator: number, denominator: number) {
 }
 
 async function getAnalyticsData() {
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   const thirtyDaysAgoDateTime = new Date(
     Date.now() - 30 * 24 * 60 * 60 * 1000

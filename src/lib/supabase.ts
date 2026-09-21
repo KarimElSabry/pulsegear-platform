@@ -1,7 +1,5 @@
 // src/lib/supabase.ts
 
-import { cookies } from 'next/headers'
-import { createServerClient as createSSRServerClient, type CookieOptions } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -18,24 +16,6 @@ if (!supabaseAnonKey) {
 
 export function createBrowserSupabaseClient() {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey)
-}
-
-export async function createServerSupabaseClient() {
-  const cookieStore = await cookies()
-
-  return createSSRServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value
-      },
-      set(_name: string, _value: string, _options: CookieOptions) {
-        // no-op here
-      },
-      remove(_name: string, _options: CookieOptions) {
-        // no-op here
-      },
-    },
-  })
 }
 
 export function createAdminSupabaseClient() {
