@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { ProductCondition } from '@/types/product'
 import { ReservationService } from '@/services/reservationService'
-import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase'
-
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 const RESERVABLE_CONDITIONS: ProductCondition[] = [
   'Very good',
   'Good',

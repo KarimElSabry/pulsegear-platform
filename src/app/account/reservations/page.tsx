@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase'
-
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 export default async function AccountReservationsPage() {
   const authSupabase = await createServerSupabaseClient()
   const adminSupabase = createAdminSupabaseClient()

@@ -1,7 +1,8 @@
 // src/app/account/profile/page.tsx
 
 import { redirect } from 'next/navigation'
-import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import ProfileForm from './ProfileForm'
 
 export default async function AccountProfilePage() {
