@@ -1,7 +1,7 @@
 // src/app/api/products/[id]/images/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
 // ── GET — fetch images for a product ─────────────────────────────────────────
@@ -10,7 +10,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('product_images')
@@ -29,7 +29,7 @@ export async function POST(
 ) {
   const { id } = await params
   const { image_url } = await req.json()
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   if (!image_url) {
     return NextResponse.json({ error: 'image_url is required' }, { status: 400 })
@@ -79,7 +79,7 @@ export async function PATCH(
   const { id } = await params
   const { images } = await req.json()
   // images = [{ id, display_order, is_primary }]
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   const updates = images.map((img: { id: number; display_order: number; is_primary: boolean }) =>
     supabase
@@ -103,7 +103,7 @@ export async function DELETE(
 ) {
   const { id } = await params
   const { image_id } = await req.json()
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   // Check if deleting the primary image
   const { data: img } = await supabase
