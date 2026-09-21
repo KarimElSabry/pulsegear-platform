@@ -1,10 +1,10 @@
 // src/app/api/products/[id]/reserve/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
-import { ReservationService } from '@/services/reservationService'
-import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { ProductCondition } from '@/types/product'
+import { ReservationService } from '@/services/reservationService'
+import { createAdminSupabaseClient, createServerSupabaseClient } from '@/lib/supabase'
 
 const RESERVABLE_CONDITIONS: ProductCondition[] = [
   'Very good',
@@ -13,10 +13,11 @@ const RESERVABLE_CONDITIONS: ProductCondition[] = [
   'Satisfactory',
 ]
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function normalizeDiscountCode(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toUpperCase()
+  return normalized.length > 0 ? normalized : null
+}
 
 export async function POST(
   req: NextRequest,
@@ -24,8 +25,17 @@ export async function POST(
 ) {
   try {
     const { id: rawId } = await params
-    const product_id = parseInt(rawId)
-    const { name, phone, note, discount_code, discounted_price } = await req.json()
+    const productId = Number(rawId)
+
+    if (!Number.isInteger(productId) || productId <= 0) {
+      return NextResponse.json({ error: 'Invalid product id' }, { status: 400 })
+    }
+
+    const body = await req.json()
+    const name = typeof body?.name === 'string' ? body.name.trim() : ''
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : ''
+    const note = typeof body?.note === 'string' ? body.note.trim() : ''
+    const discountCode = normalizeDiscountCode(body?.discount_code)
 
     if (!name || !phone) {
       return NextResponse.json(
@@ -34,11 +44,17 @@ export async function POST(
       )
     }
 
-    // ── Fetch product ──
-    const { data: product, error: productError } = await supabase
+    const adminSupabase = createAdminSupabaseClient()
+    const authSupabase = await createServerSupabaseClient()
+
+    const {
+      data: { user },
+    } = await authSupabase.auth.getUser()
+
+    const { data: product, error: productError } = await adminSupabase
       .from('products')
-      .select('id, condition, status')
-      .eq('id', product_id)
+      .select('id, title, price_egp, condition, status, reserved_until')
+      .eq('id', productId)
       .single()
 
     if (productError || !product) {
@@ -52,58 +68,60 @@ export async function POST(
       )
     }
 
-    if (product.status !== 'available') {
+    const result = await ReservationService.createReservation({
+      productId,
+      customerName: name,
+      customerPhone: phone,
+      note: note || null,
+      discountCode,
+      userId: user?.id ?? null,
+      basePriceEgp: Number(product.price_egp) || 0,
+    })
+
+    revalidatePath('/products')
+    revalidatePath(`/products/${rawId}`)
+    revalidatePath('/admin/reservations')
+    revalidatePath('/admin/analytics')
+    revalidatePath('/account/reservations')
+
+    return NextResponse.json(
+      {
+        success: true,
+        reservation: result.reservation,
+        final_price_egp: result.finalPriceEgp,
+        applied_discount_code: result.discountCode,
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    const message = error?.message || 'Unexpected server error'
+
+    if (message === 'PRODUCT_NOT_AVAILABLE') {
       return NextResponse.json(
         { error: 'This product is no longer available' },
         { status: 409 }
       )
     }
 
-    // ── ✅ Validate & lock discount code if provided ──
-    let resolvedDiscountCode: string | null = null
-    let resolvedDiscountedPrice: number | null = null
-
-    if (discount_code) {
-      const { data: codeData, error: codeError } = await supabase
-        .from('discount_codes')
-        .select('id, code, discount_percent, is_active, usage_count')
-        .ilike('code', discount_code.trim())
-        .single()
-
-      if (codeError || !codeData || !codeData.is_active) {
-        return NextResponse.json(
-          { error: 'Discount code is invalid or no longer active' },
-          { status: 400 }
-        )
-      }
-
-      // ✅ Increment usage_count هنا — بعد الحجز الفعلي
-      await supabase
-        .from('discount_codes')
-        .update({ usage_count: (codeData.usage_count ?? 0) + 1 })
-        .eq('id', codeData.id)
-
-      resolvedDiscountCode = codeData.code
-      resolvedDiscountedPrice = discounted_price ?? null
+    if (message === 'INVALID_DISCOUNT_CODE') {
+      return NextResponse.json(
+        { error: 'Discount code is invalid or no longer active' },
+        { status: 400 }
+      )
     }
 
-    // ── ✅ Create reservation with discount info ──
-    const reservation = await ReservationService.createReservation({
-      product_id,
-      name,
-      phone,
-      note,
-      discount_code: resolvedDiscountCode,
-      discounted_price: resolvedDiscountedPrice,
-    })
+    if (message === 'PRODUCT_NOT_RESERVABLE') {
+      return NextResponse.json(
+        { error: 'This product cannot be reserved' },
+        { status: 403 }
+      )
+    }
 
-    revalidatePath('/', 'layout')
-    revalidatePath('/products')
-    revalidatePath(`/products/${rawId}`)
-    revalidatePath('/admin')
+    console.error('POST /api/products/[id]/reserve failed:', error)
 
-    return NextResponse.json({ success: true, reservation })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to create reservation' },
+      { status: 500 }
+    )
   }
 }

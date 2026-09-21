@@ -2,21 +2,21 @@
 
 import { NextResponse } from 'next/server'
 import { sendWeeklyNewsletter } from '@/lib/brevo'
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export async function POST(req: Request) {
-  // ✅ Security check
   const authHeader = req.headers.get('authorization')
+
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
-    const supabase = createServerClient()
+    const supabase = createAdminSupabaseClient()
+
     const oneWeekAgo = new Date()
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
 
-    // ✅ منتجات جديدة الأسبوع ده
     const { data: newProducts, error: newErr } = await supabase
       .from('products')
       .select('*, images:product_images(*)')
@@ -26,7 +26,6 @@ export async function POST(req: Request) {
 
     if (newErr) throw newErr
 
-    // ✅ منتجات اتباعت الأسبوع ده
     const { data: soldProducts, error: soldErr } = await supabase
       .from('products')
       .select('*, images:product_images(*)')
@@ -44,9 +43,22 @@ export async function POST(req: Request) {
       soldProducts: soldProducts?.length || 0,
     })
   } catch (error: any) {
+    const message = error?.message || 'Failed to send newsletter'
+
+    if (
+      message.includes('BREVO_API_KEY') ||
+      message.includes('BREVO_NEWSLETTER_LIST_ID') ||
+      message.includes('BREVO_SENDER_EMAIL')
+    ) {
+      return NextResponse.json(
+        { error: 'Newsletter service is not configured' },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Failed to send newsletter' },
-      { status: 500 }
+      { error: message },
+      { status: 502 }
     )
   }
 }

@@ -1,18 +1,17 @@
 // src/services/productService.ts
 
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import type {
   Product,
   ProductFilters,
-  PaginatedProducts
+  PaginatedProducts,
 } from '@/types/product'
 
 export class ProductService {
   private static getClient() {
-    return createServerClient()
+    return createAdminSupabaseClient()
   }
 
-  // ✅ Fetch All Products
   static async getProducts(filters?: ProductFilters): Promise<Product[]> {
     const supabase = this.getClient()
 
@@ -56,7 +55,6 @@ export class ProductService {
     return data as Product[]
   }
 
-  // ✅ Fetch Single Product by ID
   static async getProductById(id: number): Promise<Product | null> {
     const supabase = this.getClient()
 
@@ -77,7 +75,6 @@ export class ProductService {
     return data as Product
   }
 
-  // ✅ Fetch Single Product by Slug
   static async getProductBySlug(slug: string): Promise<Product | null> {
     const supabase = this.getClient()
 
@@ -98,27 +95,22 @@ export class ProductService {
     return data as Product
   }
 
-  // ✅ Featured Products
   static async getFeaturedProducts(): Promise<Product[]> {
     return this.getProducts({ featured: true, status: 'available' })
   }
 
-  // ✅ Filter by Brand
   static async getProductsByBrand(brand: string): Promise<Product[]> {
     return this.getProducts({ brand, status: 'available' })
   }
 
-  // ✅ Filter by Category
   static async getProductsByCategory(category: string): Promise<Product[]> {
     return this.getProducts({ category, status: 'available' })
   }
 
-  // ✅ Search
   static async searchProducts(query: string): Promise<Product[]> {
     return this.getProducts({ search: query, status: 'available' })
   }
 
-  // ✅ Get All Brands
   static async getBrands(): Promise<string[]> {
     const supabase = this.getClient()
 
@@ -136,7 +128,6 @@ export class ProductService {
     return brands.sort()
   }
 
-  // ✅ Get All Categories
   static async getCategories(): Promise<string[]> {
     const supabase = this.getClient()
 
@@ -154,7 +145,6 @@ export class ProductService {
     return categories.sort()
   }
 
-  // ✅ Paginated Products
   static async getPaginatedProducts(
     filters?: ProductFilters
   ): Promise<PaginatedProducts> {
@@ -166,10 +156,13 @@ export class ProductService {
 
     let query = supabase
       .from('products')
-      .select(`
+      .select(
+        `
         *,
         images:product_images(*)
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .order('created_at', { ascending: false })
       .range(from, to)
 
@@ -199,11 +192,10 @@ export class ProductService {
       total,
       page,
       limit,
-      hasMore: to < total - 1
+      hasMore: to < total - 1,
     }
   }
 
-  // ✅ Create Product
   static async createProduct(
     product: Omit<Product, 'id' | 'created_at'>,
     imageUrls: string[]
@@ -216,32 +208,32 @@ export class ProductService {
       .from('products')
       .insert({
         slug,
-        title:            product.title,
-        description:      product.description ?? null,
-        brand:            product.brand ?? null,
-        category:         product.category ?? null,
-        size:             product.size ?? null,
-        price_egp:        product.price_egp,
-        original_price:   product.original_price ?? null,
-        condition:        product.condition ?? null,
-        status:           product.status ?? 'available',
-        featured:         product.featured ?? false,
-        source:           product.source ?? null,
-        source_url:       product.source_url ?? null,
-        source_platform:  product.source_platform ?? null,
-        is_reservable:    product.is_reservable ?? false,
-        is_deal:          product.is_deal ?? false,
+        title: product.title,
+        description: product.description ?? null,
+        brand: product.brand ?? null,
+        category: product.category ?? null,
+        size: product.size ?? null,
+        price_egp: product.price_egp,
+        original_price: product.original_price ?? null,
+        condition: product.condition ?? null,
+        status: product.status ?? 'available',
+        featured: product.featured ?? false,
+        source: product.source ?? null,
+        source_url: product.source_url ?? null,
+        source_platform: product.source_platform ?? null,
+        is_reservable: product.is_reservable ?? false,
+        is_deal: product.is_deal ?? false,
         discount_enabled: product.discount_enabled ?? true,
-        vinted_id:        product.vinted_id ?? null,
+        vinted_id: product.vinted_id ?? null,
       })
       .select()
       .single()
 
     if (error) {
-      console.error('❌ INSERT ERROR CODE:', error.code)
-      console.error('❌ INSERT ERROR MSG:', error.message)
-      console.error('❌ INSERT ERROR DETAILS:', error.details)
-      console.error('❌ INSERT ERROR HINT:', error.hint)
+      console.error('INSERT ERROR CODE:', error.code)
+      console.error('INSERT ERROR MSG:', error.message)
+      console.error('INSERT ERROR DETAILS:', error.details)
+      console.error('INSERT ERROR HINT:', error.hint)
       throw error
     }
 
@@ -258,10 +250,10 @@ export class ProductService {
         .insert(images)
 
       if (imgError) {
-        console.error('❌ IMAGE INSERT ERROR CODE:', imgError.code)
-        console.error('❌ IMAGE INSERT ERROR MSG:', imgError.message)
-        console.error('❌ IMAGE INSERT ERROR DETAILS:', imgError.details)
-        console.error('❌ IMAGE INSERT ERROR HINT:', imgError.hint)
+        console.error('IMAGE INSERT ERROR CODE:', imgError.code)
+        console.error('IMAGE INSERT ERROR MSG:', imgError.message)
+        console.error('IMAGE INSERT ERROR DETAILS:', imgError.details)
+        console.error('IMAGE INSERT ERROR HINT:', imgError.hint)
         throw imgError
       }
     }
@@ -269,17 +261,17 @@ export class ProductService {
     return data as Product
   }
 
-  // ✅ Update Status
   static async updateStatus(
     id: number,
     status: 'available' | 'sold' | 'reserved' | 'out_of_stock'
   ): Promise<void> {
     const supabase = this.getClient()
+
     const { error } = await supabase
       .from('products')
       .update({
         status,
-        sold_at: status === 'sold' ? new Date().toISOString() : null
+        sold_at: status === 'sold' ? new Date().toISOString() : null,
       })
       .eq('id', id)
 
@@ -289,9 +281,9 @@ export class ProductService {
     }
   }
 
-  // ✅ Delete Product
   static async deleteProduct(id: number): Promise<void> {
     const supabase = this.getClient()
+
     const { error } = await supabase
       .from('products')
       .delete()
@@ -303,8 +295,6 @@ export class ProductService {
     }
   }
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function slugify(text: string): string {
   return text

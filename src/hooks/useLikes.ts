@@ -2,17 +2,17 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
 export function useLikes(productId: number, productStatus?: string) {
-  const [likes, setLikes]     = useState(0)
+  const [likes, setLikes] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [liked, setLiked]     = useState(false)
+  const [liked, setLiked] = useState(false)
 
   const storageKey = `liked_product_${productId}`
-  const userKey    = 'user_identifier'
-  const isSold     = productStatus === 'sold'
+  const userKey = 'user_identifier'
+  const isSold = productStatus === 'sold'
 
   const getUserIdentifier = () => {
     if (typeof window === 'undefined') return ''
@@ -24,40 +24,51 @@ export function useLikes(productId: number, productStatus?: string) {
     return id
   }
 
+  const fetchLikes = useCallback(async () => {
+    if (!productId || isNaN(productId) || productId <= 0) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/products/likes?product_id=${productId}`, {
+        cache: 'no-store',
+      })
+
+      if (!res.ok) return
+
+      const data = await res.json()
+      if (typeof data.likes === 'number') {
+        setLikes(data.likes)
+      }
+    } catch (err) {
+      console.error('[useLikes] Failed to fetch:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [productId])
+
   useEffect(() => {
     const value = localStorage.getItem(storageKey)
     setLiked(value === 'true')
   }, [storageKey])
 
   useEffect(() => {
-    if (!productId || isNaN(productId) || productId <= 0) {
-      setLoading(false)
-      return
-    }
-
-    const fetchLikes = async () => {
-      try {
-        const res = await fetch(`/api/products/likes?product_id=${productId}`)
-        if (!res.ok) { setLoading(false); return }
-        const data = await res.json()
-        if (data.likes !== undefined) setLikes(data.likes)
-      } catch (err) {
-        console.error(`[useLikes] Failed to fetch:`, err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchLikes()
-    if (isSold) return
-    const interval = setInterval(fetchLikes, 10000)
-    return () => clearInterval(interval)
-  }, [productId, isSold])
+  }, [fetchLikes])
+
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchLikes()
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [fetchLikes])
 
   const addLike = async () => {
     if (liked || isSold) return
 
-    // ✅ Optimistic update
     setLiked(true)
     setLikes((prev) => prev + 1)
     localStorage.setItem(storageKey, 'true')
@@ -75,25 +86,30 @@ export function useLikes(productId: number, productStatus?: string) {
       const data = await res.json()
 
       if (res.ok || res.status === 409) {
-        if (data.likes !== undefined) setLikes(data.likes)
+        if (typeof data.likes === 'number') setLikes(data.likes)
         if (res.status === 409) {
           localStorage.setItem(storageKey, 'true')
         }
         return
       }
 
-      // ❌ Rollback
       setLiked(false)
       setLikes((prev) => prev - 1)
       localStorage.removeItem(storageKey)
-
     } catch (err) {
-      console.error(`[useLikes] Failed to add like:`, err)
+      console.error('[useLikes] Failed to add like:', err)
       setLiked(false)
       setLikes((prev) => prev - 1)
       localStorage.removeItem(storageKey)
     }
   }
 
-  return { likes, loading, addLike, liked, isSold }
+  return {
+    likes,
+    loading,
+    addLike,
+    liked,
+    isSold,
+    refreshLikes: fetchLikes,
+  }
 }

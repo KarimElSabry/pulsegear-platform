@@ -3,6 +3,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import ReserveButton from '@/components/ReserveButton'
 
 type Props = {
   originalPrice: number
@@ -140,9 +141,7 @@ export default function PriceSection({
 
         {!discountEnabled ? (
           <div className="bg-zinc-800/70 border border-zinc-700 rounded-xl px-4 py-3">
-            <p className="text-sm text-zinc-400">
-              الخصومات غير متاحة لهذا المنتج.
-            </p>
+            <p className="text-sm text-zinc-400">الخصومات غير متاحة لهذا المنتج.</p>
           </div>
         ) : (
           <>
@@ -189,24 +188,31 @@ export default function PriceSection({
       </div>
 
       <div className="border-t border-zinc-800 pt-5">
-        {isUnavailable ? (
+        {isReservable ? (
+          <ReserveButton
+            productId={productId}
+            productTitle={productTitle}
+            isReservable={isReservable}
+            status={status}
+            discountedPrice={discountPercent > 0 ? finalPrice : undefined}
+            discountCode={discountPercent > 0 ? discountCode : undefined}
+          />
+        ) : (
           <button
-            disabled
-            className="w-full bg-zinc-700 text-zinc-400 font-bold py-3 rounded-xl cursor-not-allowed"
+            disabled={isUnavailable}
+            className={`w-full font-bold py-3 rounded-xl transition ${
+              isUnavailable
+                ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                : 'bg-white hover:bg-zinc-200 text-black'
+            }`}
           >
             {status === 'sold'
               ? 'تم البيع'
               : status === 'reserved'
               ? 'محجوز'
-              : 'غير متوفر'}
-          </button>
-        ) : isReservable ? (
-          <button className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition">
-            احجز المنتج
-          </button>
-        ) : (
-          <button className="w-full bg-white hover:bg-zinc-200 text-black font-bold py-3 rounded-xl transition">
-            اطلب الآن
+              : status === 'out_of_stock'
+              ? 'غير متوفر'
+              : 'اطلب الآن'}
           </button>
         )}
       </div>

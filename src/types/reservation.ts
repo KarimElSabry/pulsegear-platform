@@ -17,8 +17,8 @@ export interface Reservation {
   note: string | null
   status: ReservationStatus
   created_at: string
+  user_id?: string | null
   product: ReservationProduct | ReservationProduct[] | null
-  // ✅ New fields
   discount_code: string | null
   discounted_price: number | null
 }

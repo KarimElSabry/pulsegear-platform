@@ -1,9 +1,11 @@
+// src/proxy.ts
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get('admin_token')?.value
-  const { pathname } = request.nextUrl
+  const { pathname, origin } = request.nextUrl
 
   if (pathname.startsWith('/admin-login')) {
     return NextResponse.next()
@@ -13,7 +15,7 @@ export function proxy(request: NextRequest) {
     const secret = process.env.ADMIN_SECRET
 
     if (!secret) {
-      console.error('ADMIN_SECRET is not set in .env.local!')
+      console.error('ADMIN_SECRET is not set in environment')
       return NextResponse.redirect(new URL('/admin-login', request.url))
     }
 
@@ -22,9 +24,22 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  if (pathname.startsWith('/account')) {
+    const hasSupabaseAuthCookies =
+      request.cookies.get('sb-access-token') ||
+      request.cookies.get('sb-refresh-token') ||
+      [...request.cookies.getAll()].some((cookie) => cookie.name.startsWith('sb-'))
+
+    if (!hasSupabaseAuthCookies) {
+      const loginUrl = new URL('/login', origin)
+      loginUrl.searchParams.set('next', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin-login'],
+  matcher: ['/admin/:path*', '/admin-login', '/account/:path*'],
 }

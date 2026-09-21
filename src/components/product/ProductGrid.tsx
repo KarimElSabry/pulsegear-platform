@@ -1,8 +1,9 @@
 // src/components/product/ProductGrid.tsx
+
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { createBrowserSupabaseClient } from '@/lib/supabase'
 import type { Product } from '@/types/product'
 import ProductCard from './ProductCard'
 
@@ -26,10 +27,14 @@ export default function ProductGrid({
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
 
+  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
+
   const fetchProducts = useCallback(async () => {
+    setLoading(true)
+
     let query = supabase
       .from('products')
-      .select(`*, images:product_images(*)`)
+      .select('*, images:product_images(*)')
       .order('created_at', { ascending: false })
 
     if (filterAvailability === 'In Stock') {
@@ -43,14 +48,15 @@ export default function ProductGrid({
     const { data, error } = await query
 
     if (error) {
-      console.error('❌ fetchProducts error:', error.message)
+      console.error('fetchProducts error:', error.message)
+      setProducts([])
       setLoading(false)
       return
     }
 
-    setProducts(data as Product[])
+    setProducts((data ?? []) as Product[])
     setLoading(false)
-  }, [filterAvailability])
+  }, [supabase, filterAvailability])
 
   useEffect(() => {
     fetchProducts()
@@ -60,14 +66,17 @@ export default function ProductGrid({
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'products' },
-        () => { fetchProducts() }
+        () => {
+          fetchProducts()
+        }
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
-  }, [fetchProducts])
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, fetchProducts])
 
-  // ─── Apply Filters ────────────────────────────────────
   let displayed = [...products]
 
   if (filterBrand && filterBrand !== 'All') {
@@ -82,11 +91,12 @@ export default function ProductGrid({
 
   if (filterCategory && filterCategory !== 'All') {
     displayed = displayed.filter(
-      (p) => p.category?.toLowerCase().replace(/ /g, '_') === filterCategory.toLowerCase().replace(/ /g, '_')
+      (p) =>
+        p.category?.toLowerCase().replace(/ /g, '_') ===
+        filterCategory.toLowerCase().replace(/ /g, '_')
     )
   }
 
-  // ─── Sort: available/reserved first, sold last ────────
   const statusOrder: Record<string, number> = {
     available: 0,
     reserved: 1,
@@ -98,7 +108,6 @@ export default function ProductGrid({
       (statusOrder[a.status ?? ''] ?? 0) - (statusOrder[b.status ?? ''] ?? 0)
   )
 
-  // ─── Randomize (within same status group) ────────────
   if (randomize) {
     const groups = [
       displayed.filter((p) => p.status === 'available'),
@@ -113,7 +122,6 @@ export default function ProductGrid({
     displayed = displayed.slice(0, limit)
   }
 
-  // ─── Loading State ────────────────────────────────────
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -133,7 +141,6 @@ export default function ProductGrid({
     )
   }
 
-  // ─── Empty State ──────────────────────────────────────
   if (displayed.length === 0) {
     return (
       <p className="text-zinc-500 col-span-3 text-center py-20">
@@ -142,7 +149,6 @@ export default function ProductGrid({
     )
   }
 
-  // ─── Products Grid ────────────────────────────────────
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {displayed.map((product) => (
