@@ -5,6 +5,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 const navLinks = [
@@ -19,12 +20,17 @@ const navLinks = [
 ]
 
 export default function Header() {
+  const pathname = usePathname()
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const [menuOpen, setMenuOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
 
+  const isAdminRoute = pathname?.startsWith('/admin')
+
   useEffect(() => {
+    if (isAdminRoute) return
+
     let mounted = true
 
     async function loadUser() {
@@ -51,33 +57,37 @@ export default function Header() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [supabase])
+  }, [supabase, isAdminRoute])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/'
   }
 
+  if (isAdminRoute) {
+    return null
+  }
+
   return (
     <header className="w-full border-b border-white/10 bg-[#111111] sticky top-0 z-50">
-      <div className="w-full px-6 py-4 flex items-center justify-between gap-4">
-        <Link href="/">
+      <div className="w-full px-6 py-4 flex items-center justify-between gap-6">
+        <Link href="/" className="shrink-0">
           <Image
             src="/logo.png"
             alt="Pulse Gear Logo"
-            width={140}
-            height={40}
+            width={120}
+            height={120}
             style={{ width: 'auto', height: 'auto' }}
             priority
           />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden xl:flex items-center gap-6 flex-1 justify-center">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition-colors duration-200 ${
+              className={`text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                 link.highlight
                   ? 'text-orange-400 hover:text-orange-300 font-bold'
                   : 'text-gray-300 hover:text-white'
@@ -88,20 +98,20 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3 shrink-0">
           {authLoading ? (
             <span className="text-sm text-zinc-500">Loading...</span>
           ) : userEmail ? (
             <>
               <Link
                 href="/account"
-                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition"
+                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition whitespace-nowrap"
               >
                 Account
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition"
+                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap"
               >
                 Logout
               </button>
@@ -110,13 +120,13 @@ export default function Header() {
             <>
               <Link
                 href="/login"
-                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition"
+                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition whitespace-nowrap"
               >
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition"
+                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap"
               >
                 Sign Up
               </Link>
@@ -125,7 +135,7 @@ export default function Header() {
         </div>
 
         <button
-          className="md:hidden flex flex-col gap-1.5 p-2"
+          className="md:hidden flex flex-col gap-1.5 p-2 shrink-0"
           onClick={() => setMenuOpen((prev) => !prev)}
         >
           <span
