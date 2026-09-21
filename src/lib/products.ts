@@ -1,29 +1,29 @@
 // src/lib/products.ts
 
-import { createServerClient } from './supabase'
+import { createAdminSupabaseClient } from './supabase'
 import { Product, ProductImage } from '../types/product'
 
 export const ProductService = {
-
-  // ✅ جيب كل المنتجات
   async getAll(): Promise<Product[]> {
-    const supabase = createServerClient()
+    const supabase = createAdminSupabaseClient()
+
     const { data, error } = await supabase
       .from('products')
-      .select(`*, images:product_images(*)`)
+      .select('*, images:product_images(*)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
     return data || []
   },
 
-  // ✅ جيب منتجات بفلتر 🆕
-  async getProducts(filters?: { status?: 'available' | 'sold' | 'reserved' | 'out_of_stock' }): Promise<Product[]> {
-    const supabase = createServerClient()
+  async getProducts(filters?: {
+    status?: 'available' | 'sold' | 'reserved' | 'out_of_stock'
+  }): Promise<Product[]> {
+    const supabase = createAdminSupabaseClient()
 
     let query = supabase
       .from('products')
-      .select(`*, images:product_images(*)`)
+      .select('*, images:product_images(*)')
       .order('sold_at', { ascending: false })
 
     if (filters?.status) {
@@ -36,12 +36,12 @@ export const ProductService = {
     return data || []
   },
 
-  // ✅ جيب منتج واحد بالـ slug
   async getBySlug(slug: string): Promise<Product | null> {
-    const supabase = createServerClient()
+    const supabase = createAdminSupabaseClient()
+
     const { data, error } = await supabase
       .from('products')
-      .select(`*, images:product_images(*)`)
+      .select('*, images:product_images(*)')
       .eq('slug', slug)
       .single()
 
@@ -49,14 +49,14 @@ export const ProductService = {
     return data
   },
 
-  // ✅ أضف منتج جديد
-  async create(product: Omit<Product, 'id' | 'created_at'>, imageUrls: string[]): Promise<Product> {
-    const supabase = createServerClient()
+  async create(
+    product: Omit<Product, 'id' | 'created_at'>,
+    imageUrls: string[]
+  ): Promise<Product> {
+    const supabase = createAdminSupabaseClient()
 
-    // 1️⃣ اعمل الـ slug
     const slug = product.slug || slugify(product.title)
 
-    // 2️⃣ احفظ المنتج
     const { data, error } = await supabase
       .from('products')
       .insert({ ...product, slug })
@@ -64,11 +64,10 @@ export const ProductService = {
       .single()
 
     if (error) {
-      console.error('❌ INSERT ERROR:', JSON.stringify(error, null, 2))
+      console.error('INSERT ERROR:', JSON.stringify(error, null, 2))
       throw error
     }
 
-    // 3️⃣ احفظ الصور
     if (imageUrls.length > 0) {
       const images: Omit<ProductImage, 'id'>[] = imageUrls.map((url, index) => ({
         product_id: data.id,
@@ -82,7 +81,7 @@ export const ProductService = {
         .insert(images)
 
       if (imgError) {
-        console.error('❌ IMAGE INSERT ERROR:', JSON.stringify(imgError, null, 2))
+        console.error('IMAGE INSERT ERROR:', JSON.stringify(imgError, null, 2))
         throw imgError
       }
     }
@@ -90,9 +89,12 @@ export const ProductService = {
     return data
   },
 
-  // ✅ غير status المنتج
-  async updateStatus(id: number, status: 'available' | 'sold' | 'reserved'): Promise<void> {
-    const supabase = createServerClient()
+  async updateStatus(
+    id: number,
+    status: 'available' | 'sold' | 'reserved'
+  ): Promise<void> {
+    const supabase = createAdminSupabaseClient()
+
     const { error } = await supabase
       .from('products')
       .update({ status })
@@ -101,9 +103,9 @@ export const ProductService = {
     if (error) throw error
   },
 
-  // ✅ احذف منتج
   async delete(id: number): Promise<void> {
-    const supabase = createServerClient()
+    const supabase = createAdminSupabaseClient()
+
     const { error } = await supabase
       .from('products')
       .delete()
@@ -113,7 +115,6 @@ export const ProductService = {
   },
 }
 
-// ✅ Helper - عمل slug من الـ title
 function slugify(text: string): string {
   return text
     .toLowerCase()
