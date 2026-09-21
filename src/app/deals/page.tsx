@@ -1,14 +1,14 @@
 // src/app/deals/page.tsx
 
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import ProductCard from '@/components/product/ProductCard'
 import type { Product } from '@/types/product'
 
 export const revalidate = 60
 
 export default async function DealsPage() {
-  const supabase = await createServerClient()
+  const supabase = await createAdminSupabaseClient()
 
   const { data, error } = await supabase
     .from('products')

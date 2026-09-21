@@ -3,11 +3,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createBrowserSupabaseClient } from '@/lib/supabase'
 import { addProduct , addSale } from './actions'
 
 const FALLBACK_RATE = 55
 const DEFAULT_SHIPPING_EUR = 10
+const supabase = createBrowserSupabaseClient()
 
 export default function AdminPage() {
   const [imageUrls, setImageUrls]         = useState<string[]>([])

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 import { ProductService } from '@/services/productService'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
   }
 
   // ✅ 2. جيب كل Vinted products اللي لسه available
-  const supabase = createServerClient()
+  const supabase = createAdminSupabaseClient()
 
   const { data: products, error } = await supabase
     .from('products')
