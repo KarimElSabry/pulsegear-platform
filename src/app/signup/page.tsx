@@ -35,7 +35,7 @@ export default function SignupPage() {
 
     const redirectTo =
       typeof window !== 'undefined'
-        ? `${window.location.origin}/account`
+        ? `${window.location.origin}/auth/callback`
         : undefined
 
     const { error } = await supabase.auth.signUp({

@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 type ProfileFormProps = {
   userEmail: string
@@ -20,6 +20,33 @@ type ProfileFormProps = {
     planned_watch: string
     planned_heart_rate_strap: string
   }
+}
+
+function SectionCard({
+  title,
+  subtitle,
+  icon,
+  children,
+}: {
+  title: string
+  subtitle: string
+  icon: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="mb-5 flex items-start gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 text-xl">
+          {icon}
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
+        </div>
+      </div>
+      {children}
+    </section>
+  )
 }
 
 export default function ProfileForm({
@@ -51,6 +78,41 @@ export default function ProfileForm({
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const completionCount = useMemo(() => {
+    const values = [
+      firstName,
+      lastName,
+      phone,
+      currentSport,
+      nextEvent,
+      currentPr,
+      targetPr,
+      currentWatch,
+      currentHeartRateStrap,
+      plannedWatch,
+      plannedHeartRateStrap,
+    ]
+    return values.filter((v) => v.trim().length > 0).length + (newsletterSubscribed ? 1 : 0)
+  }, [
+    firstName,
+    lastName,
+    phone,
+    currentSport,
+    nextEvent,
+    currentPr,
+    targetPr,
+    currentWatch,
+    currentHeartRateStrap,
+    plannedWatch,
+    plannedHeartRateStrap,
+    newsletterSubscribed,
+  ])
+
+  const inputClass =
+    'w-full rounded-2xl border border-zinc-700 bg-zinc-900/80 px-4 py-3 text-white placeholder-zinc-500 outline-none transition focus:border-red-500 focus:bg-zinc-900'
+
+  const labelClass = 'mb-2 block text-sm font-medium text-zinc-300'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -81,17 +143,15 @@ export default function ProfileForm({
 
       if (!res.ok) {
         setError(data.error || 'Failed to update profile')
-        setLoading(false)
         return
       }
 
       if (data.partial_success) {
-        setError('Profile saved, but newsletter sync failed.')
-        setLoading(false)
+        setError('Settings saved, but newsletter sync failed.')
         return
       }
 
-      setSuccess('Profile updated successfully.')
+      setSuccess('Settings updated successfully.')
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -99,36 +159,52 @@ export default function ProfileForm({
     }
   }
 
-  const inputClass =
-    'w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500'
-
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-      <form onSubmit={handleSubmit} className="space-y-8">
-        <section className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="rounded-3xl border border-red-500/20 bg-gradient-to-r from-red-500/10 via-zinc-900 to-zinc-900 p-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h2 className="text-xl font-bold text-white">Personal Info</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Basic details for your account and order communication.
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-red-400">
+              Athlete Settings
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-white md:text-3xl">
+              Build your performance profile
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+              Tell us about your sport, your current gear, and what you want to achieve next.
+              We use this to personalize recommendations, content, and future offers.
             </p>
           </div>
 
+          <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+            <p className="text-xs uppercase tracking-widest text-zinc-500">Profile completion</p>
+            <p className="mt-1 text-2xl font-black text-white">{completionCount}/12</p>
+          </div>
+        </div>
+      </div>
+
+      <SectionCard
+        icon="👤"
+        title="Personal Info"
+        subtitle="Basic account details and communication preferences."
+      >
+        <div className="space-y-5">
           <div>
-            <label className="block text-sm text-zinc-300 mb-2">Email</label>
+            <label className={labelClass}>Email</label>
             <input
               type="email"
               value={userEmail}
               disabled
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-zinc-400"
+              className="w-full rounded-2xl border border-zinc-700 bg-zinc-800 px-4 py-3 text-zinc-400"
             />
-            <p className="text-xs text-zinc-500 mt-2">
-              Your login email is managed by Supabase Auth.
+            <p className="mt-2 text-xs text-zinc-500">
+              Your login email is managed through authentication settings.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">First Name</label>
+              <label className={labelClass}>First Name</label>
               <input
                 type="text"
                 value={firstName}
@@ -139,7 +215,7 @@ export default function ProfileForm({
             </div>
 
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Last Name</label>
+              <label className={labelClass}>Last Name</label>
               <input
                 type="text"
                 value={lastName}
@@ -151,7 +227,7 @@ export default function ProfileForm({
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-300 mb-2">Phone</label>
+            <label className={labelClass}>Phone</label>
             <input
               type="tel"
               value={phone}
@@ -161,8 +237,8 @@ export default function ProfileForm({
             />
           </div>
 
-          <div className="bg-zinc-800/70 border border-zinc-700 rounded-xl px-4 py-4">
-            <label className="flex items-start gap-3 cursor-pointer">
+          <div className="rounded-2xl border border-zinc-700 bg-zinc-900/70 p-4">
+            <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={newsletterSubscribed}
@@ -170,25 +246,25 @@ export default function ProfileForm({
                 className="mt-1"
               />
               <div>
-                <p className="text-white font-medium">Subscribe to newsletter</p>
-                <p className="text-sm text-zinc-400 mt-1">
-                  Receive weekly product updates, offers, and new arrivals by email.
+                <p className="font-semibold text-white">Subscribe to newsletter</p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Receive weekly product drops, offers, and relevant updates based on your gear
+                  interests.
                 </p>
               </div>
             </label>
           </div>
-        </section>
+        </div>
+      </SectionCard>
 
-        <section className="space-y-5 border-t border-zinc-800 pt-8">
+      <SectionCard
+        icon="🏃"
+        title="Sports Profile"
+        subtitle="Your discipline, goals, and the event you are preparing for."
+      >
+        <div className="space-y-5">
           <div>
-            <h2 className="text-xl font-bold text-white">Sports Profile</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Optional details that help us recommend more relevant products and content.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm text-zinc-300 mb-2">Current Sport</label>
+            <label className={labelClass}>Current Sport</label>
             <input
               type="text"
               value={currentSport}
@@ -199,19 +275,19 @@ export default function ProfileForm({
           </div>
 
           <div>
-            <label className="block text-sm text-zinc-300 mb-2">Next Event</label>
+            <label className={labelClass}>Next Event</label>
             <input
               type="text"
               value={nextEvent}
               onChange={(e) => setNextEvent(e.target.value)}
               className={inputClass}
-              placeholder="Cairo Half Marathon, local race, triathlon event..."
+              placeholder="Cairo Half Marathon, local race, triathlon..."
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Current Personal Record</label>
+              <label className={labelClass}>Current Personal Record</label>
               <input
                 type="text"
                 value={currentPr}
@@ -222,7 +298,7 @@ export default function ProfileForm({
             </div>
 
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Target Record</label>
+              <label className={labelClass}>Target Record</label>
               <input
                 type="text"
                 value={targetPr}
@@ -232,85 +308,88 @@ export default function ProfileForm({
               />
             </div>
           </div>
-        </section>
+        </div>
+      </SectionCard>
 
-        <section className="space-y-5 border-t border-zinc-800 pt-8">
-          <div>
-            <h2 className="text-xl font-bold text-white">Gear Profile</h2>
-            <p className="text-sm text-zinc-400 mt-1">
-              Tell us what you already use and what you plan to get next.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <SectionCard
+        icon="⌚"
+        title="Gear Profile"
+        subtitle="What you use now and what you plan to upgrade next."
+      >
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Current Watch</label>
+              <label className={labelClass}>Current Watch</label>
               <input
                 type="text"
                 value={currentWatch}
                 onChange={(e) => setCurrentWatch(e.target.value)}
                 className={inputClass}
-                placeholder="Example: Garmin Forerunner 255"
+                placeholder="Garmin Forerunner 255"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Current Heart Rate Strap</label>
+              <label className={labelClass}>Current Heart Rate Strap</label>
               <input
                 type="text"
                 value={currentHeartRateStrap}
                 onChange={(e) => setCurrentHeartRateStrap(e.target.value)}
                 className={inputClass}
-                placeholder="Example: Polar H10"
+                placeholder="Polar H10"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Planned Watch</label>
+              <label className={labelClass}>Planned Watch</label>
               <input
                 type="text"
                 value={plannedWatch}
                 onChange={(e) => setPlannedWatch(e.target.value)}
                 className={inputClass}
-                placeholder="Example: Garmin Epix Pro"
+                placeholder="Garmin Epix Pro"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-zinc-300 mb-2">Planned Heart Rate Strap</label>
+              <label className={labelClass}>Planned Heart Rate Strap</label>
               <input
                 type="text"
                 value={plannedHeartRateStrap}
                 onChange={(e) => setPlannedHeartRateStrap(e.target.value)}
                 className={inputClass}
-                placeholder="Example: Garmin HRM-Pro Plus"
+                placeholder="Garmin HRM-Pro Plus"
               />
             </div>
           </div>
-        </section>
+        </div>
+      </SectionCard>
 
-        {error && (
-          <div className="text-sm text-red-400 bg-red-950/40 border border-red-900 rounded-xl px-4 py-3">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="rounded-2xl border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
 
-        {success && (
-          <div className="text-sm text-green-400 bg-green-950/40 border border-green-900 rounded-xl px-4 py-3">
-            {success}
-          </div>
-        )}
+      {success && (
+        <div className="rounded-2xl border border-green-900 bg-green-950/40 px-4 py-3 text-sm text-green-400">
+          {success}
+        </div>
+      )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition"
-        >
-          {loading ? 'Saving...' : 'Save Settings'}
-        </button>
-      </form>
-    </div>
+      <div className="sticky bottom-4 z-10">
+        <div className="rounded-2xl border border-white/10 bg-black/70 p-3 backdrop-blur-md">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-2xl bg-red-600 py-3 text-base font-bold text-white transition hover:bg-red-700 disabled:opacity-50"
+          >
+            {loading ? 'Saving settings...' : 'Save Settings'}
+          </button>
+        </div>
+      </div>
+    </form>
   )
 }
