@@ -1,58 +1,59 @@
-// src/app/forgot-password/page.tsx
+// src/app/auth/login/page.tsx
 
 'use client'
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
-export default function ForgotPasswordPage() {
+export default function LoginPage() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const nextPath = searchParams.get('next') || '/account'
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setSuccess('')
 
-    const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/reset-password`
-        : undefined
-
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
-      { redirectTo }
-    )
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    })
 
     if (error) {
-      setError(error.message || 'Failed to send reset email')
+      setError(error.message || 'Login failed')
       setLoading(false)
       return
     }
 
-    setSuccess('Password reset email sent. Please check your inbox.')
-    setLoading(false)
+    setSuccess('Logged in successfully. Redirecting...')
+    router.replace(nextPath)
+    router.refresh()
   }
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-16">
       <div className="max-w-md mx-auto bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
         <div className="text-center mb-8">
-          <p className="text-sm uppercase tracking-widest text-red-500 font-bold">
-            Password recovery
-          </p>
-          <h1 className="text-3xl font-black text-white mt-2">Forgot Password</h1>
+          <p className="text-sm uppercase tracking-widest text-red-500 font-bold">Welcome back</p>
+          <h1 className="text-3xl font-black text-white mt-2">Login</h1>
           <p className="text-zinc-400 text-sm mt-2">
-            Enter your email and we'll send you a reset link.
+            Access your wishlist, reservations, and product requests.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm text-zinc-300 mb-2">Email</label>
             <input
@@ -62,6 +63,18 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
               placeholder="you@example.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-zinc-300 mb-2">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
+              placeholder="Your password"
             />
           </div>
 
@@ -82,15 +95,20 @@ export default function ForgotPasswordPage() {
             disabled={loading}
             className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition"
           >
-            {loading ? 'Sending...' : 'Send Reset Link'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div className="mt-6 text-sm text-center text-zinc-500">
-          Back to{' '}
-          <Link href="/login" className="text-red-400 hover:text-red-300 font-semibold">
-            Login
+        <div className="mt-6 flex flex-col gap-3 text-sm text-center">
+          <Link href="/auth/forgot-password" className="text-zinc-400 hover:text-white transition">
+            Forgot your password?
           </Link>
+          <p className="text-zinc-500">
+            Don't have an account?{' '}
+            <Link href="/auth/signup" className="text-red-400 hover:text-red-300 font-semibold">
+              Sign up
+            </Link>
+          </p>
         </div>
       </div>
     </main>

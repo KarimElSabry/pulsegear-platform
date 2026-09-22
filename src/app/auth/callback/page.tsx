@@ -15,8 +15,11 @@ export default function AuthCallbackPage() {
     async function handleAuth() {
       try {
         await supabase.auth.getSession()
+      } catch (error) {
+        console.error('Auth callback failed:', error)
       } finally {
         router.replace('/account')
+        router.refresh()
       }
     }
 

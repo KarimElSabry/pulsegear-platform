@@ -3,7 +3,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const token = request.cookies.get('admin_token')?.value
   const { pathname, origin } = request.nextUrl
 
@@ -14,12 +14,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/admin')) {
     const secret = process.env.ADMIN_SECRET
 
-    if (!secret) {
-      console.error('ADMIN_SECRET is not set in environment')
-      return NextResponse.redirect(new URL('/admin-login', request.url))
-    }
-
-    if (!token || token !== secret) {
+    if (!secret || !token || token !== secret) {
       return NextResponse.redirect(new URL('/admin-login', request.url))
     }
   }
@@ -31,7 +26,7 @@ export async function middleware(request: NextRequest) {
       [...request.cookies.getAll()].some((cookie) => cookie.name.startsWith('sb-'))
 
     if (!hasSupabaseAuthCookies) {
-      const loginUrl = new URL('/login', origin)
+      const loginUrl = new URL('/auth/login', origin)
       loginUrl.searchParams.set('next', pathname)
       return NextResponse.redirect(loginUrl)
     }

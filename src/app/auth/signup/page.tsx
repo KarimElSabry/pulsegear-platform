@@ -1,4 +1,4 @@
-// src/app/login/page.tsx
+// src/app/auth/signup/page.tsx
 
 'use client'
 
@@ -6,47 +6,68 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
-export default function LoginPage() {
+export default function SignupPage() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setSuccess('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    })
-
-    if (error) {
-      setError(error.message || 'Login failed')
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.')
       setLoading(false)
       return
     }
 
-    setSuccess('Logged in successfully. Redirecting...')
-    window.location.href = '/account'
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      setLoading(false)
+      return
+    }
+
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : undefined
+
+    const { error } = await supabase.auth.signUp({
+      email: email.trim().toLowerCase(),
+      password,
+      options: {
+        emailRedirectTo: redirectTo,
+      },
+    })
+
+    if (error) {
+      setError(error.message || 'Signup failed')
+      setLoading(false)
+      return
+    }
+
+    setSuccess('Account created successfully. Please confirm from your email.')
+    setLoading(false)
   }
 
   return (
     <main className="min-h-screen bg-zinc-950 px-6 py-16">
       <div className="max-w-md mx-auto bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
         <div className="text-center mb-8">
-          <p className="text-sm uppercase tracking-widest text-red-500 font-bold">Welcome back</p>
-          <h1 className="text-3xl font-black text-white mt-2">Login</h1>
+          <p className="text-sm uppercase tracking-widest text-red-500 font-bold">Join Pulse Gear</p>
+          <h1 className="text-3xl font-black text-white mt-2">Create Account</h1>
           <p className="text-zinc-400 text-sm mt-2">
-            Access your wishlist, reservations, and product requests.
+            Save your wishlist and track your reservations and requests.
           </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleSignup} className="space-y-4">
           <div>
             <label className="block text-sm text-zinc-300 mb-2">Email</label>
             <input
@@ -67,7 +88,19 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
-              placeholder="Your password"
+              placeholder="At least 6 characters"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-zinc-300 mb-2">Confirm Password</label>
+            <input
+              type="password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
+              placeholder="Repeat password"
             />
           </div>
 
@@ -88,20 +121,15 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Creating account...' : 'Sign Up'}
           </button>
         </form>
 
-        <div className="mt-6 flex flex-col gap-3 text-sm text-center">
-          <Link href="/forgot-password" className="text-zinc-400 hover:text-white transition">
-            Forgot your password?
+        <div className="mt-6 text-sm text-center text-zinc-500">
+          Already have an account?{' '}
+          <Link href="/auth/login" className="text-red-400 hover:text-red-300 font-semibold">
+            Login
           </Link>
-          <p className="text-zinc-500">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-red-400 hover:text-red-300 font-semibold">
-              Sign up
-            </Link>
-          </p>
         </div>
       </div>
     </main>
