@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
 
         <div className="mt-6 text-sm text-center text-zinc-500">
           Back to{' '}
-          <Link href="/login" className="text-red-400 hover:text-red-300 font-semibold">
+          <Link href="/auth/login" className="text-red-400 hover:text-red-300 font-semibold">
             Login
           </Link>
         </div>

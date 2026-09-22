@@ -13,7 +13,7 @@ export default async function AccountReservationsPage() {
   } = await authSupabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   const { data: reservations, error } = await adminSupabase

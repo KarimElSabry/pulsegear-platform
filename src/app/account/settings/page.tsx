@@ -14,7 +14,7 @@ export default async function AccountSettingsPage() {
   } = await authSupabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect('/auth/login')
   }
 
   const { data: profile, error } = await adminSupabase

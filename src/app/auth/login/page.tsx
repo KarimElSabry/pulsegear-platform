@@ -12,6 +12,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -36,8 +37,10 @@ export default function LoginPage() {
       }
 
       setSuccess('Logged in successfully. Redirecting...')
-      router.replace('/account')
-      router.refresh()
+
+      setTimeout(() => {
+        window.location.href = '/account'
+      }, 300)
     } catch (err: any) {
       setError(err?.message || 'Login failed')
     } finally {
@@ -72,13 +75,23 @@ export default function LoginPage() {
           <div>
             <label className="block text-sm text-zinc-300 mb-2">Password</label>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500"
               placeholder="Your password"
             />
+
+            <label className="mt-3 flex items-center gap-2 text-sm text-zinc-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+                className="accent-red-500"
+              />
+              Show password
+            </label>
           </div>
 
           {error && (
@@ -103,9 +116,13 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 flex flex-col gap-3 text-sm text-center">
-          <Link href="/auth/forgot-password" className="text-zinc-400 hover:text-white transition">
+          <Link
+            href="/auth/forgot-password"
+            className="text-zinc-400 hover:text-white transition"
+          >
             Forgot your password?
           </Link>
+
           <p className="text-zinc-500">
             Don't have an account?{' '}
             <Link href="/auth/signup" className="text-red-400 hover:text-red-300 font-semibold">
