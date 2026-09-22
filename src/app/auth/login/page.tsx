@@ -4,20 +4,17 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-
-  const nextPath = searchParams.get('next') || '/account'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,12 +32,11 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message || 'Login failed')
-        setLoading(false)
         return
       }
 
       setSuccess('Logged in successfully. Redirecting...')
-      router.replace(nextPath)
+      router.replace('/account')
       router.refresh()
     } catch (err: any) {
       setError(err?.message || 'Login failed')
