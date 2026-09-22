@@ -3,12 +3,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export default function LoginPage() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -26,20 +25,28 @@ export default function LoginPage() {
     setError('')
     setSuccess('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    })
+    try {
+      const supabase = createBrowserSupabaseClient()
 
-    if (error) {
-      setError(error.message || 'Login failed')
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      })
+
+      if (error) {
+        setError(error.message || 'Login failed')
+        setLoading(false)
+        return
+      }
+
+      setSuccess('Logged in successfully. Redirecting...')
+      router.replace(nextPath)
+      router.refresh()
+    } catch (err: any) {
+      setError(err?.message || 'Login failed')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSuccess('Logged in successfully. Redirecting...')
-    router.replace(nextPath)
-    router.refresh()
   }
 
   return (

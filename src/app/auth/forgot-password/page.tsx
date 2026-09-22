@@ -3,11 +3,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -19,24 +18,31 @@ export default function ForgotPasswordPage() {
     setError('')
     setSuccess('')
 
-    const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/reset-password`
-        : undefined
+    try {
+      const supabase = createBrowserSupabaseClient()
 
-    const { error } = await supabase.auth.resetPasswordForEmail(
-      email.trim().toLowerCase(),
-      { redirectTo }
-    )
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/reset-password`
+          : undefined
 
-    if (error) {
-      setError(error.message || 'Failed to send reset email')
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo }
+      )
+
+      if (error) {
+        setError(error.message || 'Failed to send reset email')
+        setLoading(false)
+        return
+      }
+
+      setSuccess('Password reset email sent. Please check your inbox.')
+    } catch (err: any) {
+      setError(err?.message || 'Failed to send reset email')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSuccess('Password reset email sent. Please check your inbox.')
-    setLoading(false)
   }
 
   return (

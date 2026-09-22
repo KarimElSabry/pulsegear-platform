@@ -3,11 +3,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export default function SignupPage() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -33,27 +32,34 @@ export default function SignupPage() {
       return
     }
 
-    const redirectTo =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/auth/callback`
-        : undefined
+    try {
+      const supabase = createBrowserSupabaseClient()
 
-    const { error } = await supabase.auth.signUp({
-      email: email.trim().toLowerCase(),
-      password,
-      options: {
-        emailRedirectTo: redirectTo,
-      },
-    })
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined
 
-    if (error) {
-      setError(error.message || 'Signup failed')
+      const { error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          emailRedirectTo: redirectTo,
+        },
+      })
+
+      if (error) {
+        setError(error.message || 'Signup failed')
+        setLoading(false)
+        return
+      }
+
+      setSuccess('Account created successfully. Please confirm from your email.')
+    } catch (err: any) {
+      setError(err?.message || 'Signup failed')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setSuccess('Account created successfully. Please confirm from your email.')
-    setLoading(false)
   }
 
   return (
