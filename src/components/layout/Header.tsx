@@ -59,6 +59,10 @@ export default function Header() {
     }
   }, [supabase, isAdminRoute])
 
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [pathname])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/'
@@ -69,28 +73,30 @@ export default function Header() {
   }
 
   return (
-    <header className="w-full border-b border-white/10 bg-[#111111] sticky top-0 z-50">
-      <div className="w-full px-6 py-4 flex items-center justify-between gap-6">
-        <Link href="/" className="shrink-0">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0b0b0b]/95 backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-4 py-3 md:px-6 lg:px-8">
+        {/* Logo */}
+        <Link href="/" className="shrink-0 flex items-center">
           <Image
             src="/logo.png"
             alt="Pulse Gear Logo"
             width={120}
             height={120}
-            style={{ width: 'auto', height: 'auto' }}
             priority
+            className="h-[72px] w-auto sm:h-[82px] lg:h-[92px]"
           />
         </Link>
 
-        <nav className="hidden xl:flex items-center gap-6 flex-1 justify-center">
+        {/* Desktop Navigation */}
+        <nav className="hidden xl:flex flex-1 items-center justify-center gap-7 2xl:gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+              className={`relative whitespace-nowrap text-[15px] 2xl:text-base font-medium tracking-[0.01em] transition-colors duration-200 ${
                 link.highlight
-                  ? 'text-orange-400 hover:text-orange-300 font-bold'
-                  : 'text-gray-300 hover:text-white'
+                  ? 'text-orange-400 hover:text-orange-300 font-semibold'
+                  : 'text-zinc-200 hover:text-white'
               }`}
             >
               {link.label}
@@ -98,20 +104,21 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3 shrink-0">
+        {/* Desktop Auth */}
+        <div className="hidden lg:flex items-center gap-3 shrink-0">
           {authLoading ? (
             <span className="text-sm text-zinc-500">Loading...</span>
           ) : userEmail ? (
             <>
               <Link
                 href="/account"
-                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition whitespace-nowrap"
+                className="rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
               >
                 Account
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap"
+                className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-zinc-200"
               >
                 Logout
               </button>
@@ -120,13 +127,13 @@ export default function Header() {
             <>
               <Link
                 href="/login"
-                className="text-sm text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition whitespace-nowrap"
+                className="rounded-full border border-zinc-700 px-5 py-2.5 text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
               >
                 Login
               </Link>
               <Link
                 href="/signup"
-                className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition whitespace-nowrap"
+                className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-zinc-200"
               >
                 Sign Up
               </Link>
@@ -134,84 +141,88 @@ export default function Header() {
           )}
         </div>
 
+        {/* Mobile / Tablet Menu Button */}
         <button
-          className="md:hidden flex flex-col gap-1.5 p-2 shrink-0"
+          className="flex shrink-0 flex-col gap-1.5 rounded-md p-2 text-white xl:hidden"
           onClick={() => setMenuOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+          aria-expanded={menuOpen}
         >
           <span
-            className={`block w-6 h-0.5 bg-gray-300 transition-all duration-300 ${
-              menuOpen ? 'rotate-45 translate-y-2' : ''
+            className={`block h-0.5 w-6 bg-white transition-all duration-300 ${
+              menuOpen ? 'translate-y-2 rotate-45' : ''
             }`}
           />
           <span
-            className={`block w-6 h-0.5 bg-gray-300 transition-all duration-300 ${
+            className={`block h-0.5 w-6 bg-white transition-all duration-300 ${
               menuOpen ? 'opacity-0' : ''
             }`}
           />
           <span
-            className={`block w-6 h-0.5 bg-gray-300 transition-all duration-300 ${
-              menuOpen ? '-rotate-45 -translate-y-2' : ''
+            className={`block h-0.5 w-6 bg-white transition-all duration-300 ${
+              menuOpen ? '-translate-y-2 -rotate-45' : ''
             }`}
           />
         </button>
       </div>
 
+      {/* Mobile / Tablet Menu */}
       {menuOpen && (
-        <nav className="md:hidden border-t border-white/10 px-6 py-4 flex flex-col gap-4 bg-[#111111]">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`text-base font-medium transition-colors duration-200 ${
-                link.highlight
-                  ? 'text-orange-400 hover:text-orange-300 font-bold'
-                  : 'text-gray-300 hover:text-white'
-              }`}
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="border-t border-white/10 bg-[#0b0b0b] xl:hidden">
+          <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-4 md:px-6 lg:px-8">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                    link.highlight
+                      ? 'border-orange-500/30 bg-orange-500/10 text-orange-300 hover:bg-orange-500/15'
+                      : 'border-zinc-800 bg-zinc-900 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
-          <div className="border-t border-zinc-800 pt-4 flex flex-col gap-3">
-            {authLoading ? (
-              <span className="text-sm text-zinc-500">Loading...</span>
-            ) : userEmail ? (
-              <>
-                <Link
-                  href="/account"
-                  className="text-sm text-center text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Account
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm text-center text-white border border-zinc-700 hover:border-zinc-500 px-4 py-2 rounded-full transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/signup"
-                  className="text-sm text-center bg-white text-black hover:bg-zinc-200 px-4 py-2 rounded-full font-semibold transition"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Sign Up
-                </Link>
-              </>
-            )}
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {authLoading ? (
+                <span className="text-sm text-zinc-500">Loading...</span>
+              ) : userEmail ? (
+                <>
+                  <Link
+                    href="/account"
+                    className="rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
+                  >
+                    Account
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-zinc-200"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-zinc-200"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-        </nav>
+        </div>
       )}
     </header>
   )

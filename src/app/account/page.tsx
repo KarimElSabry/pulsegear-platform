@@ -30,7 +30,7 @@ export default async function AccountPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Link
-            href="/account/profile"
+            href="/account/settings"
             className="bg-zinc-900 border border-zinc-800 hover:border-red-500 rounded-2xl p-6 transition"
           >
             <div className="text-3xl mb-3">👤</div>
