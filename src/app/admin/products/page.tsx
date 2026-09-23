@@ -1,10 +1,18 @@
-// src/app/admin/products/page.tsx
+// src/app/account/page.tsx
 
-import { ProductService } from '@/services/productService'
-import type { Product } from '@/types/product'
-import ManageProductsClient from './ManageProductsClient'
+import { redirect } from 'next/navigation'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-export default async function ManageProductsPage() {
-  const products = await ProductService.getProducts()
-  return <ManageProductsClient products={products} />
+export default async function AccountPage() {
+  const supabase = await createServerSupabaseClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/auth/login')
+  }
+
+  redirect('/account/settings')
 }

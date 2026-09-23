@@ -4,6 +4,24 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import AccountTabs from '@/components/account/AccountTabs'
+
+const statusStyles: Record<string, string> = {
+  pending: 'bg-yellow-500/20 text-yellow-400',
+  contacted: 'bg-blue-500/20 text-blue-400',
+  sourcing: 'bg-purple-500/20 text-purple-400',
+  completed: 'bg-green-500/20 text-green-400',
+  cancelled: 'bg-red-500/20 text-red-400',
+}
+
+const statusLabels: Record<string, string> = {
+  pending: 'Pending',
+  contacted: 'Contacted',
+  sourcing: 'Sourcing',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+}
+
 export default async function AccountRequestsPage() {
   const authSupabase = await createServerSupabaseClient()
   const adminSupabase = createAdminSupabaseClient()
@@ -49,6 +67,8 @@ export default async function AccountRequestsPage() {
           </p>
         </div>
 
+        <AccountTabs />
+
         {!requests || requests.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 text-center">
             <p className="text-5xl mb-4">📝</p>
@@ -67,59 +87,59 @@ export default async function AccountRequestsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {requests.map((request: any) => (
-              <div
-                key={request.id}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
-              >
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-xs">
-                      Request #{request.id}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        request.status === 'completed'
-                          ? 'bg-green-500/20 text-green-400'
-                          : request.status === 'cancelled'
-                          ? 'bg-red-500/20 text-red-400'
-                          : 'bg-yellow-500/20 text-yellow-400'
-                      }`}
-                    >
-                      {request.status}
-                    </span>
-                  </div>
+            {requests.map((request: any) => {
+              const status = request.status || 'pending'
 
-                  <h2 className="text-xl font-bold text-white">
-                    {request.requested_product}
-                  </h2>
-
-                  <p className="text-sm text-zinc-400">
-                    Submitted on{' '}
-                    {new Date(request.created_at).toLocaleDateString('en-GB', {
-                      day: '2-digit',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
-                  </p>
-
-                  {request.budget && (
-                    <p className="text-sm text-zinc-300">
-                      Budget:{' '}
-                      <span className="text-green-400 font-semibold">
-                        {Number(request.budget).toLocaleString('en-US')} EGP
+              return (
+                <div
+                  key={request.id}
+                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6"
+                >
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-xs">
+                        Request #{request.id}
                       </span>
-                    </p>
-                  )}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          statusStyles[status] ?? 'bg-zinc-700 text-zinc-300'
+                        }`}
+                      >
+                        {statusLabels[status] ?? status}
+                      </span>
+                    </div>
 
-                  {request.notes && (
+                    <h2 className="text-xl font-bold text-white">
+                      {request.requested_product}
+                    </h2>
+
                     <p className="text-sm text-zinc-400">
-                      Notes: <span className="text-zinc-300">{request.notes}</span>
+                      Submitted on{' '}
+                      {new Date(request.created_at).toLocaleDateString('en-GB', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
                     </p>
-                  )}
+
+                    {request.budget && (
+                      <p className="text-sm text-zinc-300">
+                        Budget:{' '}
+                        <span className="text-green-400 font-semibold">
+                          {Number(request.budget).toLocaleString('en-US')} EGP
+                        </span>
+                      </p>
+                    )}
+
+                    {request.notes && (
+                      <p className="text-sm text-zinc-400">
+                        Notes: <span className="text-zinc-300">{request.notes}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

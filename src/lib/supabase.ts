@@ -1,5 +1,6 @@
 // src/lib/supabase.ts
 
+import { createBrowserClient } from '@supabase/ssr'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -15,7 +16,7 @@ if (!supabaseAnonKey) {
 }
 
 export function createBrowserSupabaseClient() {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
 
 export function createAdminSupabaseClient() {

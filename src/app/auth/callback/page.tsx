@@ -3,12 +3,9 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export default function AuthCallbackPage() {
-  const router = useRouter()
-
   useEffect(() => {
     const supabase = createBrowserSupabaseClient()
 
@@ -18,13 +15,12 @@ export default function AuthCallbackPage() {
       } catch (error) {
         console.error('Auth callback failed:', error)
       } finally {
-        router.replace('/account')
-        router.refresh()
+        window.location.assign('/account')
       }
     }
 
     handleAuth()
-  }, [router])
+  }, [])
 
   return (
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center px-6">

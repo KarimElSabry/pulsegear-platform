@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import AccountTabs from '@/components/account/AccountTabs'
+
 export default async function AccountReservationsPage() {
   const authSupabase = await createServerSupabaseClient()
   const adminSupabase = createAdminSupabaseClient()
@@ -54,6 +56,8 @@ export default async function AccountReservationsPage() {
           </p>
         </div>
 
+        <AccountTabs />
+
         {!reservations || reservations.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 text-center">
             <p className="text-5xl mb-4">📦</p>
@@ -97,8 +101,8 @@ export default async function AccountReservationsPage() {
                             reservation.status === 'confirmed'
                               ? 'bg-green-500/20 text-green-400'
                               : reservation.status === 'cancelled'
-                              ? 'bg-red-500/20 text-red-400'
-                              : 'bg-yellow-500/20 text-yellow-400'
+                                ? 'bg-red-500/20 text-red-400'
+                                : 'bg-yellow-500/20 text-yellow-400'
                           }`}
                         >
                           {reservation.status}
@@ -121,7 +125,8 @@ export default async function AccountReservationsPage() {
 
                       {reservation.discounted_price && (
                         <p className="text-sm text-green-400 font-semibold">
-                          Final Price: {Number(reservation.discounted_price).toLocaleString('en-US')} EGP
+                          Final Price:{' '}
+                          {Number(reservation.discounted_price).toLocaleString('en-US')} EGP
                         </p>
                       )}
 

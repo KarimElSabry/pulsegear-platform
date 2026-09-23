@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
+import NewsletterSignup from '@/components/newsletter/NewsletterSignup'
 
 const navLinks = [
   { label: 'Products', href: '/products' },
@@ -22,6 +23,10 @@ export default function Footer() {
   return (
     <footer className="mt-0 w-full border-t border-white/10 bg-[#111111]">
       <div className="mx-auto max-w-6xl px-6 py-14">
+        <div className="mb-12">
+          <NewsletterSignup source="footer" compact />
+        </div>
+
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="flex flex-col gap-4 md:col-span-1">
             <Link href="/" className="inline-flex w-fit items-center">
@@ -83,7 +88,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
             >
-              💬 WhatsApp Us
+              WhatsApp Us
             </a>
 
             <a
@@ -92,7 +97,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
             >
-              📸 Instagram
+              Instagram
             </a>
           </div>
         </div>

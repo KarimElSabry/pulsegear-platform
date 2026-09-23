@@ -6,6 +6,7 @@ import ContactForm from "@/components/ContactForm";
 import HeroCarousel from "@/components/HeroCarousel";
 import ScrollReveal from "@/components/ScrollReveal";
 import StatsBar from "@/components/StatsBar";
+import NewsletterSignup from "@/components/newsletter/NewsletterSignup";
 
 const homeFaqs = [
   {
@@ -64,12 +65,10 @@ const latestPosts = [
 export default function HomePage() {
   return (
     <main className="w-full">
-
-      {/* ===== HERO ===== */}
+      {/* HERO */}
       <section className="w-full bg-zinc-950 text-white min-h-[90vh] flex items-center">
         <div className="max-w-6xl mx-auto px-6 py-24 w-full flex flex-col md:flex-row items-center gap-12">
           <div className="flex flex-col gap-6 max-w-xl flex-1">
-
             <div className="flex flex-col gap-0">
               <span className="text-3xl font-bold uppercase tracking-[0.3em] text-red-500">Your Gear.</span>
               <span className="text-3xl font-bold uppercase tracking-[0.3em] text-red-500">Your Pace.</span>
@@ -77,8 +76,7 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-6xl md:text-7xl font-black leading-[1.05] uppercase tracking-tight">
-              Train Smarter.{" "}
-              <span className="text-red-500">Perform Better.</span>
+              Train Smarter. <span className="text-red-500">Perform Better.</span>
             </h1>
             <p className="text-lg text-zinc-400 leading-relaxed">
               Premium running watches, heart rate monitors, and accessories
@@ -104,12 +102,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== STATS BAR ===== */}
+      {/* STATS */}
       <StatsBar />
 
-      {/* ===== FEATURED PRODUCTS ===== */}
+      {/* OUR PROMISE */}
+      <ScrollReveal delay={0.1}>
+        <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col items-center gap-2 mb-14 text-center">
+              <span className="text-3xl font-bold uppercase tracking-widest text-red-500">Our Promise</span>
+              <h2 className="text-4xl font-black text-white uppercase">Why Pulse Gear?</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { icon: "🌍", title: "Globally Sourced", desc: "We bring you the best running gear from top international brands." },
+                { icon: "🚀", title: "Fast Delivery", desc: "Quick and reliable shipping straight to your door across Egypt." },
+                { icon: "💬", title: "Expert Support", desc: "Not sure what to get? We help you find the perfect gear for your goals." },
+              ].map((item, i) => (
+                <ScrollReveal key={item.title} delay={i * 0.15}>
+                  <div className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-red-600 transition-colors duration-300 h-full">
+                    <span className="text-4xl">{item.icon}</span>
+                    <h3 className="text-lg font-bold text-white uppercase">{item.title}</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      </ScrollReveal>
+
+      {/* FEATURED PRODUCTS */}
       <ScrollReveal>
-        <section className="w-full py-20 px-6 bg-zinc-950">
+        <section className="w-full py-20 px-6 bg-zinc-950 border-t border-zinc-800">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-10">
               <h2 className="text-3xl font-black text-white uppercase">Hand-Picked For You</h2>
@@ -125,11 +150,10 @@ export default function HomePage() {
         </section>
       </ScrollReveal>
 
-      {/* ===== 🔥 HOT DEALS BANNER ===== */}
+      {/* HOT DEALS */}
       <ScrollReveal delay={0.1}>
         <section className="w-full bg-gradient-to-r from-orange-600/10 via-zinc-900 to-zinc-900 py-14 px-6 border-t border-orange-500/20">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-
             <div className="flex flex-col gap-3">
               <span className="text-2xl font-bold uppercase tracking-widest text-orange-400">
                 🔥 Hot Deals
@@ -154,17 +178,37 @@ export default function HomePage() {
                 Limited time — grab yours before it's gone!
               </span>
             </div>
-
           </div>
         </section>
       </ScrollReveal>
 
-      {/* ===== 📚 BLOG PREVIEW ===== */}
+      {/* NEWSLETTER */}
+      <NewsletterSignup source="homepage" />
+
+      {/* REQUEST A PRODUCT */}
+      <ScrollReveal delay={0.1}>
+        <section className="w-full bg-zinc-950 text-white py-20 px-6 border-t border-zinc-800">
+          <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
+            <h2 className="text-4xl font-black uppercase leading-tight">
+              Can't Find What You're Looking For?
+            </h2>
+            <p className="text-zinc-400 text-lg">
+              Submit a product request and we'll source it for you.
+            </p>
+            <Link
+              href="/request-product"
+              className="self-center bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
+            >
+              Request a Product
+            </Link>
+          </div>
+        </section>
+      </ScrollReveal>
+
+      {/* BLOG */}
       <ScrollReveal delay={0.1}>
         <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
           <div className="max-w-6xl mx-auto">
-
-            {/* Header */}
             <div className="flex items-center justify-between mb-10">
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-bold uppercase tracking-widest text-red-500">
@@ -182,7 +226,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {latestPosts.map((post, i) => (
                 <ScrollReveal key={post.slug} delay={i * 0.1}>
@@ -190,10 +233,8 @@ export default function HomePage() {
                     href={`/blog/${post.slug}`}
                     className="group flex flex-col gap-4 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-6 transition-all duration-300 h-full"
                   >
-                    {/* Emoji */}
                     <span className="text-4xl">{post.emoji}</span>
 
-                    {/* Tag + Read Time */}
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
                         {post.tag}
@@ -201,17 +242,14 @@ export default function HomePage() {
                       <span className="text-xs text-zinc-500">{post.readTime}</span>
                     </div>
 
-                    {/* Title */}
                     <h3 className="text-lg font-black text-white uppercase leading-tight group-hover:text-red-400 transition-colors duration-200">
                       {post.title}
                     </h3>
 
-                    {/* Description */}
                     <p className="text-sm text-zinc-400 leading-relaxed flex-1">
                       {post.desc}
                     </p>
 
-                    {/* CTA */}
                     <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200">
                       <span>Read Article</span>
                       <span>→</span>
@@ -220,16 +258,14 @@ export default function HomePage() {
                 </ScrollReveal>
               ))}
             </div>
-
           </div>
         </section>
       </ScrollReveal>
 
-      {/* ===== SOLD ARCHIVE BANNER ===== */}
+      {/* SOLD ARCHIVE */}
       <ScrollReveal delay={0.1}>
         <section className="w-full bg-zinc-900 py-14 px-6 border-t border-zinc-800">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-
             <div className="flex flex-col gap-3">
               <span className="text-2xl font-bold uppercase tracking-widest text-red-500">
                 Sold Archive
@@ -254,63 +290,14 @@ export default function HomePage() {
                 Items go fast — check what's still available!
               </span>
             </div>
-
           </div>
         </section>
       </ScrollReveal>
 
-      {/* ===== WHY PULSE GEAR ===== */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col items-center gap-2 mb-14 text-center">
-              <span className="text-3xl font-bold uppercase tracking-widest text-red-500">Our Promise</span>
-              <h2 className="text-4xl font-black text-white uppercase">Why Pulse Gear?</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: "🌍", title: "Globally Sourced",  desc: "We bring you the best running gear from top international brands." },
-                { icon: "🚀", title: "Fast Delivery",     desc: "Quick and reliable shipping straight to your door across Egypt." },
-                { icon: "💬", title: "Expert Support",    desc: "Not sure what to get? We help you find the perfect gear for your goals." },
-              ].map((item, i) => (
-                <ScrollReveal key={item.title} delay={i * 0.15}>
-                  <div className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-red-600 transition-colors duration-300 h-full">
-                    <span className="text-4xl">{item.icon}</span>
-                    <h3 className="text-lg font-bold text-white uppercase">{item.title}</h3>
-                    <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* ===== REQUEST A PRODUCT ===== */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 text-white py-20 px-6 border-t border-zinc-800">
-          <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
-            <h2 className="text-4xl font-black uppercase leading-tight">
-              Can't Find What You're Looking For?
-            </h2>
-            <p className="text-zinc-400 text-lg">
-              Submit a product request and we'll source it for you.
-            </p>
-            <Link
-              href="/request-product"
-              className="self-center bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-            >
-              Request a Product
-            </Link>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* ===== GET IN TOUCH ===== */}
+      {/* GET IN TOUCH */}
       <ScrollReveal delay={0.1}>
         <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
           <div className="max-w-6xl mx-auto">
-
             <div className="flex flex-col items-center gap-2 mb-14 text-center">
               <span className="text-3xl font-bold uppercase tracking-widest text-red-500">Get In Touch</span>
               <h2 className="text-3xl font-black text-white uppercase">We're Here To Help</h2>
@@ -320,8 +307,6 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-
-              {/* LEFT — FAQ */}
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-black text-white uppercase">Quick Answers</h3>
@@ -347,16 +332,13 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* RIGHT — Contact Form */}
               <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
                 <ContactForm />
               </div>
-
             </div>
           </div>
         </section>
       </ScrollReveal>
-
     </main>
   );
 }

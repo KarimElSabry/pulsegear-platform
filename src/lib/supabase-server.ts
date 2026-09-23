@@ -1,7 +1,7 @@
 // src/lib/supabase-server.ts
 
 import { cookies } from 'next/headers'
-import { createServerClient as createSSRServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -17,16 +17,24 @@ if (!supabaseAnonKey) {
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
 
-  return createSSRServerClient(supabaseUrl, supabaseAnonKey, {
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value
       },
-      set(_name: string, _value: string, _options: CookieOptions) {
-        // no-op
+      set(name: string, value: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value, ...options })
+        } catch {
+          // ignored in server components where setting cookies may not be allowed
+        }
       },
-      remove(_name: string, _options: CookieOptions) {
-        // no-op
+      remove(name: string, options: CookieOptions) {
+        try {
+          cookieStore.set({ name, value: '', ...options, maxAge: 0 })
+        } catch {
+          // ignored in server components where setting cookies may not be allowed
+        }
       },
     },
   })

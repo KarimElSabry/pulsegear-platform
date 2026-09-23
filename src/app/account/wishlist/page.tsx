@@ -4,6 +4,7 @@
 
 import Link from 'next/link'
 import ProductCard from '@/components/product/ProductCard'
+import AccountTabs from '@/components/account/AccountTabs'
 import { useWishlist } from '@/hooks/useWishlist'
 
 export default function AccountWishlistPage() {
@@ -21,6 +22,8 @@ export default function AccountWishlistPage() {
             {wishlist.length} {wishlist.length === 1 ? 'item' : 'items'} saved
           </p>
         </div>
+
+        <AccountTabs />
 
         {loading ? (
           <div className="text-center py-20">

@@ -31,10 +31,7 @@ export async function deleteProduct(id: number): Promise<void> {
   revalidatePath('/admin/products')
 }
 
-export async function updateProductStatus(
-  id: number,
-  status: ProductStatus
-): Promise<void> {
+export async function updateProductStatus(id: number, status: ProductStatus): Promise<void> {
   await ProductService.updateStatus(id, status)
   revalidatePath('/admin/products')
   revalidatePath('/products')
@@ -84,57 +81,66 @@ export async function addProduct(formData: FormData): Promise<void> {
     : undefined
 
   const isReservable = formData.get('is_reservable') === 'true'
-  const vintedId     = (formData.get('vinted_id') as string) || undefined
+  const vintedId = (formData.get('vinted_id') as string)?.trim() || undefined
 
-  await ProductService.createProduct(
-    {
-      title:          formData.get('title') as string,
-      description:    (formData.get('description') as string) || undefined,
-      price_egp:      parseFloat(formData.get('price') as string),
-      original_price: formData.get('original_price')
-                        ? parseFloat(formData.get('original_price') as string)
-                        : undefined,
-      brand:          (formData.get('brand') as string) || undefined,
-      size:           (formData.get('size') as string) || undefined,
-      condition,
-      category:       (formData.get('category') as string) || undefined,
-      source:         sourceUrl?.includes('vinted') ? 'vinted' : 'manual',
-      source_url:     sourceUrl,
-      status:         'available',
-      is_reservable:  isReservable,
-      vinted_id:      vintedId,
-    },
-    imageUrls
-  )
+  try {
+    await ProductService.createProduct(
+      {
+        title: formData.get('title') as string,
+        description: (formData.get('description') as string) || undefined,
+        price_egp: parseFloat(formData.get('price') as string),
+        original_price: formData.get('original_price')
+          ? parseFloat(formData.get('original_price') as string)
+          : undefined,
+        brand: (formData.get('brand') as string) || undefined,
+        size: (formData.get('size') as string) || undefined,
+        condition,
+        category: (formData.get('category') as string) || undefined,
+        source: sourceUrl?.includes('vinted') ? 'vinted' : 'manual',
+        source_url: sourceUrl,
+        status: 'available',
+        is_reservable: isReservable,
+        vinted_id: vintedId,
+      },
+      imageUrls
+    )
+  } catch (error: any) {
+    const code = error?.code
+    const message = error?.message || ''
+
+    if (code === '23505' || message.includes('products_vinted_id_key')) {
+      throw new Error(`This Vinted item already exists. Duplicate ID: ${vintedId}`)
+    }
+
+    throw new Error(message || 'Failed to add product')
+  }
 
   revalidatePath('/admin')
   revalidatePath('/admin/products')
 }
 
-// ─── ✅ Add Sale ──────────────────────────────────────────────────────────────
-
 export async function addSale(formData: FormData): Promise<void> {
-  const originalEur    = parseFloat(formData.get('original_eur')     as string)
-  const shippingEur    = parseFloat(formData.get('shipping_eur')      as string) || 0
-  const exchangeRate   = parseFloat(formData.get('exchange_rate')     as string)
-  const sellingPrice   = parseFloat(formData.get('selling_price_egp') as string)
+  const originalEur = parseFloat(formData.get('original_eur') as string)
+  const shippingEur = parseFloat(formData.get('shipping_eur') as string) || 0
+  const exchangeRate = parseFloat(formData.get('exchange_rate') as string)
+  const sellingPrice = parseFloat(formData.get('selling_price_egp') as string)
 
-  const costEgp         = (originalEur + shippingEur) * exchangeRate
-  const profitEgp       = sellingPrice - costEgp
+  const costEgp = (originalEur + shippingEur) * exchangeRate
+  const profitEgp = sellingPrice - costEgp
   const profitMarginPct = costEgp > 0 ? (profitEgp / costEgp) * 100 : 0
 
   const { error } = await supabase.from('sales').insert({
-    product_name:      formData.get('product_name'),
-    original_eur:      originalEur,
-    shipping_eur:      shippingEur,
-    exchange_rate:     exchangeRate,
-    cost_egp:          Math.round(costEgp         * 100) / 100,
+    product_name: formData.get('product_name'),
+    original_eur: originalEur,
+    shipping_eur: shippingEur,
+    exchange_rate: exchangeRate,
+    cost_egp: Math.round(costEgp * 100) / 100,
     selling_price_egp: sellingPrice,
-    profit_egp:        Math.round(profitEgp       * 100) / 100,
+    profit_egp: Math.round(profitEgp * 100) / 100,
     profit_margin_pct: Math.round(profitMarginPct * 100) / 100,
-    sale_channel:      formData.get('sale_channel'),
-    sale_date:         formData.get('sale_date'),
-    notes:             formData.get('notes') || null,
+    sale_channel: formData.get('sale_channel'),
+    sale_date: formData.get('sale_date'),
+    notes: formData.get('notes') || null,
   })
 
   if (error) throw new Error(error.message)

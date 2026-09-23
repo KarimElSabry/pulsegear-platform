@@ -152,9 +152,29 @@ function buildEmailTemplate(
   `
 }
 
-export async function addContactToBrevo(email: string, name?: string): Promise<void> {
+export async function addContactToBrevo(
+  email: string,
+  name?: string,
+  metadata?: { source?: string }
+): Promise<void> {
   const apiKey = getBrevoApiKey()
   const listId = getNewsletterListId()
+
+  const normalizedEmail = email.trim().toLowerCase()
+  const firstName = extractFirstName(name)
+
+  const attributes: Record<string, string> = {}
+
+  if (firstName) {
+    attributes.FIRSTNAME = firstName
+  }
+
+  // Optional:
+  // If you create a custom Brevo contact attribute called SOURCE,
+  // you can safely keep this enabled.
+  if (metadata?.source) {
+    attributes.SOURCE = metadata.source
+  }
 
   const res = await fetch(`${BREVO_API_URL}/contacts`, {
     method: 'POST',
@@ -163,8 +183,8 @@ export async function addContactToBrevo(email: string, name?: string): Promise<v
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      email: email.trim().toLowerCase(),
-      attributes: { FIRSTNAME: extractFirstName(name) },
+      email: normalizedEmail,
+      attributes,
       listIds: [listId],
       updateEnabled: true,
     }),
@@ -179,7 +199,17 @@ export async function addContactToBrevo(email: string, name?: string): Promise<v
     err = null
   }
 
-  throw new Error(err?.message || 'Brevo subscription failed')
+  const message = err?.message || 'Brevo subscription failed'
+
+  if (
+    message.toLowerCase().includes('duplicate') ||
+    message.toLowerCase().includes('already exist') ||
+    message.toLowerCase().includes('contact already exist')
+  ) {
+    return
+  }
+
+  throw new Error(message)
 }
 
 export async function removeContactFromBrevo(email: string): Promise<void> {

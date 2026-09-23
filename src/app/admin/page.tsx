@@ -4,46 +4,45 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
-import { addProduct , addSale } from './actions'
+import { addProduct, addSale } from './actions'
 
 const FALLBACK_RATE = 55
 const DEFAULT_SHIPPING_EUR = 10
 const supabase = createBrowserSupabaseClient()
 
 export default function AdminPage() {
-  const [imageUrls, setImageUrls]         = useState<string[]>([])
-  const [manualUrls, setManualUrls]       = useState<string>('')
-  const [uploading, setUploading]         = useState(false)
-  const formRef                           = useRef<HTMLFormElement>(null)
+  const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [manualUrls, setManualUrls] = useState<string>('')
+  const [uploading, setUploading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [submitSuccess, setSubmitSuccess] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
 
-  const [eurRate, setEurRate]             = useState<number | null>(null)
-  const [rateLoading, setRateLoading]     = useState(false)
-  const [rateError, setRateError]         = useState(false)
-  const [manualRate, setManualRate]       = useState<string>('')
-  const [originalEur, setOriginalEur]     = useState<string>('')
-  const [shippingEur, setShippingEur]     = useState<string>(String(DEFAULT_SHIPPING_EUR))
-  const [marginPct, setMarginPct]         = useState<string>('20')
-  const [baseEgp, setBaseEgp]             = useState<number | null>(null)
-  const [sellingPrice, setSellingPrice]   = useState<string>('')
+  const [eurRate, setEurRate] = useState<number | null>(null)
+  const [rateLoading, setRateLoading] = useState(false)
+  const [rateError, setRateError] = useState(false)
+  const [manualRate, setManualRate] = useState<string>('')
+  const [originalEur, setOriginalEur] = useState<string>('')
+  const [shippingEur, setShippingEur] = useState<string>(String(DEFAULT_SHIPPING_EUR))
+  const [marginPct, setMarginPct] = useState<string>('20')
+  const [baseEgp, setBaseEgp] = useState<number | null>(null)
+  const [sellingPrice, setSellingPrice] = useState<string>('')
 
-  const effectiveRate = manualRate
-    ? parseFloat(manualRate)
-    : eurRate ?? null
+  const effectiveRate = manualRate ? parseFloat(manualRate) : eurRate ?? null
 
-  // ─── Multi-API Fallback Chain ──────────────────────────────────────────────
   async function fetchRate() {
     setRateLoading(true)
     setRateError(false)
 
     const APIs = [
       async () => {
-        const res  = await fetch('https://open.er-api.com/v6/latest/EUR')
+        const res = await fetch('https://open.er-api.com/v6/latest/EUR')
         const data = await res.json()
         if (data?.rates?.EGP) return data.rates.EGP
         throw new Error('No EGP')
       },
       async () => {
-        const res  = await fetch(
+        const res = await fetch(
           'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json'
         )
         const data = await res.json()
@@ -51,7 +50,7 @@ export default function AdminPage() {
         throw new Error('No EGP')
       },
       async () => {
-        const res  = await fetch('https://api.frankfurter.app/latest?from=EUR&to=EGP')
+        const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=EGP')
         const data = await res.json()
         if (data?.rates?.EGP) return data.rates.EGP
         throw new Error('No EGP')
@@ -75,14 +74,15 @@ export default function AdminPage() {
     setRateLoading(false)
   }
 
-  useEffect(() => { fetchRate() }, [])
-
-  // ─── Auto-calculate whenever inputs change ─────────────────────────────────
   useEffect(() => {
-    const eur      = parseFloat(originalEur)
+    fetchRate()
+  }, [])
+
+  useEffect(() => {
+    const eur = parseFloat(originalEur)
     const shipping = parseFloat(shippingEur) || 0
-    const margin   = parseFloat(marginPct)
-    const rate     = effectiveRate
+    const margin = parseFloat(marginPct)
+    const rate = effectiveRate
 
     const priceInput = formRef.current?.querySelector<HTMLInputElement>('input[name="price"]')
 
@@ -94,36 +94,36 @@ export default function AdminPage() {
     }
 
     const totalEur = eur + shipping
-    const base     = totalEur * rate
-    const final    = base * (1 + (isNaN(margin) ? 0 : margin) / 100)
-    const rounded  = Math.ceil(final).toString()
+    const base = totalEur * rate
+    const final = base * (1 + (isNaN(margin) ? 0 : margin) / 100)
+    const rounded = Math.ceil(final).toString()
 
     setBaseEgp(base)
     setSellingPrice(rounded)
     if (priceInput) priceInput.value = rounded
+  }, [originalEur, shippingEur, eurRate, marginPct, manualRate, effectiveRate])
 
-  }, [originalEur, shippingEur, eurRate, marginPct, manualRate])
-
-  // ─── Handle Image Upload ───────────────────────────────────────────────────
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
     if (!files.length) return
+
     setUploading(true)
     const uploaded: string[] = []
 
     for (const file of files) {
-      const ext      = file.name.split('.').pop()
+      const ext = file.name.split('.').pop()
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
       const { error } = await supabase.storage
         .from('product-images')
         .upload(fileName, file, { upsert: false })
 
-      if (error) { console.error('Upload error:', error.message); continue }
+      if (error) {
+        console.error('Upload error:', error.message)
+        continue
+      }
 
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(fileName)
+      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName)
 
       if (data?.publicUrl) uploaded.push(data.publicUrl)
     }
@@ -132,12 +132,10 @@ export default function AdminPage() {
     setUploading(false)
   }
 
-  // ─── Remove Uploaded Image ─────────────────────────────────────────────────
   function removeImage(index: number) {
     setImageUrls((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // ─── Full Reset ────────────────────────────────────────────────────────────
   function resetForm() {
     setImageUrls([])
     setManualUrls('')
@@ -147,33 +145,38 @@ export default function AdminPage() {
     setBaseEgp(null)
     setSellingPrice('')
     setManualRate('')
+    setSubmitError('')
     formRef.current?.reset()
   }
 
-  // ─── Form Submit ───────────────────────────────────────────────────────────
   async function handleSubmit(formData: FormData) {
-    const manualList = manualUrls
-      .split('\n')
-      .map((u) => u.trim())
-      .filter(Boolean)
+    setSubmitError('')
+    setSubmitSuccess('')
 
-    formData.set('images', [...imageUrls, ...manualList].join('\n'))
-    await addProduct(formData)
-    resetForm()
+    try {
+      const manualList = manualUrls
+        .split('\n')
+        .map((u) => u.trim())
+        .filter(Boolean)
+
+      formData.set('images', [...imageUrls, ...manualList].join('\n'))
+      await addProduct(formData)
+
+      setSubmitSuccess('Product added successfully.')
+      resetForm()
+    } catch (error: any) {
+      setSubmitError(error?.message || 'Failed to add product.')
+    }
   }
 
   return (
     <div className="max-w-2xl mx-auto p-8">
-
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Add New Product</h1>
         <p className="text-gray-400 mt-1">Fill in the details below to list a new item</p>
       </div>
 
       <form ref={formRef} action={handleSubmit} className="space-y-6">
-
-        {/* Vinted Item ID */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">
             Vinted Item ID <span className="text-purple-400">*</span>
@@ -189,7 +192,6 @@ export default function AdminPage() {
           </p>
         </div>
 
-        {/* Title */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">
             Seller Description <span className="text-purple-400">*</span>
@@ -202,7 +204,6 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* Description */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">Description</label>
           <textarea
@@ -213,10 +214,7 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* ===== PRICE CALCULATOR ===== */}
         <div className="bg-gray-900 border border-purple-800 rounded-2xl p-5 space-y-4">
-
-          {/* Header + Rate Badge */}
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-sm font-bold text-purple-400 uppercase tracking-widest">
               💱 Price Calculator
@@ -250,7 +248,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Manual Rate Override */}
           {(rateError || !eurRate) && (
             <div className="space-y-1">
               <label className="block text-xs font-semibold text-yellow-400 uppercase tracking-widest">
@@ -281,7 +278,6 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* Step 1 — EUR Price */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 1 — Enter Original Price in EUR
@@ -296,7 +292,6 @@ export default function AdminPage() {
             />
           </div>
 
-          {/* Step 2 — Shipping */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 2 — Shipping to Egypt (EUR)
@@ -326,7 +321,6 @@ export default function AdminPage() {
             )}
           </div>
 
-          {/* Step 3 — Margin */}
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 3 — Set Your Profit Margin (%)
@@ -352,7 +346,6 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Breakdown */}
           {baseEgp !== null && (
             <div className="bg-gray-800 rounded-xl px-4 py-3 space-y-2 text-sm">
               <div className="flex justify-between text-gray-400">
@@ -383,7 +376,6 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Price Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
@@ -395,7 +387,7 @@ export default function AdminPage() {
               required
               step="0.01"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-              placeholder="Auto-filled by calculator ☝️"
+              placeholder="Auto-filled by calculator"
             />
           </div>
           <div className="space-y-1">
@@ -410,7 +402,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Brand & Size */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">Brand</label>
@@ -430,7 +421,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Condition & Category */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-200">
@@ -466,7 +456,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Allow Reservation */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">
             Allow Reservation? <span className="text-purple-400">*</span>
@@ -481,7 +470,6 @@ export default function AdminPage() {
           </select>
         </div>
 
-        {/* Source URL */}
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">Source URL</label>
           <input
@@ -492,7 +480,6 @@ export default function AdminPage() {
           />
         </div>
 
-        {/* Images */}
         <div className="space-y-3">
           <label className="block text-sm font-semibold text-gray-200">Product Images</label>
 
@@ -520,14 +507,12 @@ export default function AdminPage() {
 
           <textarea
             rows={3}
-            placeholder={"https://www.vinted.com/photos/...\nhttps://www.vinted.com/photos/..."}
+            placeholder={'https://www.vinted.com/photos/...\nhttps://www.vinted.com/photos/...'}
             value={manualUrls}
             onChange={(e) => setManualUrls(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none text-sm font-mono"
           />
-          <p className="text-xs text-gray-500">
-            📌 One URL per line — paste Vinted image links here
-          </p>
+          <p className="text-xs text-gray-500">📌 One URL per line — paste Vinted image links here</p>
 
           {imageUrls.length > 0 && (
             <div>
@@ -540,11 +525,7 @@ export default function AdminPage() {
                     key={i}
                     className="relative group rounded-xl overflow-hidden border border-gray-700"
                   >
-                    <img
-                      src={url}
-                      alt={`Uploaded ${i + 1}`}
-                      className="w-full h-28 object-cover"
-                    />
+                    <img src={url} alt={`Uploaded ${i + 1}`} className="w-full h-28 object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
@@ -559,7 +540,18 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* Submit */}
+        {submitError && (
+          <div className="rounded-xl border border-red-800 bg-red-950/40 px-4 py-3 text-sm text-red-400">
+            {submitError}
+          </div>
+        )}
+
+        {submitSuccess && (
+          <div className="rounded-xl border border-green-800 bg-green-950/40 px-4 py-3 text-sm text-green-400">
+            {submitSuccess}
+          </div>
+        )}
+
         <button
           type="submit"
           disabled={uploading}
@@ -567,7 +559,6 @@ export default function AdminPage() {
         >
           ➕ Add Product
         </button>
-
       </form>
     </div>
   )
