@@ -29,9 +29,9 @@ export async function POST(req: Request) {
     const { data: soldProducts, error: soldErr } = await supabase
       .from('products')
       .select('*, images:product_images(*)')
-      .gte('updated_at', oneWeekAgo.toISOString())
+      .gte('sold_at', oneWeekAgo.toISOString())
       .eq('status', 'sold')
-      .order('updated_at', { ascending: false })
+      .order('sold_at', { ascending: false })
 
     if (soldErr) throw soldErr
 

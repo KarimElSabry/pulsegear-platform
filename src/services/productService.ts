@@ -1,6 +1,7 @@
 // src/services/productService.ts
 
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { sendWishlistSoldAlerts } from '@/lib/brevo'
 import type {
   Product,
   ProductFilters,
@@ -267,6 +268,19 @@ export class ProductService {
   ): Promise<void> {
     const supabase = this.getClient()
 
+    const { data: currentProduct, error: currentProductError } = await supabase
+      .from('products')
+      .select('id, status')
+      .eq('id', id)
+      .single()
+
+    if (currentProductError) {
+      console.error('[ProductService] updateStatus fetch current error:', currentProductError.message)
+      throw currentProductError
+    }
+
+    const previousStatus = currentProduct?.status
+
     const { error } = await supabase
       .from('products')
       .update({
@@ -278,6 +292,14 @@ export class ProductService {
     if (error) {
       console.error('[ProductService] updateStatus error:', error.message)
       throw error
+    }
+
+    if (previousStatus !== 'sold' && status === 'sold') {
+      try {
+        await sendWishlistSoldAlerts(id)
+      } catch (alertError: any) {
+        console.error('[ProductService] wishlist sold alert error:', alertError?.message || alertError)
+      }
     }
   }
 

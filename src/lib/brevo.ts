@@ -1,6 +1,7 @@
 // src/lib/brevo.ts
 
 import { Product, ProductImage } from '@/types/product'
+import { createAdminSupabaseClient } from '@/lib/supabase'
 
 const BREVO_API_URL = 'https://api.brevo.com/v3'
 
@@ -143,7 +144,72 @@ function buildEmailTemplate(
             You're receiving this email because you subscribed to Pulse Gear Egypt weekly updates.
           </p>
           <p style="color:#999; font-size:12px; margin:6px 0 0;">
-            <a href="{{unsubscribeLink}}" style="color:#999;">Unsubscribe</a>
+            <a href="${siteUrl}/unsubscribe?email={{ contact.EMAIL }}" style="color:#999;">
+              Unsubscribe
+            </a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function buildWishlistSoldAlertTemplate(
+  product: Product & { images?: ProductImage[] },
+  recipientEmail: string
+): string {
+  const siteUrl = getSiteUrl()
+  const imageUrl = getPrimaryImage(product)
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <body style="font-family:Arial,sans-serif; background:#f4f4f4; margin:0; padding:20px;">
+      <div style="max-width:600px; margin:auto; background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+        <div style="background:#000; padding:32px; text-align:center;">
+          <h1 style="color:#fff; margin:0; font-size:30px; letter-spacing:1px;">Pulse Gear Egypt</h1>
+          <p style="color:#aaa; margin:10px 0 0; font-size:14px;">Wishlist Update</p>
+        </div>
+
+        <div style="padding:24px;">
+          <h2 style="font-size:24px; margin:0 0 12px; color:#111;">
+            An item in your wishlist is no longer available
+          </h2>
+
+          <p style="font-size:15px; color:#555; line-height:1.7; margin:0 0 18px;">
+            One of the products you saved to your wishlist has been marked as sold.
+          </p>
+
+          <div style="border:1px solid #e0e0e0; padding:16px; margin:12px 0; border-radius:12px; background:#f9f9f9;">
+            ${
+              imageUrl
+                ? `<img src="${imageUrl}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px; filter:grayscale(40%);"/>`
+                : ''
+            }
+            <h3 style="margin:0 0 6px; font-size:18px; color:#333;">${product.title}</h3>
+            <p style="font-size:20px; font-weight:bold; color:#777; margin:6px 0;">${product.price_egp} EGP</p>
+            <span style="background:#ef4444; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">Sold</span>
+          </div>
+
+          <div style="text-align:center; margin:30px 0 12px;">
+            <a href="${siteUrl}/products" style="display:inline-block; background:#000; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:15px; font-weight:bold; margin:0 6px 10px;">
+              Browse Similar Products
+            </a>
+            <a href="${siteUrl}/request-product" style="display:inline-block; background:#ef4444; color:#fff; padding:14px 28px; border-radius:10px; text-decoration:none; font-size:15px; font-weight:bold; margin:0 6px 10px;">
+              Request This Product
+            </a>
+          </div>
+        </div>
+
+        <div style="background:#f4f4f4; padding:20px; text-align:center;">
+          <p style="color:#999; font-size:12px; margin:0;">
+            This alert was sent because you saved this item to your Pulse Gear wishlist.
+          </p>
+          <p style="color:#999; font-size:12px; margin:6px 0 0;">
+            <a href="${siteUrl}/unsubscribe?email=${encodeURIComponent(recipientEmail)}" style="color:#999;">
+              Unsubscribe from newsletter
+            </a>
           </p>
         </div>
       </div>
@@ -169,9 +235,6 @@ export async function addContactToBrevo(
     attributes.FIRSTNAME = firstName
   }
 
-  // Optional:
-  // If you create a custom Brevo contact attribute called SOURCE,
-  // you can safely keep this enabled.
   if (metadata?.source) {
     attributes.SOURCE = metadata.source
   }
@@ -295,5 +358,132 @@ export async function sendWeeklyNewsletter(
     }
 
     throw new Error(sendErr?.message || 'Failed to send newsletter campaign')
+  }
+}
+
+export async function sendWishlistSoldAlerts(productId: number): Promise<void> {
+  const supabase = createAdminSupabaseClient()
+
+  const { data: product, error: productError } = await supabase
+    .from('products')
+    .select(`
+      *,
+      images:product_images(*)
+    `)
+    .eq('id', productId)
+    .single()
+
+  if (productError || !product) {
+    throw new Error(productError?.message || 'Product not found for wishlist alert')
+  }
+
+  const { data: wishlistRows, error: wishlistError } = await supabase
+    .from('wishlist_items')
+    .select('user_id')
+    .eq('product_id', productId)
+
+  if (wishlistError) {
+    throw new Error(wishlistError.message)
+  }
+
+  const userIds = [...new Set((wishlistRows ?? []).map((row) => row.user_id).filter(Boolean))]
+
+  if (userIds.length === 0) {
+    return
+  }
+
+  const { data: existingAlerts, error: alertsError } = await supabase
+    .from('wishlist_alerts')
+    .select('user_id')
+    .eq('product_id', productId)
+    .eq('alert_type', 'sold')
+
+  if (alertsError) {
+    throw new Error(alertsError.message)
+  }
+
+  const alreadySentUserIds = new Set(
+    (existingAlerts ?? []).map((row) => row.user_id).filter(Boolean)
+  )
+
+  const pendingUserIds = userIds.filter((userId) => !alreadySentUserIds.has(userId))
+
+  if (pendingUserIds.length === 0) {
+    return
+  }
+
+  const { data: profiles, error: profilesError } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .in('user_id', pendingUserIds)
+
+  if (profilesError) {
+    throw new Error(profilesError.message)
+  }
+
+  const { data: authUsers, error: authUsersError } = await supabase.auth.admin.listUsers()
+
+  if (authUsersError) {
+    throw new Error(authUsersError.message)
+  }
+
+  const usersById = new Map(
+    (authUsers?.users ?? []).map((user) => [user.id, user])
+  )
+
+  const sentRows: Array<{ user_id: string; product_id: number; alert_type: string }> = []
+
+  for (const userId of pendingUserIds) {
+    const authUser = usersById.get(userId)
+    const email = authUser?.email?.trim().toLowerCase()
+
+    if (!email) continue
+
+    const htmlContent = buildWishlistSoldAlertTemplate(product as Product & { images?: ProductImage[] }, email)
+
+    const res = await fetch(`${BREVO_API_URL}/smtp/email`, {
+      method: 'POST',
+      headers: {
+        'api-key': getBrevoApiKey(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: getSenderName(),
+          email: getSenderEmail(),
+        },
+        to: [{ email }],
+        subject: `An item in your wishlist is no longer available`,
+        htmlContent,
+      }),
+    })
+
+    if (!res.ok) {
+      let err: any = null
+      try {
+        err = await res.json()
+      } catch {
+        err = null
+      }
+
+      console.error('[Brevo] wishlist sold alert failed:', email, err?.message || 'Unknown error')
+      continue
+    }
+
+    sentRows.push({
+      user_id: userId,
+      product_id: productId,
+      alert_type: 'sold',
+    })
+  }
+
+  if (sentRows.length > 0) {
+    const { error: insertAlertError } = await supabase
+      .from('wishlist_alerts')
+      .insert(sentRows)
+
+    if (insertAlertError) {
+      throw new Error(insertAlertError.message)
+    }
   }
 }
