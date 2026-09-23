@@ -6,12 +6,23 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get('authorization')
+  const vercelCronHeader = req.headers.get('x-vercel-cron')
 
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const isManualAuthorized =
+    authHeader === `Bearer ${process.env.CRON_SECRET}`
+
+  const isVercelCron = vercelCronHeader === '1'
+
+  if (!isManualAuthorized && !isVercelCron) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   try {
+    console.log(
+      '[newsletter/send-weekly] Triggered by:',
+      isVercelCron ? 'vercel-cron' : 'manual'
+    )
+
     const supabase = createAdminSupabaseClient()
 
     const oneWeekAgo = new Date()
@@ -41,9 +52,12 @@ export async function POST(req: Request) {
       success: true,
       newProducts: newProducts?.length || 0,
       soldProducts: soldProducts?.length || 0,
+      triggeredBy: isVercelCron ? 'vercel-cron' : 'manual',
     })
   } catch (error: any) {
     const message = error?.message || 'Failed to send newsletter'
+
+    console.error('[newsletter/send-weekly] Error:', message)
 
     if (
       message.includes('BREVO_API_KEY') ||
