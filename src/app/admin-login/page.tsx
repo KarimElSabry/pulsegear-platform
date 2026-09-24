@@ -2,14 +2,16 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   const handleLogin = async () => {
+    setError(false)
+    setLoading(true)
+
     const res = await fetch('/api/admin-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -17,17 +19,19 @@ export default function AdminLogin() {
     })
 
     if (res.ok) {
-      router.push('/admin')
-    } else {
-      setError(true)
+      window.location.href = '/admin'
+      return
     }
+
+    setError(true)
+    setLoading(false)
   }
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center">
       <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 w-full max-w-sm">
         <h1 className="text-white text-2xl font-bold mb-6 text-center">
-          🔒 Admin Access
+          Admin Access
         </h1>
 
         <input
@@ -36,23 +40,21 @@ export default function AdminLogin() {
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
           placeholder="Enter password..."
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 
-                     text-white placeholder-zinc-500 focus:outline-none 
-                     focus:border-purple-500 mb-4"
+          className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 mb-4"
         />
 
         {error && (
           <p className="text-red-400 text-sm mb-4 text-center">
-            ❌ Wrong password!
+            Wrong password.
           </p>
         )}
 
         <button
           onClick={handleLogin}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white 
-                     font-bold py-3 rounded-xl transition"
+          disabled={loading}
+          className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition"
         >
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </div>
     </div>

@@ -10,11 +10,11 @@ export async function POST(req: Request) {
 
   const response = NextResponse.json({ success: true })
 
-  // ✅ Set cookie لمدة 7 أيام
   response.cookies.set('admin_token', process.env.ADMIN_SECRET!, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
   })
 
