@@ -1,18 +1,19 @@
-// src/app/account/page.tsx
+// src/app/admin/products/page.tsx
 
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { ProductService } from '@/services/productService'
+import ManageProductsClient from './ManageProductsClient'
 
-export default async function AccountPage() {
-  const supabase = await createServerSupabaseClient()
+export default async function ManageProductsPage() {
+  const cookieStore = await cookies()
+  const token = cookieStore.get('admin_token')?.value
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/auth/login')
+  if (token !== process.env.ADMIN_SECRET) {
+    redirect('/admin-login')
   }
 
-  redirect('/account/settings')
+  const products = await ProductService.getProducts()
+
+  return <ManageProductsClient products={products} />
 }
