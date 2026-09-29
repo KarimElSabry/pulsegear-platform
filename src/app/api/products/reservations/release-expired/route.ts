@@ -1,5 +1,5 @@
 // src/app/api/reservations/release-expired/route.ts
-// Cron (hourly): products whose 24h hold has passed go back to "available"
+// Cron (daily, 03:17 UTC; the free Hobby plan allows at most one run per day): products whose 24h hold has passed go back to "available"
 // and their pending reservation rows are marked "cancelled".
 
 import { NextResponse } from 'next/server'

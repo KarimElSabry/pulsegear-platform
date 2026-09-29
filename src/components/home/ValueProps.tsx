@@ -13,7 +13,7 @@ const ITEMS: { title: string; desc: string; icon: ReactNode }[] = [
   },
   {
     title: 'Delivered to your door',
-    desc: 'Cairo, Alexandria, Delta or Upper Egypt: hand-delivered in 1–2 weeks with a 50% deposit and 50% on delivery.',
+    desc: 'Cairo, Alexandria, Delta or Upper Egypt: reliable shipping, delivered to your door in 1–2 weeks.',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6" aria-hidden="true">
         <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" /><circle cx="7" cy="17.5" r="1.5" /><circle cx="17" cy="17.5" r="1.5" />

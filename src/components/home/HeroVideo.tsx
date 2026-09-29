@@ -11,7 +11,7 @@ import { HERO_CLIPS } from '@/content/hero-videos'
 
 const TRUST = [
   { label: '100% authentic', sub: 'Sourced from trusted sellers' },
-  { label: 'We source it for you', sub: 'Send a model or your budget, we find it' },
+  { label: 'We source it for you', sub: 'Send a model or your budget, we find\u00a0it' },
   { label: 'Delivered in Egypt', sub: 'To your door, 1–2 weeks' },
 ]
 
@@ -75,11 +75,11 @@ export default function HeroVideo() {
         </div>
 
         {/* Trust row */}
-        <dl className="mt-14 grid max-w-3xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line backdrop-blur sm:grid-cols-3">
+        <dl className="mt-14 grid max-w-4xl grid-cols-1 gap-px overflow-hidden rounded-2xl border border-line bg-line backdrop-blur sm:grid-cols-3">
           {TRUST.map((t) => (
             <div key={t.label} className="bg-surface-0/70 px-5 py-4">
               <dt className="text-sm font-bold uppercase tracking-wide text-white">{t.label}</dt>
-              <dd className="mt-1 text-xs text-muted">{t.sub}</dd>
+              <dd className="mt-1 text-xs text-muted sm:whitespace-nowrap">{t.sub}</dd>
             </div>
           ))}
         </dl>

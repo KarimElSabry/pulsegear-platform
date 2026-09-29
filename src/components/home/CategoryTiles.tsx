@@ -3,9 +3,9 @@
 // products are shown, each with a real photo of its newest item and a live count.
 // The data comes from getCategoryTiles() (called in app/page.tsx).
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowIcon } from './SectionHeading'
+import TileImage from './TileImage'
 
 export type CategoryTile = {
   key: string
@@ -13,7 +13,7 @@ export type CategoryTile = {
   sub: string
   filter: string // value understood by /products?category=
   count: number
-  image: string | null
+  images: string[] // up to 8 photos from different products; one is picked per visitor session
 }
 
 // The database mixes "Fitness Watches" and "fitness_watches", so keys are normalised.
@@ -32,7 +32,7 @@ type Row = {
   images: { image_url: string; is_primary: boolean | null; display_order: number | null }[] | null
 }
 
-/** rows must be ordered newest first. */
+/** rows must be ordered newest first. Each tile gets photos from up to 8 different products. */
 export function buildCategoryTiles(rows: Row[]): CategoryTile[] {
   const acc = new Map<string, CategoryTile>()
   for (const r of rows) {
@@ -41,9 +41,9 @@ export function buildCategoryTiles(rows: Row[]): CategoryTile[] {
     if (!meta) continue
     const imgs = r.images ?? []
     const primary = imgs.find((i) => i.is_primary) ?? [...imgs].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))[0]
-    const cur = acc.get(key) ?? { key, ...meta, count: 0, image: null }
+    const cur = acc.get(key) ?? { key, ...meta, count: 0, images: [] as string[] }
     cur.count += 1
-    if (!cur.image && primary?.image_url) cur.image = primary.image_url
+    if (primary?.image_url && cur.images.length < 8 && !cur.images.includes(primary.image_url)) cur.images.push(primary.image_url)
     acc.set(key, cur)
   }
   return [...acc.values()].sort((a, b) => b.count - a.count).slice(0, 4)
@@ -67,18 +67,8 @@ export default function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
           href={`/products?category=${encodeURIComponent(t.filter)}&availability=${encodeURIComponent('In Stock')}`}
           className={`group relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-2 ${span(tiles.length, i)}`}
         >
-          {t.image ? (
-            <Image
-              src={t.image}
-              alt=""
-              fill
-              unoptimized
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-brand/30 via-surface-2 to-surface-2" />
-          )}
+          <div className="absolute inset-0 bg-gradient-to-br from-brand/30 via-surface-2 to-surface-2" />
+          <TileImage images={t.images} salt={t.key} />
           <div className="absolute inset-0 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
             <div>

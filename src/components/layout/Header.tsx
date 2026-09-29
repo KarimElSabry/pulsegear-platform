@@ -11,7 +11,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase'
 const navLinks = [
   { label: 'Products', href: '/products' },
   { label: 'Brands', href: '/brands' },
-  { label: 'Deals', href: '/deals', highlight: true },
+  { label: 'HOT DEALS 🔥', href: '/deals', highlight: true },
   { label: 'Blog', href: '/blog' },
   { label: 'Request', href: '/request-product' },
   { label: 'Wishlist', href: '/wishlist' },

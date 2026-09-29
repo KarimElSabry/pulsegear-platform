@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 import type { Product } from '@/types/product'
 import ProductCard from './ProductCard'
+import { sortUnsoldFirst } from '@/lib/product-sort'
 
 type Props = {
   limit?: number
@@ -97,16 +98,8 @@ export default function ProductGrid({
     )
   }
 
-  const statusOrder: Record<string, number> = {
-    available: 0,
-    reserved: 1,
-    sold: 2,
-  }
-
-  displayed = displayed.sort(
-    (a, b) =>
-      (statusOrder[a.status ?? ''] ?? 0) - (statusOrder[b.status ?? ''] ?? 0)
-  )
+  // Unsold first (newest first), then sold (most recently sold first)
+  displayed = sortUnsoldFirst(displayed)
 
   if (randomize) {
     const groups = [

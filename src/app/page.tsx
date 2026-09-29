@@ -11,7 +11,7 @@ import StatsStrip, { type Stats } from '@/components/home/StatsStrip'
 import BrandMarquee from '@/components/home/BrandMarquee'
 import SectionHeading from '@/components/home/SectionHeading'
 import CategoryTiles, { buildCategoryTiles, type CategoryTile } from '@/components/home/CategoryTiles'
-import ProductCarousel from '@/components/home/ProductCarousel'
+import RandomProductRail from '@/components/home/RandomProductRail'
 import ValueProps from '@/components/home/ValueProps'
 import Testimonials from '@/components/home/Testimonials'
 import BlogTeasers from '@/components/home/BlogTeasers'
@@ -39,14 +39,14 @@ async function getHomeData(): Promise<HomeData> {
         .select('*, images:product_images(*)')
         .eq('status', 'available')
         .order('created_at', { ascending: false })
-        .limit(10),
+        .limit(16),
       supabase
         .from('products')
         .select('*, images:product_images(*)')
         .eq('is_deal', true)
         .eq('status', 'available')
         .order('created_at', { ascending: false })
-        .limit(8),
+        .limit(20),
       supabase.from('products').select('id', { count: 'exact', head: true }).eq('status', 'available'),
       supabase.from('products').select('id', { count: 'exact', head: true }).eq('status', 'sold'),
       supabase.from('products').select('brand').not('brand', 'is', null),
@@ -110,7 +110,7 @@ export default async function HomePage() {
               sub="Fresh stock, listed as it clears inspection. Reserve before someone else does."
               action={{ label: 'View all', href: '/products?availability=In%20Stock' }}
             />
-            <ProductCarousel products={featured} />
+            <RandomProductRail pool={featured} limit={10} salt="new" />
           </ScrollReveal>
         </div>
       </section>
@@ -127,7 +127,7 @@ export default async function HomePage() {
                 sub="Hand-picked prices that will not last. When they are gone, they are gone."
                 action={{ label: 'All deals', href: '/deals' }}
               />
-              <ProductCarousel products={deals} />
+              <RandomProductRail pool={deals} limit={8} salt="deals" />
             </ScrollReveal>
           </div>
         </section>
