@@ -81,7 +81,7 @@ export default function Header() {
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-4 py-3 md:px-6 lg:px-8">
         <Link href="/" className="shrink-0 flex items-center">
           <Image
-            src="/logo.png"
+            src="/hero/logo.png"
             alt="Pulse Gear Logo"
             width={140}
             height={109}

@@ -45,11 +45,11 @@ export default function Footer() {
           <div className="flex flex-col gap-4 md:col-span-1">
             <Link href="/" className="inline-flex w-fit items-center">
               <Image
-                src="/logo.png"
+                src="/hero/logo.png"
                 alt="Pulse Gear Logo"
                 width={150}
-                height={60}
-                className="h-[52px] w-auto"
+                height={80}
+                className="h-[80px] w-auto"
               />
             </Link>
 
