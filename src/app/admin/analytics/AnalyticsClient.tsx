@@ -548,6 +548,38 @@ function ManualSaleForm({
 export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
   const router = useRouter()
   const [editingSale, setEditingSale] = useState<EditSale | null>(null)
+  const [salesMonth, setSalesMonth] = useState<string>('all')
+
+  // Month keys (YYYY-MM) present in the sales list, newest first
+  const salesMonths = Array.from(
+    new Set(
+      data.recentSales
+        .map((s) => (s.sale_date ? s.sale_date.slice(0, 7) : ''))
+        .filter(Boolean)
+    )
+  ).sort((a, b) => (a < b ? 1 : -1))
+
+  const filteredSales =
+    salesMonth === 'all'
+      ? data.recentSales
+      : data.recentSales.filter((s) => s.sale_date?.slice(0, 7) === salesMonth)
+
+  const salesTotals = filteredSales.reduce(
+    (acc, s) => {
+      acc.count += 1
+      acc.revenueEgp += s.selling_price_egp
+      acc.revenueEur += s.selling_price_eur
+      acc.profitEgp += s.profit_egp
+      acc.profitEur += s.profit_eur
+      acc.costEgp += s.cost_egp
+      acc.costEur += s.cost_eur
+      return acc
+    },
+    { count: 0, revenueEgp: 0, revenueEur: 0, profitEgp: 0, profitEur: 0, costEgp: 0, costEur: 0 }
+  )
+
+  const monthLabel = (key: string) =>
+    new Date(`${key}-01T00:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`🗑️ Delete "${name}"?\n\nThis cannot be undone.`)) return
@@ -977,7 +1009,30 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
       {data.recentSales.length > 0 && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-4">🧾 Recent Sales (Last 10)</h3>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="text-white font-bold">
+              🧾 Sales{' '}
+              <span className="text-zinc-500 font-normal text-sm">
+                ({salesTotals.count} {salesTotals.count === 1 ? 'sale' : 'sales'}
+                {salesMonth !== 'all' ? ` in ${monthLabel(salesMonth)}` : ' total'})
+              </span>
+            </h3>
+            <label className="flex items-center gap-2 text-sm text-zinc-400">
+              Month
+              <select
+                value={salesMonth}
+                onChange={(e) => setSalesMonth(e.target.value)}
+                className="bg-zinc-800 text-white text-sm px-3 py-2 rounded-lg border border-zinc-700 focus:outline-none focus:border-purple-500"
+              >
+                <option value="all">All months</option>
+                {salesMonths.map((m) => (
+                  <option key={m} value={m}>
+                    {monthLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -996,9 +1051,16 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 </tr>
               </thead>
               <tbody>
-                {data.recentSales.map((s, i) => (
+                {filteredSales.length === 0 && (
+                  <tr>
+                    <td colSpan={11} className="py-8 text-center text-zinc-500">
+                      No sales in {monthLabel(salesMonth)}.
+                    </td>
+                  </tr>
+                )}
+                {filteredSales.map((s) => (
                   <tr
-                    key={i}
+                    key={s.id}
                     className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition"
                   >
                     <td className="py-3 pr-4 text-white font-medium max-w-[180px] truncate">
@@ -1088,6 +1150,31 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-zinc-700 bg-zinc-800/40">
+                  <td className="py-3 pr-4 text-white font-bold" colSpan={3}>
+                    Total{salesMonth !== 'all' ? ` · ${monthLabel(salesMonth)}` : ''}
+                  </td>
+                  <td className="py-3 pr-4 text-right text-zinc-300 font-bold">
+                    <div>{formatEGP(salesTotals.costEgp)}</div>
+                    <div className="text-xs text-zinc-500 font-normal">{formatEUR(salesTotals.costEur)}</div>
+                  </td>
+                  <td className="py-3 pr-4 text-right text-green-400 font-black">
+                    <div>{formatEGP(salesTotals.revenueEgp)}</div>
+                    <div className="text-xs text-zinc-500 font-normal">{formatEUR(salesTotals.revenueEur)}</div>
+                  </td>
+                  <td className="py-3 pr-4 text-right text-blue-400 font-black">
+                    <div>{formatEGP(salesTotals.profitEgp)}</div>
+                    <div className="text-xs text-zinc-500 font-normal">{formatEUR(salesTotals.profitEur)}</div>
+                  </td>
+                  <td className="py-3 pr-4 text-right text-zinc-500" colSpan={2}>
+                    {salesTotals.revenueEgp > 0
+                      ? `${((salesTotals.profitEgp / salesTotals.revenueEgp) * 100).toFixed(1)}% avg margin`
+                      : '—'}
+                  </td>
+                  <td colSpan={3} />
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>

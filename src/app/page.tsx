@@ -1,344 +1,129 @@
-// src/app/page.tsx
+// src/components/layout/Footer.tsx
 
-import Link from "next/link";
-import ProductGrid from "@/components/product/ProductGrid";
-import ContactForm from "@/components/ContactForm";
-import HeroCarousel from "@/components/HeroCarousel";
-import ScrollReveal from "@/components/ScrollReveal";
-import StatsBar from "@/components/StatsBar";
-import NewsletterSignup from "@/components/newsletter/NewsletterSignup";
+'use client'
 
-const homeFaqs = [
-  {
-    q: "What is Pulse Gear?",
-    a: "An Egyptian platform sourcing premium running gear globally, delivered to your door across Egypt.",
-  },
-  {
-    q: "Are the products original?",
-    a: "Yes. All products are 100% authentic, sourced from trusted international sellers.",
-  },
-  {
-    q: "What conditions do products come in?",
-    a: "Brand New, Like New, Very Good, or Good, clearly displayed on every product page.",
-  },
-  {
-    q: "How long does delivery take?",
-    a: "Generally 1–2 weeks depending on the product source and international shipping.",
-  },
-  {
-    q: "How do I pay?",
-    a: "50% upfront via Instapay or bank transfer, and 50% cash on delivery.",
-  },
-  {
-    q: "Can I request a product not listed?",
-    a: "Absolutely! Use our Request a Product page and we'll source it for you.",
-  },
-];
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
+import NewsletterSignup from '@/components/newsletter/NewsletterSignup'
 
-const latestPosts = [
-  {
-    slug: "heart-rate-zones",
-    emoji: "📊",
-    tag: "Training Guide",
-    title: "Heart Rate Zones: Train Smart, Not Hard",
-    desc: "Learn how the 5 heart rate zones work and how to use them to maximize every training session.",
-    readTime: "5 min read",
-  },
-  {
-    slug: "zone-2-training",
-    emoji: "🫀",
-    tag: "Training Guide",
-    title: "Zone 2 Training: The Secret of Elite Athletes",
-    desc: "Why elite athletes spend 80% of their training in Zone 2 — and how you can do the same.",
-    readTime: "6 min read",
-  },
-  {
-    slug: "heart-rate-strap-vs-optical",
-    emoji: "⚡",
-    tag: "Gear Review",
-    title: "Heart Rate Strap vs Optical: Which Is More Accurate?",
-    desc: "A detailed comparison between chest straps and optical sensors — accuracy, comfort, and price.",
-    readTime: "5 min read",
-  },
-];
+const navLinks = [
+  { label: 'Products', href: '/products' },
+  { label: 'Hot Deals', href: '/deals' },
+  { label: 'Brands', href: '/brands' },
+  { label: 'Sold Archive', href: '/sold' },
+  { label: 'Request Product', href: '/request-product' },
+  { label: 'Wishlist', href: '/wishlist' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'FAQ', href: '/faq' },
+]
 
-export default function HomePage() {
+const accountLinks = [
+  { label: 'Login', href: '/auth/login' },
+  { label: 'Sign Up', href: '/auth/signup' },
+  { label: 'My Account', href: '/account' },
+]
+
+export default function Footer() {
+  const pathname = usePathname()
+  if (pathname?.startsWith('/admin')) return null
+
+  // The homepage has its own large newsletter section, so the footer copy is hidden
+  // there. Every other page shows the newsletter form exactly once, here.
+  const showNewsletter = pathname !== '/'
+
   return (
-    <main className="w-full">
-      {/* HERO */}
-      <section className="w-full bg-zinc-950 text-white min-h-[90vh] flex items-center">
-        <div className="max-w-6xl mx-auto px-6 py-24 w-full flex flex-col md:flex-row items-center gap-12">
-          <div className="flex flex-col gap-6 max-w-xl flex-1">
-            <div className="flex flex-col gap-0">
-              <span className="text-3xl font-bold uppercase tracking-[0.3em] text-red-500">Your Gear.</span>
-              <span className="text-3xl font-bold uppercase tracking-[0.3em] text-red-500">Your Pace.</span>
-              <span className="text-3xl font-bold uppercase tracking-[0.3em] text-red-500">Your Race.</span>
-            </div>
-
-            <h1 className="text-6xl md:text-7xl font-black leading-[1.05] uppercase tracking-tight">
-              Train Smarter. <span className="text-red-500">Perform Better.</span>
-            </h1>
-            <p className="text-lg text-zinc-400 leading-relaxed">
-              Premium running watches, heart rate monitors, and accessories
-              sourced globally, priced competitively, hand-delivered to your doorstep across Egypt.
-            </p>
-            <div className="flex flex-wrap gap-4 mt-2">
-              <Link
-                href="/products"
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-              >
-                Browse Products
-              </Link>
-              <Link
-                href="/request-product"
-                className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-              >
-                Request a Product
-              </Link>
-            </div>
+    <footer className="mt-0 w-full border-t border-line bg-surface-1">
+      <div className="mx-auto max-w-6xl px-6 py-14">
+        {showNewsletter && (
+          <div className="mb-12">
+            <NewsletterSignup source="footer" compact />
           </div>
+        )}
 
-          <HeroCarousel />
-        </div>
-      </section>
-
-      {/* STATS */}
-      <StatsBar />
-
-      {/* OUR PROMISE */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col items-center gap-2 mb-14 text-center">
-              <span className="text-3xl font-bold uppercase tracking-widest text-red-500">Our Promise</span>
-              <h2 className="text-4xl font-black text-white uppercase">Why Pulse Gear?</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: "🌍", title: "Globally Sourced", desc: "We bring you the best running gear from top international brands." },
-                { icon: "🚀", title: "Fast Delivery", desc: "Quick and reliable shipping straight to your door across Egypt." },
-                { icon: "💬", title: "Expert Support", desc: "Not sure what to get? We help you find the perfect gear for your goals." },
-              ].map((item, i) => (
-                <ScrollReveal key={item.title} delay={i * 0.15}>
-                  <div className="flex flex-col gap-4 p-8 bg-zinc-900 rounded-2xl border border-zinc-800 hover:border-red-600 transition-colors duration-300 h-full">
-                    <span className="text-4xl">{item.icon}</span>
-                    <h3 className="text-lg font-bold text-white uppercase">{item.title}</h3>
-                    <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
-                  </div>
-                </ScrollReveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* FEATURED PRODUCTS */}
-      <ScrollReveal>
-        <section className="w-full py-20 px-6 bg-zinc-950 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-3xl font-black text-white uppercase">Hand-Picked For You</h2>
-              <Link
-                href="/products"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200 uppercase tracking-wide"
-              >
-                View All →
-              </Link>
-            </div>
-            <ProductGrid limit={3} filterAvailability="In Stock" randomize />
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* HOT DEALS */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-gradient-to-r from-orange-600/10 via-zinc-900 to-zinc-900 py-14 px-6 border-t border-orange-500/20">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex flex-col gap-3">
-              <span className="text-2xl font-bold uppercase tracking-widest text-orange-400">
-                🔥 Hot Deals
-              </span>
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase leading-tight">
-                Unbeatable Prices. Limited Stock.
-              </h2>
-              <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-                We hand-pick the best deals on premium running gear so you never
-                miss out. These won't last long!
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center gap-3 shrink-0">
-              <Link
-                href="/deals"
-                className="bg-orange-500 hover:bg-orange-400 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
-              >
-                View All Deals 🔥
-              </Link>
-              <span className="text-xs text-zinc-500">
-                Limited time — grab yours before it's gone!
-              </span>
-            </div>
-          </div>
-        </section>
-      </ScrollReveal>
-
-      {/* NEWSLETTER */}
-      <NewsletterSignup source="homepage" />
-
-      {/* REQUEST A PRODUCT */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 text-white py-20 px-6 border-t border-zinc-800">
-          <div className="max-w-2xl mx-auto text-center flex flex-col gap-6">
-            <h2 className="text-4xl font-black uppercase leading-tight">
-              Can't Find What You're Looking For?
-            </h2>
-            <p className="text-zinc-400 text-lg">
-              Submit a product request and we'll source it for you.
-            </p>
-            <Link
-              href="/request-product"
-              className="self-center bg-red-600 hover:bg-red-700 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-            >
-              Request a Product
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
+          <div className="flex flex-col gap-4 md:col-span-1">
+            <Link href="/" className="inline-flex w-fit items-center">
+              <Image
+                src="/logo.png"
+                alt="Pulse Gear Logo"
+                width={150}
+                height={60}
+                className="h-[52px] w-auto"
+              />
             </Link>
-          </div>
-        </section>
-      </ScrollReveal>
 
-      {/* BLOG */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-10">
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-bold uppercase tracking-widest text-red-500">
-                  From The Blog
-                </span>
-                <h2 className="text-3xl font-black text-white uppercase">
-                  Train Smarter 📚
-                </h2>
-              </div>
+            <p className="max-w-xs text-sm leading-relaxed text-gray-400">
+              Egypt&apos;s home for serious runners. We source, ship, and deliver the gear you
+              actually want to train and race with.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+              Navigation
+            </h3>
+
+            {navLinks.map((link) => (
               <Link
-                href="/blog"
-                className="text-sm font-semibold text-zinc-400 hover:text-white transition-colors duration-200 uppercase tracking-wide"
+                key={link.href}
+                href={link.href}
+                className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
               >
-                View All Articles →
+                {link.label}
               </Link>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {latestPosts.map((post, i) => (
-                <ScrollReveal key={post.slug} delay={i * 0.1}>
-                  <Link
-                    href={`/blog/${post.slug}`}
-                    className="group flex flex-col gap-4 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-6 transition-all duration-300 h-full"
-                  >
-                    <span className="text-4xl">{post.emoji}</span>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
-                        {post.tag}
-                      </span>
-                      <span className="text-xs text-zinc-500">{post.readTime}</span>
-                    </div>
-
-                    <h3 className="text-lg font-black text-white uppercase leading-tight group-hover:text-red-400 transition-colors duration-200">
-                      {post.title}
-                    </h3>
-
-                    <p className="text-sm text-zinc-400 leading-relaxed flex-1">
-                      {post.desc}
-                    </p>
-
-                    <div className="flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:gap-3 transition-all duration-200">
-                      <span>Read Article</span>
-                      <span>→</span>
-                    </div>
-                  </Link>
-                </ScrollReveal>
-              ))}
-            </div>
+            ))}
           </div>
-        </section>
-      </ScrollReveal>
 
-      {/* SOLD ARCHIVE */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-900 py-14 px-6 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex flex-col gap-3">
-              <span className="text-2xl font-bold uppercase tracking-widest text-red-500">
-                Sold Archive
-              </span>
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase leading-tight">
-                These Gems Found Their Home 🏷️
-              </h2>
-              <p className="text-zinc-400 text-sm max-w-md leading-relaxed">
-                Browse our sold items to see what's been flying off the shelves,
-                and don't miss out on what's still available!
-              </p>
-            </div>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+              Account
+            </h3>
 
-            <div className="flex flex-col items-center gap-3 shrink-0">
+            {accountLinks.map((link) => (
               <Link
-                href="/sold"
-                className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-red-500 text-white px-8 py-3.5 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
+                key={link.href}
+                href={link.href}
+                className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
               >
-                View Sold Archive →
+                {link.label}
               </Link>
-              <span className="text-xs text-zinc-500">
-                Items go fast — check what's still available!
-              </span>
-            </div>
+            ))}
           </div>
-        </section>
-      </ScrollReveal>
 
-      {/* GET IN TOUCH */}
-      <ScrollReveal delay={0.1}>
-        <section className="w-full bg-zinc-950 py-20 px-6 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col items-center gap-2 mb-14 text-center">
-              <span className="text-3xl font-bold uppercase tracking-widest text-red-500">Get In Touch</span>
-              <h2 className="text-3xl font-black text-white uppercase">We're Here To Help</h2>
-              <p className="text-zinc-400 text-sm max-w-md">
-                Browse our most common questions or send us a message directly.
-              </p>
-            </div>
+          <div className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-white">
+              Get in Touch
+            </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-black text-white uppercase">Quick Answers</h3>
-                  <Link
-                    href="/faq"
-                    className="text-xs font-semibold text-red-500 hover:text-red-400 uppercase tracking-wide transition-colors duration-200"
-                  >
-                    View All FAQs →
-                  </Link>
-                </div>
-                <div className="flex flex-col gap-px">
-                  {homeFaqs.map((faq, i) => (
-                    <details key={i} className="group border-t border-zinc-800 last:border-b last:border-zinc-800">
-                      <summary className="flex items-center justify-between gap-4 py-4 cursor-pointer list-none">
-                        <span className="text-sm font-semibold text-white group-open:text-red-400 transition-colors duration-200">
-                          {faq.q}
-                        </span>
-                        <span className="text-zinc-500 group-open:text-red-500 transition-colors duration-200 text-xl shrink-0">+</span>
-                      </summary>
-                      <div className="pb-4 text-zinc-400 text-sm leading-relaxed">{faq.a}</div>
-                    </details>
-                  ))}
-                </div>
-              </div>
+            <a
+              href="https://wa.me/+201205322444"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
+            >
+              WhatsApp Us
+            </a>
 
-              <div className="bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
-                <ContactForm />
-              </div>
-            </div>
+            <a
+              href="https://instagram.com/pulsegear_egypt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-gray-400 transition-colors duration-200 hover:text-white"
+            >
+              Instagram
+            </a>
           </div>
-        </section>
-      </ScrollReveal>
-    </main>
-  );
+        </div>
+
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 md:flex-row">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()} Pulse Gear Egypt. All rights reserved.
+          </p>
+
+          <p className="text-xs text-gray-500">Built for runners. Powered by passion.</p>
+        </div>
+      </div>
+    </footer>
+  )
 }

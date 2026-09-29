@@ -1,549 +1,244 @@
-// src/app/blog/heart-rate-strap-vs-optical/page.tsx
+// src/app/blog/gear-review/heart-rate-strap-vs-optical/page.tsx
+// Built on the shared blog kit (src/components/blog).
 
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { articleMetadata } from '@/lib/blog-meta'
+import {
+  ArticleShell,
+  Section,
+  P,
+  Strong,
+  BulletList,
+  Callout,
+  StatCards,
+  MeterCard,
+  CompareTable,
+  FaqList,
+  type FaqItem,
+} from '@/components/blog'
 
-export const metadata: Metadata = {
-  title: "Heart Rate Strap vs Optical: أيهما أدق؟ | Pulse Gear Blog",
-  description:
-    "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Heart Rate Monitor في الدقة والراحة وأيهما يناسبك.",
-  openGraph: {
-    title: "Heart Rate Strap vs Optical: أيهما أدق؟",
-    description:
-      "مقارنة تفصيلية بين الـ Chest Strap والـ Optical Heart Rate Monitor.",
-    type: "article",
-  },
-};
+const SLUG = 'gear-review/heart-rate-strap-vs-optical'
 
-const comparisonData = [
-  {
-    category: "Accuracy",
-    icon: "🎯",
-    strap: {
-      rating: 5,
-      note: "دقة طبية، بيقيس الـ Electrical Signal مباشرة من القلب. الأدق في السوق.",
-    },
-    optical: {
-      rating: 3,
-      note: "كويس في الحالات العادية بس بيغلط في الـ Intervals والـ Sprints.",
-    },
-    winner: "strap",
-  },
-  {
-    category: "Comfort",
-    icon: "😌",
-    strap: {
-      rating: 3,
-      note: "محتاج تبلله قبل اللبس، ممكن يعمل احتكاك في الجلد بعد فترة.",
-    },
-    optical: {
-      rating: 5,
-      note: "زي الساعة العادية، مفيش إحساس بيه خالص طول اليوم.",
-    },
-    winner: "optical",
-  },
-  {
-    category: "High Intensity Performance",
-    icon: "⚡",
-    strap: {
-      rating: 5,
-      note: "ممتاز في الـ HIIT والـ Sprints، بيتابع التغييرات السريعة فوراً.",
-    },
-    optical: {
-      rating: 2,
-      note: "بيتأخر في التسجيل، الـ Lag ممكن يوصل لـ 10–15 ثانية.",
-    },
-    winner: "strap",
-  },
-  {
-    category: "Battery Life",
-    icon: "🔋",
-    strap: {
-      rating: 5,
-      note: "من 400 لـ 500 ساعة، بيستمر شهور من غير شحن.",
-    },
-    optical: {
-      rating: 3,
-      note: "من يوم لـ 7 أيام حسب الـ GPS والـ Features المفعّلة.",
-    },
-    winner: "strap",
-  },
-  {
-    category: "Ease of Use",
-    icon: "🔧",
-    strap: {
-      rating: 3,
-      note: "محتاج تربطه صح وتبلله، خطوة إضافية قبل كل تمرين.",
-    },
-    optical: {
-      rating: 5,
-      note: "البسه وروح، مفيش إعداد أو تحضير.",
-    },
-    winner: "optical",
-  },
-  {
-    category: "All-Day Tracking",
-    icon: "📊",
-    strap: {
-      rating: 2,
-      note: "مش مناسب للبس طول اليوم، صُمّم للتمرين بس.",
-    },
-    optical: {
-      rating: 5,
-      note: "ممتاز للـ 24/7 Tracking، HR والـ Sleep والـ HRV وكل حاجة.",
-    },
-    winner: "optical",
-  },
-];
+export const metadata: Metadata = articleMetadata(SLUG)
 
-const useCases = [
+type Side = { rating: number; note: string }
+type Row = { category: string; strap: Side; optical: Side; winner: 'strap' | 'optical' }
+
+const comparison: Row[] = [
   {
-    title: "اختار الـ Chest Strap لو...",
-    icon: "💪",
-    color: "border-blue-500/30 bg-blue-500/5",
-    titleColor: "text-blue-400",
-    cases: [
-      "بتعمل HIIT أو Interval Training بجدية",
-      "بتجري سباقات أو بتتدرب بـ Serious Level",
-      "محتاج أدق قراءة ممكنة للـ HR",
-      "عندك Arrhythmia أو مشاكل في القلب",
-      "عايز Battery Life يستمر شهور",
-    ],
+    category: 'Accuracy',
+    strap: { rating: 5, note: 'دقة طبية، بيقيس الـ Electrical Signal مباشرة من القلب. الأدق في السوق.' },
+    optical: { rating: 3, note: 'كويس في الحالات العادية بس بيغلط في الـ Intervals والـ Sprints.' },
+    winner: 'strap',
   },
   {
-    title: "اختار الـ Optical لو...",
-    icon: "⌚",
-    color: "border-purple-500/30 bg-purple-500/5",
-    titleColor: "text-purple-400",
-    cases: [
-      "بتتمرن بشكل عام وغير متخصص",
-      "عايز تتابع الـ HR والـ Sleep طول اليوم",
-      "مش قادر تتحمل الـ Chest Strap",
-      "بتعمل Yoga أو Pilates أو تمارين خفيفة",
-      "عايز كل حاجة في جهاز واحد",
-    ],
+    category: 'Comfort',
+    strap: { rating: 3, note: 'محتاج تبلله قبل اللبس، ممكن يعمل احتكاك في الجلد بعد فترة.' },
+    optical: { rating: 5, note: 'زي الساعة العادية، مفيش إحساس بيه خالص طول اليوم.' },
+    winner: 'optical',
   },
-];
+  {
+    category: 'High Intensity Performance',
+    strap: { rating: 5, note: 'ممتاز في الـ HIIT والـ Sprints، بيتابع التغييرات السريعة فوراً.' },
+    optical: { rating: 2, note: 'بيتأخر في التسجيل، الـ Lag ممكن يوصل لـ 10–15 ثانية.' },
+    winner: 'strap',
+  },
+  {
+    category: 'Battery Life',
+    strap: { rating: 5, note: 'من 400 لـ 500 ساعة، بيستمر شهور من غير شحن.' },
+    optical: { rating: 3, note: 'من يوم لـ 7 أيام حسب الـ GPS والـ Features المفعّلة.' },
+    winner: 'strap',
+  },
+  {
+    category: 'Ease of Use',
+    strap: { rating: 3, note: 'محتاج تربطه صح وتبلله، خطوة إضافية قبل كل تمرين.' },
+    optical: { rating: 5, note: 'البسه وروح، مفيش إعداد أو تحضير.' },
+    winner: 'optical',
+  },
+  {
+    category: 'All-Day Tracking',
+    strap: { rating: 2, note: 'مش مناسب للبس طول اليوم، صُمّم للتمرين بس.' },
+    optical: { rating: 5, note: 'ممتاز للـ 24/7 Tracking، HR والـ Sleep والـ HRV وكل حاجة.' },
+    winner: 'optical',
+  },
+]
+
+function Rated({ side }: { side: Side }) {
+  return (
+    <>
+      <span className="mb-1 block text-xs font-bold tabular-nums text-white" dir="ltr">
+        {'●'.repeat(side.rating)}
+        <span className="text-muted">{'●'.repeat(5 - side.rating)}</span>
+        <span className="ms-2 text-muted">{side.rating}/5</span>
+      </span>
+      {side.note}
+    </>
+  )
+}
+
+const strapCases = [
+  'بتعمل HIIT أو Interval Training بجدية',
+  'بتجري سباقات أو بتتدرب بـ Serious Level',
+  'محتاج أدق قراءة ممكنة للـ HR',
+  'عندك Arrhythmia أو مشاكل في القلب',
+  'عايز Battery Life يستمر شهور',
+]
+
+const opticalCases = [
+  'بتتمرن بشكل عام وغير متخصص',
+  'عايز تتابع الـ HR والـ Sleep طول اليوم',
+  'مش قادر تتحمل الـ Chest Strap',
+  'بتعمل Yoga أو Pilates أو تمارين خفيفة',
+  'عايز كل حاجة في جهاز واحد',
+]
 
 const verdicts = [
-  {
-    icon: "🎯",
-    text: "لو الدقة أهم حاجة ليك، Chest Strap بدون تفكير",
-  },
-  {
-    icon: "😌",
-    text: "لو الراحة والسهولة أهم، Optical Smartwatch",
-  },
-  {
-    icon: "💪",
-    text: "لو بتتدرب بجدية، Chest Strap للتمرين والـ Smartwatch لليوم كله",
-  },
-];
+  'لو الدقة أهم حاجة ليك، Chest Strap بدون تفكير',
+  'لو الراحة والسهولة أهم، Optical Smartwatch',
+  'لو بتتدرب بجدية، Chest Strap للتمرين والـ Smartwatch لليوم كله',
+]
 
-const relatedPosts = [
+const faqs: FaqItem[] = [
   {
-    slug: "heart-rate-zones",
-    emoji: "📊",
-    title: "Heart Rate Zones: اتدرب بذكاء مش بتعب",
-    tag: "Training Guide",
+    q: 'Can I use a chest strap and a watch at the same time?',
+    qAr: 'أقدر أستخدم الـ Chest Strap والساعة مع بعض؟',
+    a: 'Yes. Garmin and Polar watches pair with a chest strap over Bluetooth or ANT+ and use it as the heart rate source during the workout, then fall back to the wrist sensor for the rest of the day.',
+    aAr: 'أيوه. ساعات Garmin و Polar بتتوصل بالـ Chest Strap عن طريق الـ Bluetooth أو ANT+ وبتاخد منه الـ HR أثناء التمرين، وباقي اليوم بترجع لحساس المعصم.',
   },
   {
-    slug: "zone-2-training",
-    emoji: "🫀",
-    title: "Zone 2 Training: سر الـ Elite Athletes",
-    tag: "Training Guide",
+    q: 'Why does my optical sensor lag during intervals?',
+    qAr: 'ليه الـ Optical Sensor بيتأخر في الـ Intervals؟',
+    a: 'PPG reads blood flow at the wrist, which changes a few seconds after the heart does, and the algorithm smooths the signal. That is where the 10 to 15 second lag comes from. ECG straps read the electrical signal directly, so they react instantly.',
+    aAr: 'الـ PPG بيقيس تدفق الدم في المعصم، وده بيتغير بعد القلب بثواني، والـ Algorithm بيعمل smoothing كمان. من هنا جاي الـ Lag بتاع 10 لـ 15 ثانية. الـ ECG Strap بيقرأ الإشارة الكهربائية مباشرة فبيتفاعل فوراً.',
   },
   {
-    slug: "garmin-vs-polar",
-    emoji: "🥊",
-    title: "Garmin vs Polar: أنهي الأحسن ليك؟",
-    tag: "Gear Review",
+    q: 'Is a chest strap uncomfortable?',
+    qAr: 'الـ Chest Strap مش مريح؟',
+    a: 'Modern straps are light and soft, but you still need to wet the electrodes and adjust the fit before each run. Most people stop noticing it after the first kilometre.',
+    aAr: 'الـ Straps الحديثة خفيفة وطرية، بس لسه محتاج تبلّ الـ Electrodes وتظبط الحزام قبل كل جرية. أغلب الناس بتنسى إنه موجود بعد أول كيلومتر.',
   },
-];
+]
 
-function RatingDots({ rating, color }: { rating: number; color: string }) {
-  return (
-    <div className="flex gap-1.5">
-      {[1, 2, 3, 4, 5].map((dot) => (
-        <div
-          key={dot}
-          className={`w-2.5 h-2.5 rounded-full transition-all ${
-            dot <= rating ? color : "bg-zinc-700"
-          }`}
-        />
-      ))}
-    </div>
-  );
-}
+const toc = [
+  { id: 'glance', label: 'نظرة سريعة' },
+  { id: 'how', label: 'إزاي كل واحد بيشتغل؟' },
+  { id: 'compare', label: 'المقارنة التفصيلية' },
+  { id: 'score', label: 'النتيجة الإجمالية' },
+  { id: 'who', label: 'أيهما يناسبك؟' },
+  { id: 'verdict', label: 'الحكم النهائي' },
+  { id: 'faq', label: 'FAQ' },
+]
 
 export default function HeartRateStrapVsOpticalPage() {
   return (
-    <main className="w-full bg-zinc-950 min-h-screen text-white">
+    <ArticleShell
+      slug={SLUG}
+      dek="الـ Chest Strap أدق والـ Optical أسهل. بس الحقيقة مش بسيطة كده، الاختيار الصح بيعتمد على نوع تدريبك وأسلوب حياتك."
+      toc={toc}
+      related={['training-guide/heart-rate-zones', 'training-guide/zone-2-training', 'gear-review/garmin-vs-polar']}
+      cta={{
+        title: 'جاهز تختار الـ Monitor المناسب ليك؟',
+        body: 'شوف مجموعتنا الكاملة من الـ Chest Straps والـ GPS Watches، كلها مختارة بعناية للـ Serious Athletes في مصر.',
+        href: '/products?category=Heart%20Rate%20Straps',
+        label: 'Browse heart rate monitors',
+      }}
+    >
+      <Section id="glance" title="At a glance" titleAr="نظرة سريعة">
+        <StatCards
+          columns={2}
+          items={[
+            { value: 'ECG', label: 'Chest Strap', sub: 'بيقيس الـ Electrical Signal من القلب مباشرة. ECG-level accuracy.', tone: 'blue' },
+            { value: 'PPG', label: 'Optical Sensor', sub: 'بيقيس الـ Blood Flow من الـ Wrist بالـ LED. PPG technology.', tone: 'brand' },
+          ]}
+        />
+      </Section>
 
-      {/* ===== HERO ===== */}
-      <section className="w-full border-b border-zinc-800 py-20 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+      <Section id="how" title="How each one works" titleAr="إزاي كل واحد بيشتغل؟">
+        <MeterCard
+          title="Chest Strap"
+          badge="ECG / Electrocardiography"
+          tone="blue"
+          description="الـ Chest Strap بيقيس الـ Electrical Signals اللي القلب بيبعتها مع كل نبضة، نفس التقنية اللي بيستخدمها الأطباء في الـ ECG. ده بيديه دقة عالية جداً حتى في التمارين الشديدة لأنه مش بيتأثر بالحركة أو العرق."
+        />
+        <MeterCard
+          title="Optical Sensor"
+          badge="PPG / Photoplethysmography"
+          tone="brand"
+          description="الـ Optical Sensor بيستخدم LED Light بيضيء على الجلد ويقيس التغيير في الـ Blood Flow مع كل نبضة. الطريقة دي كويسة في الحالات العادية بس بتتأثر بالحركة والعرق ولون الجلد."
+        />
+      </Section>
 
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wide">
-            <Link href="/" className="hover:text-white transition-colors duration-200">
-              Home
-            </Link>
-            <span>/</span>
-            <Link href="/blog" className="hover:text-white transition-colors duration-200">
-              Blog
-            </Link>
-            <span>/</span>
-            <span className="text-zinc-400">Strap vs Optical</span>
-          </div>
+      <Section id="compare" title="Detailed comparison" titleAr="المقارنة التفصيلية">
+        <CompareTable
+          caption="Chest strap vs optical sensor by category"
+          columns={['Chest Strap', 'Optical', 'Winner']}
+          rows={comparison.map((r) => ({
+            label: r.category,
+            cells: [
+              <Rated key="s" side={r.strap} />,
+              <Rated key="o" side={r.optical} />,
+              <Strong key="w">{r.winner === 'strap' ? 'Chest Strap يكسب' : 'Optical يكسب'}</Strong>,
+            ],
+          }))}
+        />
+      </Section>
 
-          {/* Tag */}
-          <span className="self-start text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
-            Gear Review
-          </span>
-
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
-            Chest Strap vs Optical ⚡
-            <br />
-            <span className="text-red-500">أيهما أدق وأنسب ليك؟</span>
-          </h1>
-
-          {/* ✅ dir="rtl" + no dashes */}
-          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
-            الـ Chest Strap أدق والـ Optical أسهل. بس الحقيقة مش بسيطة
-            كده، الاختيار الصح بيعتمد على نوع تدريبك وأسلوب حياتك. 🎯
-          </p>
-
-          {/* Meta */}
-          <div className="flex items-center gap-4 text-xs text-zinc-500">
-            <span>⏱ 5 min read</span>
-            <span>•</span>
-            <span>⚡ Gear Review</span>
-            <span>•</span>
-            <span>Pulse Gear Egypt</span>
-          </div>
-
+      <Section id="score" title="Overall score" titleAr="النتيجة الإجمالية">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <MeterCard
+            title="Chest Strap"
+            badge="4 / 6"
+            tone="blue"
+            percent={67}
+            description="يكسب في: Accuracy والـ High Intensity والـ Battery Life والـ Price"
+          />
+          <MeterCard
+            title="Optical Sensor"
+            badge="2 / 6"
+            tone="brand"
+            percent={33}
+            description="يكسب في: Comfort والـ Ease of Use والـ All-Day Tracking"
+          />
         </div>
-      </section>
+      </Section>
 
-      {/* ===== ARTICLE BODY ===== */}
-      <article className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-16">
-
-        {/* ===== HERO CARDS ===== */}
-        <section className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-6 flex flex-col items-center gap-3 text-center">
-            <span className="text-5xl">🫀</span>
-            <p className="font-black uppercase text-blue-400 text-lg">Chest Strap</p>
-            <p className="text-xs text-zinc-500">ECG-Level Accuracy</p>
-            <div className="bg-zinc-900 rounded-xl p-3 w-full">
-              <p className="text-xs text-zinc-500">بيقيس</p>
-              <p className="text-sm font-bold text-white">Electrical Signal</p>
-              <p className="text-xs text-zinc-500" dir="rtl">من القلب مباشرة</p>
-            </div>
+      <Section id="who" title="Which one fits you?" titleAr="أيهما يناسبك؟">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="card space-y-4 p-6">
+            <h3 className="text-sm font-black uppercase text-sky-400" dir="auto">اختار الـ Chest Strap لو...</h3>
+            <BulletList items={strapCases} />
           </div>
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-6 flex flex-col items-center gap-3 text-center">
-            <span className="text-5xl">⌚</span>
-            <p className="font-black uppercase text-purple-400 text-lg">Optical Sensor</p>
-            <p className="text-xs text-zinc-500">PPG Technology</p>
-            <div className="bg-zinc-900 rounded-xl p-3 w-full">
-              <p className="text-xs text-zinc-500">بيقيس</p>
-              <p className="text-sm font-bold text-white">Blood Flow</p>
-              <p className="text-xs text-zinc-500" dir="rtl">من الـ Wrist بالـ LED</p>
-            </div>
+          <div className="card space-y-4 p-6">
+            <h3 className="text-sm font-black uppercase text-brand-soft" dir="auto">اختار الـ Optical لو...</h3>
+            <BulletList items={opticalCases} />
           </div>
-        </section>
-
-        {/* ===== HOW THEY WORK ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            إزاي كل واحد بيشتغل؟ 🔬
-          </h2>
-
-          {/* Chest Strap */}
-          <div className="bg-zinc-900 border border-blue-500/30 rounded-2xl p-6 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🫀</span>
-              <div>
-                <p className="font-black uppercase text-blue-400">Chest Strap</p>
-                <p className="text-xs text-zinc-500">ECG / Electrocardiography</p>
-              </div>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-              الـ Chest Strap بيقيس الـ{" "}
-              <span className="text-white font-bold">Electrical Signals</span>{" "}
-              اللي القلب بيبعتها مع كل نبضة، نفس التقنية اللي بيستخدمها
-              الأطباء في الـ ECG. ده بيديه دقة عالية جداً حتى في التمارين
-              الشديدة لأنه مش بيتأثر بالحركة أو العرق.
-            </p>
-          </div>
-
-          {/* Optical */}
-          <div className="bg-zinc-900 border border-purple-500/30 rounded-2xl p-6 flex flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">💡</span>
-              <div>
-                <p className="font-black uppercase text-purple-400">Optical Sensor</p>
-                <p className="text-xs text-zinc-500">PPG / Photoplethysmography</p>
-              </div>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-              الـ Optical Sensor بيستخدم{" "}
-              <span className="text-white font-bold">LED Light</span>{" "}
-              بيضيء على الجلد ويقيس التغيير في الـ Blood Flow مع كل نبضة.
-              الطريقة دي كويسة في الحالات العادية بس بتتأثر بالحركة والعرق
-              ولون الجلد.
-            </p>
-          </div>
-        </section>
-
-        {/* ===== COMPARISON TABLE ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            المقارنة التفصيلية 📊
-          </h2>
-
-          <div className="flex flex-col gap-4">
-            {comparisonData.map((row) => (
-              <div
-                key={row.category}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden"
-              >
-                {/* Row Header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl">{row.icon}</span>
-                    <p className="font-black uppercase text-white text-sm">
-                      {row.category}
-                    </p>
-                  </div>
-                  {row.winner === "strap" ? (
-                    <span className="text-xs font-bold uppercase tracking-wide text-blue-400 bg-blue-400/10 px-3 py-1 rounded-full">
-                      ✅ Chest Strap يكسب
-                    </span>
-                  ) : (
-                    <span className="text-xs font-bold uppercase tracking-wide text-purple-400 bg-purple-400/10 px-3 py-1 rounded-full">
-                      ✅ Optical يكسب
-                    </span>
-                  )}
-                </div>
-
-                {/* Row Body */}
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  {/* Strap Side */}
-                  <div
-                    className={`p-5 flex flex-col gap-3 border-b md:border-b-0 md:border-l border-zinc-800 ${
-                      row.winner === "strap" ? "bg-blue-500/5" : ""
-                    }`}
-                  >
-                    <p className="text-xs font-bold uppercase tracking-wide text-blue-400">
-                      🫀 Chest Strap
-                    </p>
-                    <RatingDots rating={row.strap.rating} color="bg-blue-500" />
-                    <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-                      {row.strap.note}
-                    </p>
-                  </div>
-
-                  {/* Optical Side */}
-                  <div
-                    className={`p-5 flex flex-col gap-3 ${
-                      row.winner === "optical" ? "bg-purple-500/5" : ""
-                    }`}
-                  >
-                    <p className="text-xs font-bold uppercase tracking-wide text-purple-400">
-                      ⌚ Optical
-                    </p>
-                    <RatingDots rating={row.optical.rating} color="bg-purple-500" />
-                    <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-                      {row.optical.note}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== SCORE SUMMARY ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            النتيجة الإجمالية 🏆
-          </h2>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-6">
-
-            {/* Chest Strap Score */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🫀</span>
-                  <p className="font-black uppercase text-blue-400">Chest Strap</p>
-                </div>
-                <span className="text-2xl font-black text-blue-400">4 / 6</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="h-2 rounded-full bg-blue-500 transition-all"
-                  style={{ width: "67%" }}
-                />
-              </div>
-              <p className="text-xs text-zinc-500" dir="rtl">
-                يكسب في: Accuracy والـ High Intensity والـ Battery Life والـ Price
-              </p>
-            </div>
-
-            <div className="border-t border-zinc-800" />
-
-            {/* Optical Score */}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">⌚</span>
-                  <p className="font-black uppercase text-purple-400">Optical Sensor</p>
-                </div>
-                <span className="text-2xl font-black text-purple-400">2 / 6</span>
-              </div>
-              <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="h-2 rounded-full bg-purple-500 transition-all"
-                  style={{ width: "33%" }}
-                />
-              </div>
-              <p className="text-xs text-zinc-500" dir="rtl">
-                يكسب في: Comfort والـ Ease of Use والـ All-Day Tracking
-              </p>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ===== WHO SHOULD BUY ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            أيهما يناسبك؟ 🤔
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {useCases.map((uc) => (
-              <div
-                key={uc.title}
-                className={`border rounded-2xl p-6 flex flex-col gap-4 ${uc.color}`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl">{uc.icon}</span>
-                  <h3 className={`text-sm font-black uppercase ${uc.titleColor}`} dir="rtl">
-                    {uc.title}
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-3">
-                  {uc.cases.map((c, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="text-green-400 text-sm shrink-0 mt-0.5">✓</span>
-                      <p className="text-sm text-zinc-300 leading-relaxed" dir="rtl">{c}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== PRO TIP ===== */}
-        <section className="bg-zinc-900 border border-yellow-500/30 rounded-2xl p-6 flex items-start gap-4">
-          <span className="text-3xl shrink-0">💡</span>
-          <div className="flex flex-col gap-2">
-            <p className="font-black uppercase text-yellow-400 text-sm">
-              Pro Tip: استخدم الاتنين مع بعض!
-            </p>
-            <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-              كتير من الـ Athletes المحترفين بيلبسوا الـ Chest Strap في
-              التمارين الشديدة للدقة والـ Smartwatch في باقي اليوم لمتابعة
-              الـ HR والـ Recovery. الـ Garmin والـ Polar بيدعموا الاتنين مع
-              بعض في نفس الوقت، بيبعت الـ Chest Strap Data للـ Watch
-              مباشرة عن طريق الـ Bluetooth.
-            </p>
-          </div>
-        </section>
-
-        {/* ===== FINAL VERDICT ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            الحكم النهائي ⚖️
-          </h2>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-            {verdicts.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-4 border-b border-zinc-800 last:border-b-0 pb-4 last:pb-0"
-              >
-                <span className="text-2xl shrink-0">{item.icon}</span>
-                <p className="text-zinc-300 leading-relaxed text-sm" dir="rtl">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== CTA ===== */}
-        <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-4 items-center text-center">
-          <span className="text-4xl">🛒</span>
-          <h3 className="text-xl font-black uppercase text-white" dir="auto">
-            جاهز تختار الـ Monitor المناسب ليك؟
-          </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
-            شوف مجموعتنا الكاملة من الـ Chest Straps والـ GPS Watches،
-            كلها مختارة بعناية للـ Serious Athletes في مصر.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link
-              href="/products"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-            >
-              Browse Products
-            </Link>
-            <Link
-              href="/request-product"
-              className="border border-zinc-600 text-zinc-300 hover:border-white hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-            >
-              Request a Product
-            </Link>
-          </div>
-        </section>
-
-        {/* ===== RELATED POSTS ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-black uppercase text-white">اقرأ كمان 📚</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {relatedPosts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col gap-3 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-5 transition-all duration-300"
-              >
-                <span className="text-3xl">{post.emoji}</span>
-                <span className="text-xs font-bold uppercase tracking-wide text-red-500">
-                  {post.tag}
-                </span>
-                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200" dir="rtl">
-                  {post.title}
-                </h3>
-                <span className="text-xs text-red-500 font-semibold" dir="auto">
-                  اقرأ المقال →
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== BACK ===== */}
-        <div className="flex justify-center pt-4">
-          <Link
-            href="/blog"
-            className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
-          dir="auto">
-            → Back to Blog
-          </Link>
         </div>
+        <Callout tone="tip" title="Pro Tip: استخدم الاتنين مع بعض!">
+          كتير من الـ Athletes المحترفين بيلبسوا الـ Chest Strap في التمارين الشديدة للدقة والـ Smartwatch في باقي اليوم لمتابعة
+          الـ HR والـ Recovery. الـ Garmin والـ Polar بيدعموا الاتنين مع بعض في نفس الوقت، بيبعت الـ Chest Strap Data للـ Watch
+          مباشرة عن طريق الـ Bluetooth.
+        </Callout>
+      </Section>
 
-      </article>
-    </main>
-  );
+      <Section id="verdict" title="Final verdict" titleAr="الحكم النهائي">
+        <Callout tone="tip" title="الخلاصة">
+          <ul className="list-disc space-y-1 ps-5">
+            {verdicts.map((v) => (
+              <li key={v}>{v}</li>
+            ))}
+          </ul>
+        </Callout>
+        <P>
+          مش لاقي الموديل اللي بتدور عليه؟{' '}
+          <Link href="/request-product" className="font-semibold text-brand-soft hover:text-white">
+            اطلبه من صفحة Request a Product
+          </Link>{' '}
+          وهنجيبهولك.
+        </P>
+      </Section>
+
+      <FaqList items={faqs} />
+    </ArticleShell>
+  )
 }

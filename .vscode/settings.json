@@ -1,0 +1,6 @@
+{
+  // Tailwind CSS v4 uses at-rules (@theme, @utility, @source, @apply, @variant)
+  // that VS Code's built-in CSS checker does not know. They are valid; silence the warning.
+  "css.lint.unknownAtRules": "ignore",
+  "editor.quickSuggestions": { "strings": "on" }
+}

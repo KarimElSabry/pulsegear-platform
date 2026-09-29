@@ -97,7 +97,11 @@ export function useWishlist() {
     async (localIds: number[]) => {
       if (localIds.length === 0) return
 
-      const rows = localIds.map((productId) => ({ product_id: productId }))
+      const { data: userData } = await supabase.auth.getUser()
+      const userId = userData.user?.id
+      if (!userId) return
+
+      const rows = localIds.map((productId) => ({ user_id: userId, product_id: productId }))
 
       const { error } = await supabase
         .from('wishlist_items')
@@ -215,10 +219,15 @@ export function useWishlist() {
       await fetchProductsByIds(optimisticIds)
 
       try {
+        const { data: userData } = await supabase.auth.getUser()
+        const userId = userData.user?.id
+        if (!userId) throw new Error('Not signed in')
+
         if (currentlyLoved) {
           const { error } = await supabase
             .from('wishlist_items')
             .delete()
+            .eq('user_id', userId)
             .eq('product_id', productId)
 
           if (error) throw error
@@ -226,7 +235,7 @@ export function useWishlist() {
           const { error } = await supabase
             .from('wishlist_items')
             .upsert(
-              [{ product_id: productId }],
+              [{ user_id: userId, product_id: productId }],
               { onConflict: 'user_id,product_id', ignoreDuplicates: false }
             )
 

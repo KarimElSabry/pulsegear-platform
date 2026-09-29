@@ -1,0 +1,4 @@
+{
+  // Optional but recommended: understands Tailwind v4 (@theme, @utility) and autocompletes class names.
+  "recommendations": ["bradlc.vscode-tailwindcss"]
+}

@@ -11,12 +11,10 @@ import { createBrowserSupabaseClient } from '@/lib/supabase'
 const navLinks = [
   { label: 'Products', href: '/products' },
   { label: 'Brands', href: '/brands' },
-  { label: 'HOT Deals', href: '/deals', highlight: true, icon: '🔥' },
+  { label: 'Deals', href: '/deals', highlight: true },
   { label: 'Blog', href: '/blog' },
-  { label: 'Sold', href: '/sold' },
-  { label: 'Request Product', href: '/request-product' },
+  { label: 'Request', href: '/request-product' },
   { label: 'Wishlist', href: '/wishlist' },
-  { label: 'FAQ', href: '/faq' },
 ]
 
 export default function Header() {
@@ -63,10 +61,6 @@ export default function Header() {
     }
   }, [supabase, isAdminRoute])
 
-  useEffect(() => {
-    setMenuOpen(false)
-  }, [pathname])
-
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/'
@@ -83,20 +77,20 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[#0b0b0b]/95 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-line bg-surface-0/85 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-4 py-3 md:px-6 lg:px-8">
         <Link href="/" className="shrink-0 flex items-center">
           <Image
             src="/logo.png"
             alt="Pulse Gear Logo"
             width={140}
-            height={140}
+            height={109}
             priority
-            className="h-[80px] w-auto sm:h-[92px] lg:h-[104px]"
+            className="h-12 w-auto sm:h-14"
           />
         </Link>
 
-        <nav className="hidden xl:flex flex-1 items-center justify-center gap-8 2xl:gap-10">
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-7 xl:gap-9">
           {navLinks.map((link) => {
             const isActive = isActiveLink(link.href)
 
@@ -115,8 +109,7 @@ export default function Header() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {link.icon && <span aria-hidden="true">{link.icon}</span>}
-                  <span>{link.label}</span>
+                                    <span>{link.label}</span>
                 </span>
                 {isActive && (
                   <span
@@ -132,7 +125,7 @@ export default function Header() {
 
         <div className="hidden lg:flex items-center gap-3 shrink-0">
           {authLoading ? (
-            <span className="text-sm text-zinc-500">Loading...</span>
+            <span className="h-10 w-40 animate-pulse rounded-full bg-surface-3" aria-hidden="true" />
           ) : userEmail ? (
             <>
               <Link
@@ -167,7 +160,7 @@ export default function Header() {
         </div>
 
         <button
-          className="flex shrink-0 flex-col gap-1.5 rounded-md p-2 text-white xl:hidden"
+          className="flex shrink-0 flex-col gap-1.5 rounded-md p-2 text-white lg:hidden"
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Toggle menu"
           aria-expanded={menuOpen}
@@ -191,7 +184,7 @@ export default function Header() {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-white/10 bg-[#0b0b0b] xl:hidden">
+        <div className="border-t border-line bg-surface-0 lg:hidden">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-4 md:px-6 lg:px-8">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {navLinks.map((link) => {
@@ -201,6 +194,7 @@ export default function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
+                    onClick={() => setMenuOpen(false)}
                     className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
                       link.highlight
                         ? 'border-orange-500/30 bg-orange-500/10 text-orange-300 hover:bg-orange-500/15'
@@ -210,8 +204,7 @@ export default function Header() {
                     }`}
                   >
                     <span className="inline-flex items-center gap-1.5">
-                      {link.icon && <span aria-hidden="true">{link.icon}</span>}
-                      <span>{link.label}</span>
+                                            <span>{link.label}</span>
                     </span>
                   </Link>
                 )
@@ -220,11 +213,12 @@ export default function Header() {
 
             <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {authLoading ? (
-                <span className="text-sm text-zinc-500">Loading...</span>
+                <span className="h-10 w-40 animate-pulse rounded-full bg-surface-3" aria-hidden="true" />
               ) : userEmail ? (
                 <>
                   <Link
                     href="/account"
+                    onClick={() => setMenuOpen(false)}
                     className="rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
                   >
                     Account
@@ -240,12 +234,14 @@ export default function Header() {
                 <>
                   <Link
                     href="/auth/login"
+                    onClick={() => setMenuOpen(false)}
                     className="rounded-xl border border-zinc-700 px-4 py-3 text-center text-sm font-medium text-white transition hover:border-zinc-500 hover:bg-zinc-900"
                   >
                     Login
                   </Link>
                   <Link
                     href="/auth/signup"
+                    onClick={() => setMenuOpen(false)}
                     className="rounded-xl bg-white px-4 py-3 text-center text-sm font-semibold text-black transition hover:bg-zinc-200"
                   >
                     Sign Up

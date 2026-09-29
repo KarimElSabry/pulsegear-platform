@@ -270,7 +270,8 @@ async function getAnalyticsData() {
   })
   const salesOverTime = [...salesTimeMap.entries()].map(([date, val]) => ({ date, ...val }))
 
-  const recentSales = sales.slice(0, 10).map((s: any) => {
+  // All sales go to the client; the table filters by month there.
+  const recentSales = sales.map((s: any) => {
     const exchangeRate = Number(s.exchange_rate) || 0
     const sellingPriceEgp = Number(s.selling_price_egp) || 0
     const profitEgp = Number(s.profit_egp) || 0

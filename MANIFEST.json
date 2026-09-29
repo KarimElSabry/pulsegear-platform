@@ -1,0 +1,506 @@
+{
+ "files": [
+  {
+   "path": ".gitignore",
+   "sha": "6b3ba419a6d770eb6bec5cad4d4c6543189f42625340db22c26826137a1925c9",
+   "step": 1
+  },
+  {
+   "path": ".vscode/extensions.json",
+   "sha": "23e5733a53a78d8372592edab41f5e2d378dafb0aec9870db44e22d65681d09b",
+   "step": 1
+  },
+  {
+   "path": ".vscode/settings.json",
+   "sha": "767c35e68d3ff6a3642506d6db280d84db8b3832374780a1437471803cd8a57e",
+   "step": 1
+  },
+  {
+   "path": "ARCHITECTURE.md",
+   "sha": "dc06d84e9d4193d97bc64c4e64e1d9f401821e331e5f6967f7390191736c943b",
+   "step": 1
+  },
+  {
+   "path": "public/hero/poster.webp",
+   "sha": "df8e7cf3ae654d58764211377c6e36916d2468b39d5ff1f08bca7be9881aa33a",
+   "step": 1
+  },
+  {
+   "path": "public/og-default.jpg",
+   "sha": "d8eae68147fadc656f6bc5d5a52a3aa08538227cc682f7c5f4dd691dae4944de",
+   "step": 1
+  },
+  {
+   "path": "src/app/admin/analytics/AnalyticsClient.tsx",
+   "sha": "ef40fcd844308c2a32d889ec32ee5e5587ffc95a47c97472fb0d201bc1824921",
+   "step": 1
+  },
+  {
+   "path": "src/app/admin/analytics/page.tsx",
+   "sha": "e8a5ae7b65560c39f015d5b56f92ac30ca34c4cedca48e93a655ff0e0c3d6f17",
+   "step": 1
+  },
+  {
+   "path": "src/app/admin/page.tsx",
+   "sha": "6504357d6a89a04cb330e84e1d289ce0106d7558ad70619ee0544ad6a1435fda",
+   "step": 1
+  },
+  {
+   "path": "src/app/api/admin/upload-url/route.ts",
+   "sha": "30df9173e1af625425333433ec490ef4f94c80a7300605e4fba28a9b80deb7e4",
+   "step": 1
+  },
+  {
+   "path": "src/app/api/newsletter/send-weekly/route.ts",
+   "sha": "41ef1420a135513c4f09315a8026d22dcf2cd40e72e1023a4997ebcd61c5bd8f",
+   "step": 1
+  },
+  {
+   "path": "src/app/api/products/[id]/reserve/route.ts",
+   "sha": "5169874984e754b8946d791304efdc30715cfe52af6a00761ee66c2c7b6f5664",
+   "step": 1
+  },
+  {
+   "path": "src/app/api/reservations/[id]/status/route.ts",
+   "sha": "881fc7a688eda52405a0650d7b31d6d2c7d34b2e4b94f8260a56887b31d64048",
+   "step": 1
+  },
+  {
+   "path": "src/app/api/reservations/release-expired/route.ts",
+   "sha": "47702ac5f6c9f8cd450e550280baed0fa87025fbe23db06525c4b8664921379c",
+   "step": 1
+  },
+  {
+   "path": "src/app/error.tsx",
+   "sha": "5a7022b6304888cb24e698f674d423bf596647d4b11ec7213b90cc21e1de9aff",
+   "step": 1
+  },
+  {
+   "path": "src/app/globals.css",
+   "sha": "295a1879f8ff294904474d6c303961e466151f2bfa145adaac39657d5a987afa",
+   "step": 1
+  },
+  {
+   "path": "src/app/layout.tsx",
+   "sha": "91d2510248877983a84c73cbcba877411b405e84112069ee689f8ee767ab3b70",
+   "step": 1
+  },
+  {
+   "path": "src/app/not-found.tsx",
+   "sha": "1d820f495886ef7001a3aa26772d7cc8aff514aebf463f0a77b4e4ffd24e12e9",
+   "step": 1
+  },
+  {
+   "path": "src/app/products/ProductsContent.tsx",
+   "sha": "ed8073e87c9ec744e65bc1f2a917cbf83bfb393cf9518014e060bf7e38f74ecf",
+   "step": 1
+  },
+  {
+   "path": "src/app/products/[id]/page.tsx",
+   "sha": "3a367d9675faa08ece136e95d6774b5ac4b15fa6e94d183d8138086d2dc09ae2",
+   "step": 1
+  },
+  {
+   "path": "src/app/products/loading.tsx",
+   "sha": "6c160d43b771487486c267f08394098d190e4915e291157164c178e46b5e1e10",
+   "step": 1
+  },
+  {
+   "path": "src/app/robots.ts",
+   "sha": "ef6eb1a196c2b66beb3f16093c1865882c176aff958a33dbb59ddf171f2d6864",
+   "step": 1
+  },
+  {
+   "path": "src/app/sitemap.ts",
+   "sha": "7bebcf7586b97d4e794b21c5089ab533665ce0c028f3d632e3b09e6d324e2445",
+   "step": 1
+  },
+  {
+   "path": "src/components/ScrollReveal.tsx",
+   "sha": "f8ed059d4e90cfe718135012bb9edd97f910763f6595b8a6c670ae05473cf1c8",
+   "step": 1
+  },
+  {
+   "path": "src/components/layout/Footer.tsx",
+   "sha": "914e8873d396dc2df2d5ed42cd43141640fdf5320799f27ca26c91f0d0104f69",
+   "step": 1
+  },
+  {
+   "path": "src/components/layout/Header.tsx",
+   "sha": "df3d86ed464ebf7924edd5f9670e992c563d636b5ffdc755aa5e75faaab4c3e1",
+   "step": 1
+  },
+  {
+   "path": "src/components/product/ProductCard.tsx",
+   "sha": "bdbaf60501402ea0ec4331a0e00674fc6582a497eb698d96e418f816ad87e3f1",
+   "step": 1
+  },
+  {
+   "path": "src/content/posts.ts",
+   "sha": "8be92dbc3cf5fcae8bac1122a52019ee2c38816b36b4d13cc498b1e66bf5338a",
+   "step": 1
+  },
+  {
+   "path": "src/hooks/useWishlist.ts",
+   "sha": "1508150ff60fc049d7be990969022bec9242e5be3e410e1be0477996085f2d48",
+   "step": 1
+  },
+  {
+   "path": "src/lib/admin-auth.ts",
+   "sha": "2874853909116d3bde57c9fea4dc78433cee325afecfbbfea0596c8e25cd33f3",
+   "step": 1
+  },
+  {
+   "path": "src/lib/site.ts",
+   "sha": "d9758030f09226f50ea58c4f408c256526c1cd32c2920b9317ce80241a10737a",
+   "step": 1
+  },
+  {
+   "path": "src/proxy.ts",
+   "sha": "29b1a47e730467220bc2ff55eaeb6e2833bfa2cb0d5c4770c7d6e165038dcc17",
+   "step": 1
+  },
+  {
+   "path": "src/services/reservationService.ts",
+   "sha": "bfb1c9667afb7316045ef0cada6d36b37ec5d6542b93709fe86774b94babce49",
+   "step": 1
+  },
+  {
+   "path": "src/types/reservation.ts",
+   "sha": "8b30b98d36754209c7d9f66478e9341977a1e91dcf8e5281f3fd79134aebda1d",
+   "step": 1
+  },
+  {
+   "path": "supabase/SCHEMA.md",
+   "sha": "85e27d09626fdc8dd4596ff836ed49d497b1a9fe916dc0fa29fa63e4d593652f",
+   "step": 1
+  },
+  {
+   "path": "supabase/migrations/20260929_01_fix_product_status.sql",
+   "sha": "fc3d14c4952d29522fa6872bade07c65a636e075ed926c4476558883ff37cd5e",
+   "step": 1
+  },
+  {
+   "path": "supabase/migrations/20260929_02_lock_down_access.sql",
+   "sha": "9e810dab95f51fa907da1489895d8353f4e32b62204ebe317356d4baf4275b9c",
+   "step": 1
+  },
+  {
+   "path": "supabase/migrations/20260929_03_integrity_optional.sql",
+   "sha": "b2878b617c6b137af863403e4681a4dadc9fad246588cf7d1071ecceb60d5652",
+   "step": 1
+  },
+  {
+   "path": "supabase/migrations/20260929_04_drop_duplicate_indexes_optional.sql",
+   "sha": "0a189b71e1864fd9c421962f7407423786cc5bdac64169164ef9df3d5160ddef",
+   "step": 1
+  },
+  {
+   "path": "vercel.json",
+   "sha": "e9c7710ce1e89b8bfe2df8a2bccc930d16872a3ee8d4cef6ad5d1ba25bfb8357",
+   "step": 1
+  },
+  {
+   "path": "src/app/page.tsx",
+   "sha": "7d91295af9e98989e0b3cefcc0304a2663d9f70eaf99f8043f7e00cc2a6a7f00",
+   "step": 2
+  },
+  {
+   "path": "src/components/blog/PostCover.tsx",
+   "sha": "c085dfa421068280812cc39e21528d5d0c40437a4bce8d2a4c683b10458926ba",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/AnimatedNumber.tsx",
+   "sha": "bd1b5a5e1052b66db897444f79703a8eae5b26850f8accbf3ac2410ebad885ba",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/BlogTeasers.tsx",
+   "sha": "a258c76ae4ac5b91aa8244c8b17cbe898ce9d6bb808567e21cf41d701131009a",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/BrandMarquee.tsx",
+   "sha": "d13ffdfbef8d6bdeb24c6bf625635917ceddb573c2d149cbf68478dbe663f478",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/CategoryTiles.tsx",
+   "sha": "f35183f6334fe56b5937143458e45ab9d0555693da1a9bfba2d9e00b62915999",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/HeroVideo.tsx",
+   "sha": "8076165dfa635f83667a359fccf28174e8263f65060be47265abb30246363b3e",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/HeroVideoPlayer.tsx",
+   "sha": "b1fbb1166aaf8e8618e460ae7a905c97e36da4f971724517200edf00ebeec3f7",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/HomeFaq.tsx",
+   "sha": "1e3df9c3ce5f9dad610bf7c1445e5ace822c44f66de57dd12af08e99e57fc6ee",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/ProductCarousel.tsx",
+   "sha": "ee17d871b2469c31ee8bdcdcab89e5c211c504a3482cf555e2b250ffe91efb9e",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/SectionHeading.tsx",
+   "sha": "788f612ddb6a3b511320a4ed8c3aab7658a790427a74471e726118366f4556ce",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/StatsStrip.tsx",
+   "sha": "a7a3e4aed210769a7816bc6863c0fa461ad80f694926c9544bc11979162c51cc",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/Testimonials.tsx",
+   "sha": "9b1d2879cebcbb4f408093a024c82f451ad1293fd8ba15e43ba15f907217e81e",
+   "step": 2
+  },
+  {
+   "path": "src/components/home/ValueProps.tsx",
+   "sha": "51a6b9d5fc5ce5301bb8f314ab4b12a966cadec56573e36eb70c59cc926fdadd",
+   "step": 2
+  },
+  {
+   "path": "src/content/hero-videos.ts",
+   "sha": "706c8ef067f309b3dc9f6c70efb2966c35ad7e94400476880687e8d83679d2e2",
+   "step": 2
+  },
+  {
+   "path": "src/content/testimonials.ts",
+   "sha": "48d5ad7a622e21fa40699f15406f1ac8e5c39156a75ce7cd1dc4935e1f1382cc",
+   "step": 2
+  },
+  {
+   "path": "src/app/blog/gear-guide/beginners-guide/page.tsx",
+   "sha": "72c63b264275697f1928d8a7b89f412607064dfe8d1199510916488b5aa2bc9b",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-guide/best-chest-straps/page.tsx",
+   "sha": "aeb6adc6f50f510431f66753de70547dbfdb79283e6de0eae5ab97d10fb4c576",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-guide/best-gps-watches/page.tsx",
+   "sha": "3d0f49fec485069812b29cecb73c006ca582529b74c432dbfa7842ed296ebd8b",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-guide/best-heart-rate-monitors/page.tsx",
+   "sha": "f0ae30c3f56939f90e671f92ec3e97c2b12386e60a7640fc2a9dfacb9e389154",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-guide/budget-vs-premium/page.tsx",
+   "sha": "ca5b042e56a79665111adb8def5e687139d9e6b0452c50a2b6f651959cd6d2fa",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-guide/page.tsx",
+   "sha": "f7fac33e2bc7d28280891ee2b700152d33caf44ae2cd6f1a0bc7439f0de58fe4",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-review/garmin-vs-polar/page.tsx",
+   "sha": "5f10bca6a25c8194720afaf297354e20f878b7541a23215d2004b07e45720db2",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-review/heart-rate-strap-vs-optical/page.tsx",
+   "sha": "8e5eaca1a5a0407a95aed6521560e24ca8206f732717b299b34627c082c847be",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-review/page.tsx",
+   "sha": "0c85601df725f0ac2559347b023f8900844b9a20316ca8d08067b7df52917d9a",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/gear-review/running-shoes-guide/page.tsx",
+   "sha": "bf84163fde1b8f36da555fb962138a1eb6f0fd4e6f7bb65e08c9c2396413d58a",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/layout.tsx",
+   "sha": "db7cee119e9ad3741da4a05680d8d71ebaf353313796151507af3d3810d4d665",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/page.tsx",
+   "sha": "fa2adf6421fa62e7202daf3f8f02683eb6c1ac9d024f9494ff6cf9a3ef9c4f77",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/claude-ai-running-coach-setup/ClaudeCoachClient.tsx",
+   "sha": "ad5f7e0fc71084c2e40e7c6413196db8b8f2fee419e5680765fb36ae5707a55b",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/claude-ai-running-coach-setup/page.tsx",
+   "sha": "874c7c419102f66264385cf6e02415ec5154a29e43b614ab3203028ce1a68b7a",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/claude-coach-watch-telegram/page.tsx",
+   "sha": "72192c0f9795303a0d680786b9e744798b6b96485a0f2e3eea592ef30285b79f",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/claude-kailo-free-running-coach/page.tsx",
+   "sha": "47afe6a78675d8dfb7694630a51a5b40fb6a52e77cb9bc9028d1faf114c2ad77",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/complete-training-setup/page.tsx",
+   "sha": "a4da882e61acdf74b6b6842ed56a2e2ddc3de772a4df45a32082e581c3d36932",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/heart-rate-zones/page.tsx",
+   "sha": "0bb46c6bd91096b22a2e63987fb54e9de00b0108e34e1a0f8c633def7e467b6d",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/page.tsx",
+   "sha": "08b43c7178ba28acc468b63e420166ea7cf0be97969fa13ae31a3285b3a17ae4",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/running-cadence/page.tsx",
+   "sha": "a4955652a132b87c982b7900d5574e62b3778add4151fb28720eb46257053f3f",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/sleep-recovery/page.tsx",
+   "sha": "c6229a5293ff8a9414a60c02fff63fd9592bfa5f9fff7800b9cf65ea4ff8e0fc",
+   "step": 3
+  },
+  {
+   "path": "src/app/blog/training-guide/zone-2-training/page.tsx",
+   "sha": "855cc0f663705f4ec74f28c5a1e3e02acde7b0692c863a869df60b695a76b889",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/ArticleShell.tsx",
+   "sha": "e04504851bdc89c7d97f44fb686f3e88fdffb12561d5a408f85991c3cc03ebab",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/BlogNav.tsx",
+   "sha": "853b3b899a0bdbb51a33206341ac9f4f154b98006fb73caf27c441eadd59bdf4",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/Callout.tsx",
+   "sha": "b20439d38c74b98946da6baa53055ceb00821b1d04a28ebdcd3e819961027017",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/CategoryIndex.tsx",
+   "sha": "657031091d3daade18863354616b1d8d3a11f8d5890c053b58cfb9eac16f0176",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/CompareTable.tsx",
+   "sha": "b3d8e5cc04ce414f10824295a3ac1f707b87a4a372ee2d33373d236b2b4c7c4d",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/FaqList.tsx",
+   "sha": "d95c7815a7a60430b102540c07700b9b307e01a13ebb29076af8667784c311f0",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/MeterCard.tsx",
+   "sha": "b641e4fc5313f707cffb4ab4971a7c18474e91e4da6c8a44f304aedfd89c5db0",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/PickCard.tsx",
+   "sha": "827386cbba51900ae05df74d133f9483d1cbd3d5b1be76cb3f2e33fb81fdaee3",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/PostCard.tsx",
+   "sha": "955607f4cfdb2f70cad171e9aaf3d4809ca7ddacee80c3c639c46bdeb34ec366",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/ProductCta.tsx",
+   "sha": "cbc5108c06a8875ab718fc3eba16b2d87527a7bc385adf96e3e8a994b68efd83",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/PromptBlock.tsx",
+   "sha": "755788e92e9c2166b0892a71d947e0b696f4cfec5e26a79dbf40d6a662c5e466",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/ProsCons.tsx",
+   "sha": "7902919b3a09b0ae5466a99ecedb761c7e49229a095be85556d796f076f4ba90",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/RelatedPosts.tsx",
+   "sha": "008eb6a643a277e2c3f75ee6d0bbf3f11ba7f7f3eb55c063bea279e36e39913c",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/Section.tsx",
+   "sha": "44ff9f3f08bc38d30b907ef8087c74a101a279832469775cf329a819991a616e",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/ShareBar.tsx",
+   "sha": "684b273318f66b8e12437ef4dc8e1b3575b8d4478ed042bece8902a8a47c2bb6",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/StatCards.tsx",
+   "sha": "089354aa75b6ccc441ac29f1b7e86c3e687779ee4cd464ce0d06947e1692a7d2",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/Steps.tsx",
+   "sha": "dfb30cdd75cf2a2d851b3615ed5c4dffd2d93940f326856828ce21825940f9f3",
+   "step": 3
+  },
+  {
+   "path": "src/components/blog/index.ts",
+   "sha": "f0efad92e1681e6a46f240792d40a2fb286b24f9c732cb45db3c293eccf6cfce",
+   "step": 3
+  },
+  {
+   "path": "src/lib/blog-meta.ts",
+   "sha": "0eaff045ba655786442bef03f3ec1f99ce91f7c2b40d03bd5cb6eff1cf10d81f",
+   "step": 3
+  }
+ ],
+ "customizable": [
+  "src/content/testimonials.ts",
+  "src/content/hero-videos.ts"
+ ],
+ "deleteIfPresent": [
+  "src/app/api/products/reservations/[id]/status/route.ts",
+  "src/components/HeroCarousel.tsx",
+  "src/components/Navbar.tsx",
+  "src/app/blog/BlogClient.tsx",
+  "public/hero/hero-1.webp",
+  "public/hero/hero-2.webp",
+  "public/hero/hero-3.webp",
+  "public/hero/hero-4.webp",
+  "public/hero/hero-5.webp",
+  "public/hero/hero-6.webp",
+  "public/hero/poster.jpg"
+ ]
+}

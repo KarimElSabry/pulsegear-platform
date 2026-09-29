@@ -12,6 +12,8 @@ export interface ReservationProduct {
 
 export interface Reservation {
   id: number
+  product_id?: number
+  admin_note?: string | null
   name: string
   phone: string
   note: string | null

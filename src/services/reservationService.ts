@@ -83,6 +83,7 @@ export const ReservationService = {
       })
       .eq('id', input.productId)
       .eq('status', 'available')
+      .eq('is_reservable', true)
       .select('id, title, status, reserved_until')
 
     if (lockError) {

@@ -65,7 +65,7 @@ function PromptBlock({ content, label }: { content: string; label?: string }) {
    TERMINAL BLOCK
 ───────────────────────────────────────────── */
 
-function TerminalBlock({ commands }: { commands: string[] }) {
+function TerminalBlock({ commands, label = "Terminal" }: { commands: string[]; label?: string }) {
   const content = commands.join("\n");
   return (
     <div className="flex flex-col gap-0 rounded-xl overflow-hidden border border-zinc-700">
@@ -77,7 +77,7 @@ function TerminalBlock({ commands }: { commands: string[] }) {
             <span className="w-3 h-3 rounded-full bg-green-500/60" />
           </div>
           <span className="text-xs font-bold uppercase tracking-wide text-zinc-400 ml-1" dir="ltr">
-            Terminal
+            {label}
           </span>
         </div>
         <CopyButton text={content} />
@@ -98,10 +98,11 @@ function TerminalBlock({ commands }: { commands: string[] }) {
    PROMPTS DATA
 ───────────────────────────────────────────── */
 
-const mcpPrompt = `I want to connect my training data from athletedata.health to you.
-Please help me set up the MCP connection so you can read my Strava
-and Garmin data automatically every time I ask you something.
-I am not a programmer — explain each step clearly.`;
+const mcpPrompt = `Using the athletedata tools that are now connected, tell me:
+1. How many activities I have in the last 7 days and the total kilometres.
+2. My most recent activity: date, distance, duration, average heart rate.
+Do not estimate anything. If the tools return no data or you have no
+athletedata tools available, say exactly that so I can fix the connection.`;
 
 const dashboardPrompt = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RUNNING DATA ANALYSIS, DASHBOARD & TRAINING PLAN
@@ -197,18 +198,33 @@ Deliver in this order:
      single most important change I should make right now?
   E. One bold line, 10 words or fewer — my readiness verdict I can share`;
 
-const autoUpdatePrompt = `I want you to check my athletedata.health training data every morning
-at 7am and automatically update my dashboard.html file with any new
-activities. If my fitness, fatigue, or form numbers have changed, update
-the stat cards. If I have a new race result, recalculate my fitness estimate.
+const autoUpdatePrompt = `I want my dashboard.html in this folder refreshed automatically every
+morning at 7am with my latest athletedata.health data (new activities,
+fitness/fatigue/form numbers, and a recalculated fitness estimate if there
+is a new race result).
 
-Set this up as a scheduled daily task using cron.
-I am not a programmer — write the setup steps for me clearly.`;
+Do it like this:
+1. Create a script in this folder called update-dashboard (a .sh file on
+   Mac/Linux, a .ps1 file on Windows) that runs Claude Code headless:
+     claude -p "Pull my latest athletedata.health data and update
+     dashboard.html in this folder. Do not touch any other file."
+     --permission-mode acceptEdits
+   The athletedata MCP server is registered with --scope user, so it is
+   available to that headless run.
+2. Schedule that script for 07:00 every day using the tool this computer
+   already has: cron on Mac/Linux, Task Scheduler on Windows. Show me the
+   exact entry you created.
+3. Run the script once now while I watch, and confirm dashboard.html
+   changed (show me the file's modified time before and after).
+4. Log each run to update.log in this folder so I can see if a morning
+   run failed.
+I am not a programmer. Explain what you did in plain words, and tell me
+how to turn it off later.`;
 
 const quickCommands = [
   {
     label: "Update dashboard manually",
-    prompt: "Pull my latest training data from athletedata.health and update my dashboard.html",
+    prompt: "Using the athletedata tools, pull my latest training data and update my dashboard.html in this folder",
   },
   {
     label: "Get a new training week",
@@ -304,9 +320,37 @@ function StepCard({ step }: { step: any }) {
           <TerminalBlock commands={step.terminalCommands} />
         )}
 
+        {/* Labelled terminal blocks (e.g. Mac vs Windows) */}
+        {step.terminalBlocks && (
+          <div className="flex flex-col gap-3">
+            {step.terminalBlocks.map((block: { label: string; commands: string[] }) => (
+              <TerminalBlock key={block.label} label={block.label} commands={block.commands} />
+            ))}
+          </div>
+        )}
+
+        {/* After steps for steps other than 06 (06 renders its own below the prompt) */}
+        {step.afterSteps && step.number !== "06" && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
+              Then:
+            </p>
+            {step.afterSteps.map((s: string, i: number) => (
+              <div key={i} className="flex items-start gap-3">
+                <span className={`text-sm font-bold shrink-0 mt-0.5 ${step.numberColor}`} dir="ltr">
+                  {i + 1}.
+                </span>
+                <p className="text-sm text-zinc-300 leading-relaxed break-words" dir="ltr">
+                  {s}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Step 4 — MCP Prompt */}
         {step.number === "04" && (
-          <PromptBlock content={mcpPrompt} label="Paste into Claude Code" />
+          <PromptBlock content={mcpPrompt} label="Test message — paste into Claude Code or claude.ai" />
         )}
 
         {/* Step 5 — Dashboard Prompt */}

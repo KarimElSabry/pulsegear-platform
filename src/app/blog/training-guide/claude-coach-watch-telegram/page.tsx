@@ -1,55 +1,39 @@
 // src/app/blog/training-guide/claude-coach-watch-telegram/page.tsx
+// Built on the shared blog kit (src/components/blog). The build pieces,
+// the full prompt and the traps are rendered by AdvancedCoachClient.
 
-import type { Metadata } from "next";
-import Link from "next/link";
-import { AdvancedCoachClient } from "./AdvancedCoachClient";
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import { articleMetadata } from '@/lib/blog-meta'
+import {
+  ArticleShell,
+  Section,
+  P,
+  Strong,
+  BulletList,
+  Callout,
+  StatCards,
+  CompareTable,
+  FaqList,
+} from '@/components/blog'
+import { AdvancedCoachClient } from './AdvancedCoachClient'
 
-const SITE_URL     = "https://pulsegear-platform.vercel.app";
-const SHOP_URL     = "https://pulsegear-platform.vercel.app/products";
-const BLOG_URL     = "https://pulsegear-platform.vercel.app/blog";
-const INSTAGRAM_URL = "https://instagram.com/pulsegear_egypt";
-const BEGINNER_URL  = "/blog/training-guide/claude-ai-running-coach-setup";
+const SLUG = 'training-guide/claude-coach-watch-telegram'
+const INSTAGRAM_URL = 'https://instagram.com/pulsegear_egypt'
+const BEGINNER_URL = '/blog/training-guide/claude-ai-running-coach-setup'
 
-export const metadata: Metadata = {
-  title: "خلي Claude يبعت تمرينك على ساعتك ويكلمك على Telegram — الإعداد الكامل",
-  description:
-    "ربط intervals.icu بـ Claude AI لبناء training block كامل يتبعت على ساعتك، مع Telegram bot يكلمك بتفاصيل تمرينك كل يوم. مجاناً تماماً.",
+export const metadata: Metadata = articleMetadata(SLUG, {
   keywords: [
-    "intervals.icu Claude AI",
-    "Telegram running coach Egypt",
-    "push workouts to Garmin",
-    "Claude AI training block",
-    "AI coach Telegram Egypt",
-    "تريننج متقدم",
-    "Claude AI",
-    "intervals.icu",
+    'intervals.icu Claude AI',
+    'Telegram running coach Egypt',
+    'push workouts to Garmin',
+    'Claude AI training block',
+    'AI coach Telegram Egypt',
+    'تريننج متقدم',
+    'Claude AI',
+    'intervals.icu',
   ],
-  openGraph: {
-    title: "خلي Claude يبعت تمرينك على ساعتك ويكلمك على Telegram",
-    description:
-      "intervals.icu + Claude AI + Telegram. Training block على ساعتك، coaching messages على تليفونك، مجاناً.",
-    type: "article",
-    url: `${SITE_URL}/blog/training-guide/claude-coach-watch-telegram`,
-    images: [
-      {
-        url: `${SITE_URL}/og-claude-telegram.jpg`,
-        width: 1200,
-        height: 630,
-        alt: "Claude AI Watch + Telegram Coach Setup - Pulse Gear Egypt",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "خلي Claude يبعت تمرينك على ساعتك ويكلمك على Telegram",
-    description:
-      "intervals.icu + Claude AI + Telegram. Training block على ساعتك، coaching messages على تليفونك.",
-    images: [`${SITE_URL}/og-claude-telegram.jpg`],
-  },
-  alternates: {
-    canonical: `${SITE_URL}/blog/training-guide/claude-coach-watch-telegram`,
-  },
-};
+})
 
 /* ─────────────────────────────────────────────
    DATA
@@ -75,10 +59,10 @@ const requirements = [
   {
     icon: "🤖",
     what: "Claude Code on your laptop",
-    note: "Not just claude.ai — you need the desktop version",
-    free: true,
-    where: "claude.ai/code",
-    href: "https://claude.ai/code",
+    note: "Not just claude.ai — you need the terminal version. Install: curl -fsSL https://claude.ai/install.sh | bash (Mac/Linux) or irm https://claude.ai/install.ps1 | iex (Windows PowerShell). Needs a Claude Pro or Max subscription.",
+    free: false,
+    where: "code.claude.com/docs/en/quickstart",
+    href: "https://code.claude.com/docs/en/quickstart",
   },
   {
     icon: "📱",
@@ -140,36 +124,36 @@ const whatHappens = [
   {
     label: "Part 1 is the only part that needs you.",
     text: "Accounts, an API key, and the Telegram bot. Everything after that Claude does while you watch.",
-    icon: "👤",
   },
   {
     label: "The backfill is the slow bit.",
     text: "When you connect Garmin or Strava, intervals.icu fetches your history. It is not instant. Go make a coffee. If the calendar is still empty after ten minutes, the sync toggle is off.",
-    icon: "⏳",
   },
   {
     label: "Part 3 is the part people skip and should not.",
     text: "It is a real interview and it takes ten minutes. What comes out is coach.md — a plain text file that holds how you want to be coached. That file is the actual product here. Everything else is plumbing.",
-    icon: "📝",
   },
   {
     label: "Part 4 shows you the block before it posts it.",
     text: "Read it. Push back on it. It is reading your real Fitness and Fatigue numbers, so if the block looks too hard, say so and tell it why. That conversation is the coaching.",
-    icon: "📋",
   },
   {
     label: "Part 5 is 5 minutes.",
     text: "BotFather, one message, done. You will see it land on your phone before you close the laptop.",
-    icon: "📱",
   },
 ];
+
+const extraTraps = [
+  "Only ~7 days push to the watch at a time. Build a 4-week block and week 1 shows up now. The rest lands as it approaches. Nothing is broken.",
+  "A 403 error is almost always the User-Agent, not your key. Cloudflare sits in front of intervals.icu and blocks default Python requests.",
+]
 
 const faqs = [
   {
     q: "Do I need to have done the Level 1 setup first?",
     qAr: "لازم أكون عملت الـ Level 1 الأول؟",
-    a: "No. This is a completely separate setup. It uses intervals.icu instead of athletedata.health and does not require the dashboard from Level 1. You can start here directly.",
-    aAr: "لا. ده setup منفصل خالص. بيستخدم intervals.icu بدل athletedata.health ومش محتاج الـ dashboard من الـ Level 1. تقدر تبدأ هنا مباشرة.",
+    a: "No. This is a completely separate setup. It uses intervals.icu instead of Kailo or athletedata.health and does not require the dashboard from Level 1. You can start here directly.",
+    aAr: "لا. ده setup منفصل خالص. بيستخدم intervals.icu بدل Kailo أو athletedata.health ومش محتاج الـ dashboard من الـ Level 1. تقدر تبدأ هنا مباشرة.",
   },
   {
     q: "My block posted to intervals.icu but nothing showed on my watch. Why?",
@@ -209,16 +193,30 @@ const faqs = [
   },
 ];
 
-const relatedPosts = [
-  {
-    href: BEGINNER_URL,
-    label: "Level 1 — المبتدئ",
-    title: "خلي Claude AI يقرأ تمرينك كل يوم لوحده",
-    tag: "Beginner · athletedata.health + Dashboard",
-    accent: "border-green-500/30 hover:border-green-500/60",
-    tagColor: "text-green-400 bg-green-500/10 border-green-500/20",
-  },
-];
+const whatYouGet = [
+  '180 يوم من داتا تمرينك متحللة بالكامل',
+  'coach.md — ملف بيحتوي على فلسفة التدريب بتاعتك وانت اللي بتكتبه',
+  'Training block كامل على ساعتك مباشرة — من غير copy paste',
+  'Telegram bot بيبعتلك تفاصيل تمرين النهارده كل يوم',
+]
+
+const commentPrompts = [
+  'وصل الـ block على ساعتك؟ قولنا',
+  'شايف الـ Telegram messages؟ شيرلنا',
+  'عندك سؤال في أي خطوة؟ اسأل هنا',
+]
+
+const toc = [
+  { id: 'overview', label: 'في نهاية الـ 40 دقيقة دول' },
+  { id: 'what-youre-building', label: 'What you are building' },
+  { id: 'requirements', label: 'What You Need Before Starting' },
+  { id: 'the-prompt', label: 'الـ Prompt الكامل' },
+  { id: 'what-happens', label: 'What happens, and what to expect' },
+  { id: 'traps', label: 'The Four Traps' },
+  { id: 'cost', label: 'What it costs' },
+  { id: 'closing', label: 'يلا اتدرب' },
+  { id: 'faq', label: 'FAQ' },
+]
 
 /* ─────────────────────────────────────────────
    PAGE
@@ -226,517 +224,173 @@ const relatedPosts = [
 
 export default function AdvancedCoachPage() {
   return (
-    <main className="w-full bg-zinc-950 min-h-screen text-white">
+    <ArticleShell
+      slug={SLUG}
+      dek="intervals.icu connects your watch. Claude reads 180 days of your training, interviews you, builds your block, pushes it to your wrist, and texts you every day on Telegram. Everything is free except the Claude Pro subscription that Claude Code needs."
+      toc={toc}
+      related={['training-guide/claude-kailo-free-running-coach', 'training-guide/claude-ai-running-coach-setup', 'training-guide/complete-training-setup']}
+      cta={{
+        title: 'جاهز تتدرب صح؟',
+        body: 'الـ running gear اللي محتاجه موجود، بأسعار مناسبة للـ Egyptian runners.',
+        href: '/products',
+        label: 'اتفرج على الـ Collection',
+      }}
+    >
+      <Section id="overview" kicker="Level 2 · المتقدم · intervals.icu · Watch · Telegram" title="Your watch. Your phone. Zero subscriptions." titleAr="في نهاية الـ 40 دقيقة دول:">
+        <StatCards
+          columns={4}
+          items={[
+            { value: 'EG', label: 'For Egyptian Runners', tone: 'green' },
+            { value: '~40 min', label: 'Setup', tone: 'brand' },
+            { value: 'Free', label: 'Free tools + Claude Pro', tone: 'accent' },
+            { value: 'Watch', label: 'Watch Push + Telegram', tone: 'blue' },
+          ]}
+        />
+        <BulletList items={whatYouGet} />
+        <Callout tone="tip" title="مش عملت الـ Level 1 لسه؟">
+          <span className="block">
+            <Link href="/blog/training-guide/claude-kailo-free-running-coach" className="font-bold text-brand-soft hover:text-white">الـ Level 1 المجاني (Kailo) →</Link>
+          </span>
+          ابدأ بـ Claude + Dashboard الأول — أسهل وأسرع.{' '}
+          <Link href={BEGINNER_URL} className="font-bold text-brand-soft hover:text-white">اقرأ الـ Level 1 →</Link>
+        </Callout>
+        <Callout tone="fact" title="عجبك الـ tutorial؟">
+          Follow the page for gear, deals, and weekly training tips.{' '}
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="font-bold text-brand-soft hover:text-white">Follow على Instagram</a>
+        </Callout>
+        <Callout tone="egypt" title="بتدور على الـ running gear الصح؟">
+          الـ gear اللي بنستخدمه، متاح دلوقتي.{' '}
+          <Link href="/products" className="font-bold text-brand-soft hover:text-white">اتفرج على الـ Gear →</Link>
+        </Callout>
+      </Section>
 
-      {/* ══════════════════════════════════════
-          HERO
-      ══════════════════════════════════════ */}
-      <section className="w-full border-b border-zinc-800 py-20 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-8">
+      <Section id="what-youre-building" title="What you are building" titleAr="إيه اللي هيتبني بالظبط">
+        <AdvancedCoachClient whatYoureBuilding={whatYoureBuilding} />
+        <Callout tone="tip" title="The reason this works is intervals.icu.">
+          Everything else can read your data — Strava, Garmin, all of them. intervals.icu is the only free tool that
+          lets something <Strong>write a workout back to your watch.</Strong> That is the whole trick.
+        </Callout>
+      </Section>
 
-          {/* Level badge */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold uppercase tracking-wide text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-              Level 2 · المتقدم
-            </span>
-            <span className="text-xs font-bold uppercase tracking-wide text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
-              intervals.icu · Watch · Telegram
-            </span>
-          </div>
+      <Section id="requirements" title="What You Need Before Starting" titleAr="اللي محتاجه قبل ما نبدأ، كله مجاناً">
+        <CompareTable
+          caption="Requirements"
+          columns={['Note', 'Where']}
+          rows={requirements.map((req) => ({
+            label: req.what,
+            cells: [
+              <span key="note" className="text-xs">{req.note}{req.free ? '' : ' (Needs Claude Pro or Max)'}</span>,
+              req.href === '#' ? (
+                <span key="where" className="text-muted">{req.where}</span>
+              ) : (
+                <a key="where" href={req.href} target="_blank" rel="noopener noreferrer" className="text-brand-soft underline underline-offset-2 hover:text-white">{req.where}</a>
+              ),
+            ],
+          }))}
+        />
+        <Callout tone="fact" title="You do not need to know how to code">
+          The prompt tells Claude to run everything itself. If Claude ever hands you terminal commands and tells you
+          to run them, say <span className="font-mono font-bold text-white">&quot;run it yourself, don&apos;t give me commands to paste&quot;</span> and it will.
+        </Callout>
+      </Section>
 
-          {/* Hook */}
-          <div className="flex flex-col gap-4">
-            <p className="text-sm font-bold text-cyan-400 uppercase tracking-widest" dir="ltr">
-              Your watch. Your phone. Zero subscriptions.
-            </p>
-            <h1 className="text-4xl md:text-5xl font-black leading-tight" dir="rtl">
-              خلي Claude يبعت
-              <br />
-              <span className="text-cyan-400">تمرينك على ساعتك</span>
-              <br />
-              ويكلمك على Telegram.
-            </h1>
-            <p className="text-base text-zinc-300 leading-relaxed max-w-xl" dir="ltr">
-              intervals.icu connects your watch. Claude reads 180 days of your
-              training, interviews you, builds your block, pushes it to your
-              wrist, and texts you every day on Telegram. Free. The whole thing.
-            </p>
-          </div>
+      <Section id="the-prompt" title="The full prompt" titleAr="الـ Prompt الكامل">
+        <P>Open Claude Code in your empty folder. Paste this whole thing. Do not edit it first.</P>
+        <AdvancedCoachClient telegramPrompt />
+      </Section>
 
-          {/* Trust Bar */}
-          <div className="flex items-center gap-4 text-sm text-zinc-500 flex-wrap" dir="ltr">
-            <span>🇪🇬 For Egyptian Runners</span>
-            <span>·</span>
-            <span>⏱ ~40 min setup</span>
-            <span>·</span>
-            <span>✅ 100% Free</span>
-            <span>·</span>
-            <span>⌚ Watch Push</span>
-            <span>·</span>
-            <span>📱 Telegram</span>
-          </div>
-
-          {/* Level 1 back-link */}
-          <Link
-            href={BEGINNER_URL}
-            className="group bg-zinc-900 border border-green-500/20 hover:border-green-500/50 rounded-2xl p-5 flex items-center justify-between gap-4 transition-all duration-200"
-          >
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold uppercase tracking-wide text-green-400" dir="ltr">
-                مش عملت الـ Level 1 لسه؟
-              </span>
-              <p className="text-sm font-bold text-white" dir="rtl">
-                ابدأ بـ Claude + Dashboard الأول — أسهل وأسرع
-              </p>
+      <Section id="what-happens" title="What happens, and what to expect" titleAr="مش هتتفاجأ بحاجة لو قرأت ده الأول">
+        <div className="space-y-3">
+          {whatHappens.map((item) => (
+            <div key={item.label} className="card p-5">
+              <p className="text-sm font-bold text-white" dir="auto">{item.label}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-strong" dir="auto">{item.text}</p>
             </div>
-            <span className="text-green-400 text-xl group-hover:translate-x-1 transition-transform duration-200 shrink-0">
-              ←
-            </span>
-          </Link>
-
-          {/* Follow CTA */}
-          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <p className="text-base font-bold text-white" dir="rtl">عجبك الـ tutorial؟</p>
-              <p className="text-sm text-zinc-400" dir="ltr">
-                Follow the page for gear, deals, and weekly training tips.
-              </p>
-            </div>
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap"
-            >
-              Follow على Instagram
-            </a>
-          </div>
-
-          {/* What You'll Get */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-            <p className="text-sm font-bold uppercase tracking-wide text-zinc-400" dir="rtl">
-              في نهاية الـ 40 دقيقة دول:
-            </p>
-            {[
-              {
-                icon: "📊",
-                text: "180 يوم من داتا تمرينك متحللة بالكامل",
-                dir: "rtl" as const,
-              },
-              {
-                icon: "📝",
-                text: "coach.md — ملف بيحتوي على فلسفة التدريب بتاعتك وانت اللي بتكتبه",
-                dir: "rtl" as const,
-              },
-              {
-                icon: "⌚",
-                text: "Training block كامل على ساعتك مباشرة — من غير copy paste",
-                dir: "rtl" as const,
-              },
-              {
-                icon: "📱",
-                text: "Telegram bot بيبعتلك تفاصيل تمرين النهارده كل يوم",
-                dir: "rtl" as const,
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="text-xl shrink-0">{item.icon}</span>
-                <p className="text-sm text-zinc-300 leading-relaxed" dir={item.dir}>
-                  {item.text}
-                </p>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
-          GEAR BANNER
-      ══════════════════════════════════════ */}
-      <section className="w-full border-b border-zinc-800 bg-zinc-900/50 py-6 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🏃</span>
-            <div className="flex flex-col gap-0.5">
-              <p className="text-sm font-bold text-white" dir="rtl">بتدور على الـ running gear الصح؟</p>
-              <p className="text-sm text-zinc-400" dir="rtl">الـ gear اللي بنستخدمه، متاح دلوقتي.</p>
-            </div>
-          </div>
-          <a
-            href={SHOP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 border border-red-500 text-red-400 hover:bg-red-500 hover:text-white text-sm font-bold uppercase tracking-wide px-4 py-2 rounded-full transition-all duration-200 whitespace-nowrap"
-          >
-            اتفرج على الـ Gear
-          </a>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════
-          ARTICLE BODY
-      ══════════════════════════════════════ */}
-      <article className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-20">
-
-        {/* ─── WHAT YOU'RE BUILDING ─── */}
-        <section id="what-youre-building" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">🧩 What you are building</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">إيه اللي هيتبني بالظبط</p>
-          </div>
-
-          <AdvancedCoachClient whatYoureBuilding={whatYoureBuilding} />
-
-          <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 flex items-start gap-3">
-            <span className="text-cyan-400 shrink-0 text-lg">💡</span>
-            <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
-              <span className="text-cyan-400 font-bold">The reason this works is intervals.icu.</span>{" "}
-              Everything else can read your data — Strava, Garmin, all of them.
-              intervals.icu is the only free tool that lets something{" "}
-              <span className="text-white font-bold">write a workout back to your watch.</span>{" "}
-              That is the whole trick.
-            </p>
-          </div>
-        </section>
-
-        {/* ─── REQUIREMENTS ─── */}
-        <section id="requirements" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">⚙️ What You Need Before Starting</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">اللي محتاجه قبل ما نبدأ، كله مجاناً</p>
-          </div>
-
-          <div className="overflow-x-auto rounded-2xl border border-zinc-800">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900">
-                  <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide text-zinc-400">What</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide text-zinc-400">Note</th>
-                  <th className="text-left px-5 py-3 text-xs font-bold uppercase tracking-wide text-zinc-400">Where</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {requirements.map((req) => (
-                  <tr key={req.what} className="hover:bg-zinc-900/50 transition-colors">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <span>{req.icon}</span>
-                        <span className="text-zinc-300 text-sm font-bold" dir="ltr">{req.what}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="text-xs text-zinc-500 leading-relaxed" dir="ltr">{req.note}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      {req.href === "#" ? (
-                        <span className="text-sm text-zinc-500" dir="ltr">{req.where}</span>
-                      ) : (
-                        <a
-                          href={req.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-400 hover:text-blue-300 transition-colors underline underline-offset-2"
-                          dir="ltr"
-                        >
-                          {req.where}
-                        </a>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-start gap-3">
-            <span className="text-xl shrink-0">🙋</span>
-            <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
-              You do not need to know how to code. The prompt tells Claude to run
-              everything itself. If Claude ever hands you terminal commands and
-              tells you to run them, say{" "}
-              <span className="text-white font-bold font-mono">
-                &quot;run it yourself, don&apos;t give me commands to paste&quot;
-              </span>{" "}
-              and it will.
-            </p>
-          </div>
-        </section>
-
-        {/* ─── THE PROMPT ─── */}
-        <section id="the-prompt" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="rtl">🚀 الـ Prompt الكامل</h2>
-            <p className="text-sm text-zinc-500" dir="ltr">
-              Open Claude Code in your empty folder. Paste this whole thing. Do not edit it first.
-            </p>
-          </div>
-          <AdvancedCoachClient telegramPrompt />
-        </section>
-
-        {/* ─── WHAT HAPPENS ─── */}
-        <section id="what-happens" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">📖 What happens, and what to expect</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">مش هتتفاجأ بحاجة لو قرأت ده الأول</p>
-          </div>
-          <div className="flex flex-col gap-3">
-            {whatHappens.map((item, i) => (
-              <div
-                key={i}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-start gap-4"
-              >
-                <span className="text-2xl shrink-0">{item.icon}</span>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-bold text-white" dir="ltr">{item.label}</p>
-                  <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">{item.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── TRAPS ─── */}
-        <section id="traps" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">⚠️ The Four Traps</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">
-              كل واحدة فيهم خلّت حد يقف. كلهم اتعملت ليهم حل في الـ prompt — بس اعرفهم عشان تعرفهم لما تشوفهم.
-            </p>
-          </div>
-          <AdvancedCoachClient traps={traps} />
-          <div className="flex flex-col gap-3">
-            {[
-              {
-                icon: "⌚",
-                text: "Only ~7 days push to the watch at a time. Build a 4-week block and week 1 shows up now. The rest lands as it approaches. Nothing is broken.",
-              },
-              {
-                icon: "🔒",
-                text: "A 403 error is almost always the User-Agent, not your key. Cloudflare sits in front of intervals.icu and blocks default Python requests.",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-start gap-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4"
-              >
-                <span className="text-xl shrink-0">{item.icon}</span>
-                <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── MID-PAGE FOLLOW CTA ─── */}
-        <section className="bg-gradient-to-br from-purple-600/15 to-pink-600/10 border border-purple-500/20 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
-          <span className="text-3xl">📲</span>
-          <h3 className="text-lg font-bold text-white" dir="rtl">عجبك الـ setup لحد هنا؟</h3>
-          <p className="text-sm text-zinc-400 max-w-sm leading-relaxed" dir="ltr">
-            Follow the page on Instagram for gear reviews, running deals, and
-            weekly tips for Egyptian runners.
-          </p>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-6 py-3 rounded-full transition-all duration-200"
-          >
-            Follow على Instagram
-          </a>
-        </section>
-
-        {/* ─── WHAT IT COSTS ─── */}
-        <section id="cost" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">💰 What it costs</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">مقارنة بيها بيانت</p>
-          </div>
-          <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-6 flex flex-col gap-4">
-            <p className="text-3xl font-black text-green-400" dir="ltr">Nothing.</p>
-            <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">
-              Free intervals.icu account covers the API, the calendar, the workout
-              builder, the device integrations, and the push to your watch.
-              Telegram is free. Claude free tier handles everything here.
-            </p>
-            <div className="border-t border-green-500/20 pt-4">
-              <p className="text-sm text-zinc-500 leading-relaxed" dir="rtl">
-                قارن ده بـ training app + coaching app + recovery app اللي ممكن تكون بتدفع فيهم دلوقتي.
-                الـ setup ده بيعمل الثلاثة مع بعض.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* ─── FAQ ─── */}
-        <section id="faq" className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold text-white" dir="ltr">❓ Frequently Asked Questions</h2>
-            <p className="text-sm text-zinc-500" dir="rtl">أسئلة شايفينها كتير</p>
-          </div>
-          <div className="flex flex-col gap-4">
-            {faqs.map((faq, i) => (
-              <div
-                key={i}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-4"
-              >
-                <p className="font-bold text-white text-base" dir="ltr">🔸 {faq.q}</p>
-                <p className="text-sm font-bold text-zinc-400" dir="rtl">{faq.qAr}</p>
-                <div className="border-t border-zinc-800 pt-4 flex flex-col gap-3">
-                  <p className="text-sm text-zinc-300 leading-relaxed" dir="ltr">{faq.a}</p>
-                  <p className="text-sm text-zinc-500 leading-relaxed border-t border-zinc-800/60 pt-3" dir="rtl">
-                    {faq.aAr}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── FYI ─── */}
-        <section className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 flex flex-col gap-3">
-          <p className="text-sm font-bold uppercase tracking-wide text-zinc-400" dir="ltr">FYI</p>
-          <p className="text-sm text-zinc-400 leading-relaxed" dir="ltr">
-            This builds you a real coach, and it is still a coach that has never
-            watched you run. It knows your numbers and it knows what you told it.
-            It does not know that your left knee talks to you on descents unless
-            you put that in{" "}
-            <span className="text-white font-mono font-bold">coach.md</span>.
-            Keep that file honest and it gets sharper. Leave it thin and you get
-            generic.
-          </p>
-          <p className="text-sm text-zinc-500 leading-relaxed" dir="rtl">
-            الـ coach.md هو الفرق بين كوتش حقيقي وكالكيوليتر. كل ما تحدّثه، كل ما التدريب أدق.
-          </p>
-        </section>
-
-        {/* ─── CLOSING ─── */}
-        <section className="bg-gradient-to-br from-cyan-600/20 to-zinc-900 border border-cyan-500/20 rounded-2xl p-8 flex flex-col gap-5 text-center items-center">
-          <span className="text-4xl">🏁</span>
-          <h3 className="text-xl font-bold text-white" dir="rtl">
-            الداتا بتاعتك على ساعتك، والكوتش على تليفونك. يلا اتدرب.
-          </h3>
-          <p className="text-sm text-zinc-400 max-w-md leading-relaxed" dir="ltr">
-            Most athletes pay three subscriptions and still get generic plans.
-            This setup reads your actual numbers, knows how you want to be
-            coached, and reaches your phone every morning. Set it up once.
-          </p>
-          <p className="text-sm text-zinc-300 font-bold" dir="ltr">
-            Set it up once. Let it run. Focus on training.
-          </p>
-        </section>
-
-        {/* ══════════════════════════════════════
-            LEVEL DOWN LINK
-        ══════════════════════════════════════ */}
-        <section className="flex flex-col gap-4">
-          <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
-            مش جاهز للـ Level 2 لسه؟
-          </p>
-          {relatedPosts.map((post) => (
-            <Link
-              key={post.href}
-              href={post.href}
-              className={`group bg-zinc-900 border ${post.accent} rounded-2xl p-6 flex items-center justify-between gap-4 transition-all duration-200`}
-            >
-              <div className="flex flex-col gap-2">
-                <span className={`self-start text-xs font-bold uppercase tracking-wide border px-2 py-0.5 rounded-full ${post.tagColor}`}>
-                  {post.tag}
-                </span>
-                <p className="text-base font-bold text-white leading-snug" dir="rtl">
-                  {post.title}
-                </p>
-              </div>
-              <span className="text-zinc-400 text-2xl group-hover:translate-x-1 transition-transform duration-200 shrink-0">
-                ←
-              </span>
-            </Link>
           ))}
-        </section>
+        </div>
+      </Section>
 
-        {/* ══════════════════════════════════════
-            COMMENT CTA
-        ══════════════════════════════════════ */}
-        <section className="bg-gradient-to-br from-zinc-900 to-zinc-800 border-2 border-zinc-600 rounded-2xl p-10 flex flex-col items-center gap-6 text-center">
-          <span className="text-5xl">💬</span>
-          <div className="flex flex-col gap-3">
-            <h3 className="text-3xl md:text-4xl font-black text-white leading-tight" dir="rtl">
-              اتكلم معانا
-              <br />
-              <span className="text-yellow-400">في الكومنتس</span>
-            </h3>
-            <p className="text-lg font-bold text-zinc-300" dir="ltr">Tell us how it went.</p>
-          </div>
-          <div className="flex flex-col gap-3 w-full max-w-md">
-            {[
-              { emoji: "⌚", text: "وصل الـ block على ساعتك؟ قولنا", dir: "rtl" as const },
-              { emoji: "📱", text: "شايف الـ Telegram messages؟ شيرلنا", dir: "rtl" as const },
-              { emoji: "❓", text: "عندك سؤال في أي خطوة؟ اسأل هنا", dir: "rtl" as const },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 bg-zinc-900/60 border border-zinc-700 rounded-xl px-4 py-3">
-                <span className="text-xl shrink-0">{item.emoji}</span>
-                <p className="text-sm font-bold text-zinc-300" dir={item.dir}>{item.text}</p>
-              </div>
+      <Section id="traps" title="The Four Traps">
+        <P>كل واحدة فيهم خلّت حد يقف. كلهم اتعملت ليهم حل في الـ prompt — بس اعرفهم عشان تعرفهم لما تشوفهم.</P>
+        <AdvancedCoachClient traps={traps} />
+        <div className="space-y-3">
+          {extraTraps.map((t) => (
+            <Callout key={t} tone="warning">{t}</Callout>
+          ))}
+        </div>
+        <Callout tone="tip" title="عجبك الـ setup لحد هنا؟">
+          Follow the page on Instagram for gear reviews, running deals, and weekly tips for Egyptian runners.{' '}
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="font-bold text-brand-soft hover:text-white">Follow على Instagram</a>
+        </Callout>
+      </Section>
+
+      <Section id="cost" title="What it costs" titleAr="مقارنة بيها بيانت">
+        <StatCards
+          columns={3}
+          items={[
+            { value: 'Free', label: 'intervals.icu', sub: 'API, calendar, builder, push', tone: 'green' },
+            { value: 'Free', label: 'Telegram', sub: 'Any account', tone: 'green' },
+            { value: 'Pro', label: 'Claude Pro or Max', sub: 'Only paid piece', tone: 'brand' },
+          ]}
+        />
+        <P><Strong>Only Claude Pro.</Strong></P>
+        <P>
+          Free intervals.icu account covers the API, the calendar, the workout builder, the device integrations, and
+          the push to your watch. Telegram is free. Claude Code itself requires a Claude Pro or Max subscription (or
+          pre-paid API credits); the free claude.ai plan cannot run it.
+        </P>
+        <P>
+          قارن ده بـ training app + coaching app + recovery app اللي ممكن تكون بتدفع فيهم دلوقتي. الـ setup ده بيعمل الثلاثة مع بعض.
+        </P>
+      </Section>
+
+      <Section id="closing" title="Set it up once. Let it run. Focus on training." titleAr="الداتا بتاعتك على ساعتك، والكوتش على تليفونك. يلا اتدرب.">
+        <Callout tone="fact" title="FYI">
+          <p>
+            This builds you a real coach, and it is still a coach that has never watched you run. It knows your
+            numbers and it knows what you told it. It does not know that your left knee talks to you on descents
+            unless you put that in <span className="font-mono font-bold text-white">coach.md</span>. Keep that file
+            honest and it gets sharper. Leave it thin and you get generic.
+          </p>
+          <p className="pt-1 text-muted">الـ coach.md هو الفرق بين كوتش حقيقي وكالكيوليتر. كل ما تحدّثه، كل ما التدريب أدق.</p>
+        </Callout>
+        <P>
+          Most athletes pay three subscriptions and still get generic plans. This setup reads your actual numbers,
+          knows how you want to be coached, and reaches your phone every morning. Set it up once.
+        </P>
+        <P><Strong>Set it up once. Let it run. Focus on training.</Strong></P>
+
+        <Callout tone="tip" title="مش جاهز للـ Level 2 لسه؟">
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted">Level 1 — المبتدئ · Beginner · Kailo (free) or athletedata.health + Dashboard</span>
+          <Link href={BEGINNER_URL} className="font-bold text-white hover:text-brand-soft">
+            خلي Claude AI يقرأ تمرينك كل يوم لوحده →
+          </Link>
+        </Callout>
+
+        <div className="card space-y-5 p-8 text-center">
+          <h3 className="text-2xl font-black leading-tight text-white md:text-3xl" dir="auto">
+            اتكلم معانا <span className="text-accent-soft">في الكومنتس</span>
+          </h3>
+          <p className="text-lg font-bold text-muted-strong">Tell us how it went.</p>
+          <ul className="mx-auto max-w-md space-y-2 text-start">
+            {commentPrompts.map((t) => (
+              <li key={t} className="rounded-xl border border-line bg-surface-1/60 px-4 py-3 text-sm font-bold text-muted-strong" dir="auto">{t}</li>
             ))}
-          </div>
-          <p className="text-sm text-zinc-500" dir="rtl">بنرد على كل كومنت 👇</p>
-        </section>
+          </ul>
+          <p className="text-sm text-muted" dir="auto">بنرد على كل كومنت</p>
+        </div>
 
-        {/* ─── RELATED BLOG ─── */}
-        <section className="flex flex-col gap-4">
-          <p className="text-sm font-bold uppercase tracking-wide text-zinc-500" dir="ltr">
-            More from the blog
-          </p>
-          <a
-            href={BLOG_URL}
-            className="group bg-zinc-900 border border-zinc-700 hover:border-zinc-500 rounded-2xl p-5 flex items-center justify-between gap-4 transition-all duration-200"
-          >
-            <p className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors" dir="rtl">
-              كل المقالات والـ guides على المدونة
-            </p>
-            <span className="text-zinc-500 group-hover:text-zinc-300 text-xl group-hover:translate-x-1 transition-all duration-200 shrink-0">
-              ←
-            </span>
-          </a>
-        </section>
+        <P>
+          <Link href="/blog" className="font-bold text-brand-soft hover:text-white">كل المقالات والـ guides على المدونة →</Link>
+        </P>
 
-        {/* ─── FINAL GEAR CTA ─── */}
-        <section className="bg-zinc-900 border border-zinc-700 rounded-2xl p-8 flex flex-col items-center gap-5 text-center">
-          <span className="text-3xl">🛒</span>
-          <div className="flex flex-col gap-2">
-            <h3 className="text-lg font-bold text-white" dir="rtl">جاهز تتدرب صح؟</h3>
-            <p className="text-sm text-zinc-400 max-w-sm leading-relaxed" dir="rtl">
-              الـ running gear اللي محتاجه موجود، بأسعار مناسبة للـ Egyptian runners.
-            </p>
-          </div>
-          <a
-            href={SHOP_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-red-500 hover:bg-red-400 text-white text-sm font-bold px-8 py-3 rounded-full transition-all duration-200"
-          >
-            اتفرج على الـ Collection
-          </a>
-        </section>
+        <Callout tone="fact" title="عايز تشوف gear جديد ودـ deals وتips كل أسبوع؟">
+          <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="font-bold text-brand-soft hover:text-white">Follow @pulsegear_egypt على Instagram</a>
+          <span className="block pt-1 text-muted">اتكلم معانا في الكومنتس على الـ reel</span>
+        </Callout>
+      </Section>
 
-        {/* ─── FINAL FOLLOW CTA ─── */}
-        <section className="flex flex-col items-center gap-4 text-center pb-4">
-          <p className="text-sm text-zinc-400" dir="rtl">
-            عايز تشوف gear جديد ودـ deals وتips كل أسبوع؟
-          </p>
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white text-sm font-bold px-6 py-3 rounded-full transition-all duration-200"
-          >
-            Follow @pulsegear_egypt على Instagram
-          </a>
-          <p className="text-sm text-zinc-600" dir="rtl">
-            اتكلم معانا في الكومنتس على الـ reel
-          </p>
-        </section>
-
-      </article>
-    </main>
-  );
+      <FaqList items={faqs} title="Frequently Asked Questions" />
+    </ArticleShell>
+  )
 }

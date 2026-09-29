@@ -1,406 +1,208 @@
-// src/app/blog/zone-2-training/page.tsx
+// src/app/blog/training-guide/zone-2-training/page.tsx
+// Built on the shared blog kit (src/components/blog).
 
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata } from 'next'
+import { articleMetadata } from '@/lib/blog-meta'
+import {
+  ArticleShell,
+  Section,
+  P,
+  Strong,
+  Callout,
+  StatCards,
+  CompareTable,
+  FaqList,
+} from '@/components/blog'
 
-export const metadata: Metadata = {
-  title: "Zone 2 Training: سر الـ Elite Athletes | Pulse Gear Blog",
-  description:
-    "ليه الـ Elite Athletes بيقضوا 80% من تدريبهم في الـ Zone 2 وإزاي تعمل زيهم.",
-  openGraph: {
-    title: "Zone 2 Training: سر الـ Elite Athletes",
-    description:
-      "ليه الـ Elite Athletes بيقضوا 80% من تدريبهم في الـ Zone 2 وإزاي تعمل زيهم.",
-    type: "article",
-  },
-};
+const SLUG = 'training-guide/zone-2-training'
+
+export const metadata: Metadata = articleMetadata(SLUG)
 
 const benefits = [
   {
-    icon: "🔥",
-    title: "Fat Burning",
-    desc: "جسمك بيعتمد على الدهون كـ Fuel الأساسي في الـ Zone 2 مش الكربوهيدرات. ده بيخليك أكفأ على المسافات الطويلة.",
+    title: 'Fat Burning',
+    desc: 'جسمك بيعتمد على الدهون كـ Fuel الأساسي في الـ Zone 2 مش الكربوهيدرات. ده بيخليك أكفأ على المسافات الطويلة.',
   },
   {
-    icon: "❤️",
-    title: "Cardiac Output",
-    desc: "بيكبّر حجم الـ Left Ventricle وبيضخ دم أكتر في كل نبضة، يعني قلبك بيشتغل أذكى مش أصعب.",
+    title: 'Cardiac Output',
+    desc: 'بيكبّر حجم الـ Left Ventricle وبيضخ دم أكتر في كل نبضة، يعني قلبك بيشتغل أذكى مش أصعب.',
   },
   {
-    icon: "⚡",
-    title: "Mitochondria Density",
-    desc: "بتزيد عدد وكفاءة الـ Mitochondria في خلاياك، محطات الطاقة اللي بتحولك من Runner عادي لـ Machine.",
+    title: 'Mitochondria Density',
+    desc: 'بتزيد عدد وكفاءة الـ Mitochondria في خلاياك، محطات الطاقة اللي بتحولك من Runner عادي لـ Machine.',
   },
   {
-    icon: "🏃",
-    title: "Lactate Clearance",
-    desc: "جسمك بيتعلم يتخلص من الـ Lactic Acid أسرع، يعني تتعب أبطأ وتقدر تستمر أطول.",
+    title: 'Lactate Clearance',
+    desc: 'جسمك بيتعلم يتخلص من الـ Lactic Acid أسرع، يعني تتعب أبطأ وتقدر تستمر أطول.',
   },
   {
-    icon: "🛡️",
-    title: "Faster Recovery",
-    desc: "بيقلل الـ Inflammation ويسرع الـ Recovery بين الـ Sessions، يعني تقدر تتدرب أكتر.",
+    title: 'Faster Recovery',
+    desc: 'بيقلل الـ Inflammation ويسرع الـ Recovery بين الـ Sessions، يعني تقدر تتدرب أكتر.',
   },
   {
-    icon: "📈",
-    title: "VO2 Max Improvement",
-    desc: "الـ Aerobic Base القوي هو الأساس اللي بيرفع الـ VO2 Max على المدى البعيد مش الـ Intervals بس.",
+    title: 'VO2 Max Improvement',
+    desc: 'الـ Aerobic Base القوي هو الأساس اللي بيرفع الـ VO2 Max على المدى البعيد مش الـ Intervals بس.',
   },
-];
+]
 
 const athletes = [
   {
-    name: "Eliud Kipchoge",
-    sport: "Marathon Runner 🏃",
-    zone2: "80%",
-    fact: "أسرع راجل في تاريخ الـ Marathon، 80% من تدريبه Zone 2 هادي.",
+    name: 'Eliud Kipchoge',
+    sport: 'Marathon Runner',
+    zone2: '80%',
+    fact: 'أسرع راجل في تاريخ الـ Marathon، 80% من تدريبه Zone 2 هادي.',
   },
   {
-    name: "Tadej Pogačar",
-    sport: "Pro Cyclist 🚴",
-    zone2: "75%",
-    fact: "بطل Tour de France، بيقضي معظم وقت التدريب في Zone 2.",
+    name: 'Tadej Pogačar',
+    sport: 'Pro Cyclist',
+    zone2: '75%',
+    fact: 'بطل Tour de France، بيقضي معظم وقت التدريب في Zone 2.',
   },
   {
-    name: "Kristian Blummenfelt",
-    sport: "Olympic Triathlete 🏊",
-    zone2: "85%",
-    fact: "بطل Olympic Triathlon، معروف بـ Zone 2 Volume العالي جداً.",
+    name: 'Kristian Blummenfelt',
+    sport: 'Olympic Triathlete',
+    zone2: '85%',
+    fact: 'بطل Olympic Triathlon، معروف بـ Zone 2 Volume العالي جداً.',
   },
-];
+]
 
 const weekPlan = [
-  { day: "الاثنين", session: "Zone 2 Run", duration: "45 دقيقة", type: "easy" },
-  { day: "الثلاثاء", session: "Rest أو Zone 1 Walk", duration: "30 دقيقة", type: "rest" },
-  { day: "الأربعاء", session: "Zone 2 Cycling", duration: "60 دقيقة", type: "easy" },
-  { day: "الخميس", session: "Zone 4 Intervals", duration: "30 دقيقة", type: "hard" },
-  { day: "الجمعة", session: "Zone 2 Run", duration: "45 دقيقة", type: "easy" },
-  { day: "السبت", session: "Long Zone 2 Run", duration: "90 دقيقة", type: "easy" },
-  { day: "الأحد", session: "Complete Rest", duration: "يوم راحة", type: "rest" },
-];
+  { day: 'الاثنين', session: 'Zone 2 Run', duration: '45 دقيقة', type: 'Easy' },
+  { day: 'الثلاثاء', session: 'Rest أو Zone 1 Walk', duration: '30 دقيقة', type: 'Rest' },
+  { day: 'الأربعاء', session: 'Zone 2 Cycling', duration: '60 دقيقة', type: 'Easy' },
+  { day: 'الخميس', session: 'Zone 4 Intervals', duration: '30 دقيقة', type: 'Intense' },
+  { day: 'الجمعة', session: 'Zone 2 Run', duration: '45 دقيقة', type: 'Easy' },
+  { day: 'السبت', session: 'Long Zone 2 Run', duration: '90 دقيقة', type: 'Easy' },
+  { day: 'الأحد', session: 'Complete Rest', duration: 'يوم راحة', type: 'Rest' },
+]
 
 const talkTest = [
-  { icon: "🎵", test: "تقدر تغني؟", result: "Zone 1 — سهل أوي، زود السرعة شوية", color: "text-green-400" },
-  { icon: "💬", test: "تقدر تتكلم جمل كاملة؟", result: "✅ Zone 2 — ده المكان الصح!", color: "text-blue-400" },
-  { icon: "😤", test: "بتتكلم كلمتين بس؟", result: "Zone 3–4 — تقيل أوي، هدّي", color: "text-orange-400" },
-  { icon: "😵", test: "مش قادر تتكلم خالص؟", result: "Zone 5 — أقصى مجهود", color: "text-red-400" },
-];
+  { test: 'تقدر تغني؟', zone: 'Zone 1', result: 'سهل أوي، زود السرعة شوية' },
+  { test: 'تقدر تتكلم جمل كاملة؟', zone: 'Zone 2', result: 'ده المكان الصح!' },
+  { test: 'بتتكلم كلمتين بس؟', zone: 'Zone 3–4', result: 'تقيل أوي، هدّي' },
+  { test: 'مش قادر تتكلم خالص؟', zone: 'Zone 5', result: 'أقصى مجهود' },
+]
 
-const relatedPosts = [
+const faqs = [
   {
-    slug: "heart-rate-zones",
-    emoji: "📊",
-    title: "Heart Rate Zones: اتدرب بذكاء مش بتعب",
-    tag: "Training Guide",
+    q: 'How do I know I am really in Zone 2?',
+    qAr: 'إزاي أتأكد إني في الـ Zone 2 فعلاً؟',
+    a: 'Two checks: the talk test (full sentences without gasping) and a heart rate strap reading 60–70% of your max HR. If the strap says Zone 3 but you feel fine, trust the strap and slow down.',
+    aAr: 'اختبارين: الـ Talk Test (جمل كاملة من غير ما تلهث) وقراءة Heart Rate Strap بين 60 و70% من الـ Max HR. لو الـ strap بيقول Zone 3 وإنت حاسس إنك كويس، صدّق الـ strap وهدّي.',
   },
   {
-    slug: "heart-rate-strap-vs-optical",
-    emoji: "⚡",
-    title: "Heart Rate Strap vs Optical: أيهما أدق؟",
-    tag: "Gear Review",
+    q: 'Is Zone 2 enough on its own?',
+    qAr: 'الـ Zone 2 لوحده كفاية؟',
+    a: 'It is the base, not the whole plan. Keep roughly 80% of your week easy and the other 20% genuinely hard (Zone 4–5). Avoid living in Zone 3.',
+    aAr: 'هو الأساس مش الخطة كلها. خلّي حوالي 80% من أسبوعك سهل و20% صعب بجد (Zone 4–5). واتجنب إنك تعيش في الـ Zone 3.',
   },
   {
-    slug: "garmin-vs-polar",
-    emoji: "🥊",
-    title: "Garmin vs Polar: أنهي الأحسن ليك؟",
-    tag: "Gear Review",
+    q: 'How long until I see results?',
+    qAr: 'هشوف نتيجة إمتى؟',
+    a: 'Most runners notice the same heart rate producing a faster pace within 8 to 12 weeks of consistent Zone 2 volume.',
+    aAr: 'معظم الـ runners بيلاحظوا إن نفس النبض بيديهم pace أسرع خلال 8 لـ 12 أسبوع من Zone 2 Volume منتظم.',
   },
-];
+]
+
+const toc = [
+  { id: 'what', label: 'إيه هو الـ Zone 2 بالظبط؟' },
+  { id: 'eighty-twenty', label: 'قاعدة الـ 80/20' },
+  { id: 'benefits', label: 'ليه الـ Zone 2 مهم جداً؟' },
+  { id: 'athletes', label: 'الـ Elite Athletes اللي بيثبتوا الكلام ده' },
+  { id: 'mistake', label: 'الغلطة اللي كلنا بنعملها' },
+  { id: 'week-plan', label: 'خطة أسبوعية مقترحة للمبتدئين' },
+  { id: 'faq', label: 'FAQ' },
+]
 
 export default function Zone2TrainingPage() {
   return (
-    <main className="w-full bg-zinc-950 min-h-screen text-white">
+    <ArticleShell
+      slug={SLUG}
+      dek="لو شايف إن التدريب الصح لازم يكون مؤلم وصعب، إنت غلطان. الـ Zone 2 هو أهم Zone في تدريبك وهو الأبطأ والأسهل. وده مش رأيي، ده العلم."
+      toc={toc}
+      related={['training-guide/heart-rate-zones', 'training-guide/claude-kailo-free-running-coach', 'gear-review/heart-rate-strap-vs-optical']}
+      cta={{
+        title: 'عايز تتأكد إنك في الـ Zone 2 الصح؟',
+        body: 'محتاج Heart Rate Monitor دقيق عشان تتدرب في الـ Zone الصح. شوف مجموعتنا من الـ Chest Straps والـ GPS Watches.',
+        href: '/products',
+        label: 'Browse Heart Rate Monitors',
+      }}
+    >
+      <Section id="what" title="What exactly is Zone 2?" titleAr="إيه هو الـ Zone 2 بالظبط؟">
+        <P>
+          الـ Zone 2 هو التدريب اللي بيحصل عند <Strong>60–70% من الـ Max HR</Strong> بتاعك.
+          ده المجهود اللي تقدر تتكلم فيه جمل كاملة بدون ما تلهث، يعني مريح بس مش سهل أوي.
+        </P>
+        <P>
+          <Strong>الـ Talk Test</Strong> هو أسهل طريقة تعرف إنك في الـ Zone 2 من غير أي جهاز:
+        </P>
+        <CompareTable
+          caption="Talk test"
+          columns={['Zone', 'الحكم']}
+          rows={talkTest.map((t) => ({ label: t.test, cells: [t.zone, t.result] }))}
+        />
+      </Section>
 
-      {/* ===== HERO ===== */}
-      <section className="w-full border-b border-zinc-800 py-20 px-6">
-        <div className="max-w-3xl mx-auto flex flex-col gap-6">
+      <Section id="eighty-twenty" title="The 80/20 rule" titleAr="قاعدة الـ 80/20">
+        <P>الـ Elite Athletes مش بيتدربوا بشدة كل يوم، بيوزعوا تدريبهم كده:</P>
+        <StatCards
+          columns={2}
+          items={[
+            { value: '80%', label: 'Zone 1 & 2', sub: 'Easy & Aerobic Training', tone: 'blue' },
+            { value: '20%', label: 'Zone 4 & 5', sub: 'Hard & Intense Training', tone: 'brand' },
+          ]}
+        />
+        <Callout tone="tip">
+          معظم الناس بتعمل العكس، بتتدرب بشدة كل يوم وبتتساءل ليه مش بتتحسن.
+        </Callout>
+      </Section>
 
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase tracking-wide">
-            <Link href="/" className="hover:text-white transition-colors duration-200">Home</Link>
-            <span>/</span>
-            <Link href="/blog" className="hover:text-white transition-colors duration-200">Blog</Link>
-            <span>/</span>
-            <span className="text-zinc-400">Zone 2 Training</span>
-          </div>
-
-          {/* Tag */}
-          <span className="self-start text-xs font-bold uppercase tracking-wide text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
-            Training Guide
-          </span>
-
-          {/* Title */}
-          <h1 className="text-4xl md:text-5xl font-black uppercase leading-tight">
-            Zone 2 Training 🤫
-            <br />
-            <span className="text-red-500">سر الـ Elite Athletes</span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg text-zinc-400 leading-relaxed" dir="rtl">
-            لو شايف إن التدريب الصح لازم يكون مؤلم وصعب، إنت غلطان.
-            الـ Zone 2 هو أهم Zone في تدريبك وهو الأبطأ والأسهل.
-            وده مش رأيي، ده العلم. 🧬
-          </p>
-
-          {/* Meta */}
-          <div className="flex items-center gap-4 text-xs text-zinc-500">
-            <span>⏱ 6 min read</span>
-            <span>•</span>
-            <span>🏃 Training Guide</span>
-            <span>•</span>
-            <span>Pulse Gear Egypt</span>
-          </div>
-
+      <Section id="benefits" title="Why Zone 2 matters so much" titleAr="ليه الـ Zone 2 مهم جداً؟">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {benefits.map((b) => (
+            <div key={b.title} className="card flex flex-col gap-2 p-5">
+              <h3 className="text-sm font-black uppercase text-white" dir="auto">{b.title}</h3>
+              <p className="text-sm leading-relaxed text-muted-strong" dir="auto">{b.desc}</p>
+            </div>
+          ))}
         </div>
-      </section>
+      </Section>
 
-      {/* ===== ARTICLE BODY ===== */}
-      <article className="max-w-3xl mx-auto px-6 py-16 flex flex-col gap-16">
+      <Section id="athletes" title="The elite athletes who prove it" titleAr="الـ Elite Athletes اللي بيثبتوا الكلام ده">
+        <StatCards
+          items={athletes.map((a) => ({ value: a.zone2, label: a.name, sub: `${a.sport} · Zone 2`, tone: 'brand' as const }))}
+        />
+        <CompareTable
+          caption="Elite athletes and their Zone 2 share"
+          columns={['Sport', 'Zone 2', 'Fact']}
+          rows={athletes.map((a) => ({ label: a.name, cells: [a.sport, a.zone2, a.fact] }))}
+        />
+      </Section>
 
-        {/* ===== WHAT IS ZONE 2 ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            إيه هو الـ Zone 2 بالظبط؟ 🎯
-          </h2>
-          <p className="text-zinc-400 leading-relaxed" dir="rtl">
-            الـ Zone 2 هو التدريب اللي بيحصل عند{" "}
-            <span className="text-white font-bold">60–70% من الـ Max HR</span> بتاعك.
-            ده المجهود اللي تقدر تتكلم فيه جمل كاملة بدون ما تلهث،
-            يعني مريح بس مش سهل أوي.
-          </p>
+      <Section id="mistake" title="The mistake we all make" titleAr="الغلطة اللي كلنا بنعملها">
+        <Callout tone="danger" title='الـ "Grey Zone" Trap — الـ Zone 3'>
+          معظم الناس بتتدرب في الـ Zone 3 طول الوقت، مش سهل ومش صعب.
+          ده بيخليك تتعب من غير ما تاخد الفايدة الكاملة من الـ Zone 2 أو الـ Zone 4.
+          بتدفع تمن التعب من غير ما تاخد الـ Adaptation.
+        </Callout>
+        <Callout tone="tip" title="الحل الصح">
+          <Strong>Zone 2 — 80%</Strong> من الأسبوع، و<Strong>Zone 4–5 — 20%</Strong> بس.
+          اعمل الـ Easy Days سهلة فعلاً، واعمل الـ Hard Days صعبة فعلاً.
+        </Callout>
+      </Section>
 
-          {/* Talk Test */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-            <h3 className="text-base font-black uppercase text-white">
-              🗣️ الـ Talk Test — أسهل طريقة تعرف إنك في الـ Zone 2
-            </h3>
-            <div className="flex flex-col gap-3">
-              {talkTest.map((item) => (
-                <div key={item.test} className="flex items-start gap-4 bg-zinc-800 rounded-xl p-4">
-                  <span className="text-xl shrink-0">{item.icon}</span>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm font-bold text-white" dir="rtl">{item.test}</p>
-                    <p className={`text-sm ${item.color}`} dir="rtl">{item.result}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      <Section id="week-plan" title="A sample week for beginners" titleAr="خطة أسبوعية مقترحة للمبتدئين">
+        <CompareTable
+          caption="Suggested weekly plan"
+          columns={['Session', 'Duration', 'Type']}
+          rows={weekPlan.map((d) => ({ label: d.day, cells: [d.session, d.duration, d.type] }))}
+        />
+        <Callout tone="warning">
+          ده مجرد مثال. اضبط الـ Volume على حسب مستواك الحالي.
+        </Callout>
+      </Section>
 
-        {/* ===== 80/20 VISUAL ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            قاعدة الـ 80/20 📊
-          </h2>
-          <p className="text-zinc-400 leading-relaxed" dir="rtl">
-            الـ Elite Athletes مش بيتدربوا بشدة كل يوم، بيوزعوا تدريبهم كده:
-          </p>
-
-          {/* Visual Bar */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-4">
-            <div className="flex rounded-xl overflow-hidden h-14">
-              <div
-                className="bg-blue-500 flex items-center justify-center text-sm font-black text-white"
-                style={{ width: "80%" }}
-              >
-                80% — Zone 1 & 2
-              </div>
-              <div
-                className="bg-red-500 flex items-center justify-center text-sm font-black text-white"
-                style={{ width: "20%" }}
-              >
-                20%
-              </div>
-            </div>
-            <div className="flex justify-between text-xs text-zinc-400">
-              <span>🔵 Easy & Aerobic Training</span>
-              <span>🔴 Hard & Intense Training</span>
-            </div>
-            <p className="text-zinc-400 text-sm leading-relaxed" dir="rtl">
-              💡 معظم الناس بتعمل العكس، بتتدرب بشدة كل يوم وبتتساءل ليه مش بتتحسن.
-            </p>
-          </div>
-        </section>
-
-        {/* ===== BENEFITS ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            ليه الـ Zone 2 مهم جداً؟ 💪
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {benefits.map((b) => (
-              <div
-                key={b.title}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{b.icon}</span>
-                  <h3 className="text-sm font-black uppercase text-white">{b.title}</h3>
-                </div>
-                <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">{b.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== ELITE ATHLETES ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            الـ Elite Athletes اللي بيثبتوا الكلام ده 🏆
-          </h2>
-          <div className="flex flex-col gap-4">
-            {athletes.map((a) => (
-              <div
-                key={a.name}
-                className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center gap-4"
-              >
-                <div className="flex-1 flex flex-col gap-1">
-                  <p className="text-lg font-black uppercase text-white">{a.name}</p>
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide">{a.sport}</p>
-                  <p className="text-sm text-zinc-400 leading-relaxed mt-2" dir="rtl">{a.fact}</p>
-                </div>
-                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl px-6 py-4 text-center shrink-0">
-                  <p className="text-3xl font-black text-red-400">{a.zone2}</p>
-                  <p className="text-xs text-zinc-500 uppercase tracking-wide">Zone 2</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== COMMON MISTAKE ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            الغلطة اللي كلنا بنعملها 😅
-          </h2>
-
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 flex flex-col gap-3">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">❌</span>
-              <div className="flex flex-col gap-2">
-                <p className="font-black uppercase text-red-400">
-                  الـ "Grey Zone" Trap — الـ Zone 3
-                </p>
-                <p className="text-sm text-zinc-400 leading-relaxed" dir="rtl">
-                  معظم الناس بتتدرب في الـ Zone 3 طول الوقت، مش سهل ومش صعب.
-                  ده بيخليك تتعب من غير ما تاخد الفايدة الكاملة من الـ Zone 2 أو الـ Zone 4.
-                  بتدفع تمن التعب من غير ما تاخد الـ Adaptation.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col gap-3">
-            <p className="text-sm font-black uppercase text-white">✅ الحل الصح</p>
-            <div className="flex rounded-xl overflow-hidden h-10">
-              <div
-                className="bg-blue-500/80 flex items-center justify-center text-xs font-bold text-white"
-                style={{ width: "80%" }}
-              >
-                Zone 2 — 80%
-              </div>
-              <div
-                className="bg-red-500/80 flex items-center justify-center text-xs font-bold text-white"
-                style={{ width: "20%" }}
-              >
-                Zone 4–5
-              </div>
-            </div>
-            <p className="text-sm text-zinc-400" dir="rtl">
-              💡 اعمل الـ Easy Days سهلة فعلاً، واعمل الـ Hard Days صعبة فعلاً.
-            </p>
-          </div>
-        </section>
-
-        {/* ===== WEEKLY PLAN ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-2xl font-black uppercase text-white">
-            خطة أسبوعية مقترحة للمبتدئين 📅
-          </h2>
-          <div className="flex flex-col gap-3">
-            {weekPlan.map((day) => (
-              <div
-                key={day.day}
-                className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex flex-wrap items-center gap-4"
-              >
-                <p className="font-black text-white w-24 shrink-0">{day.day}</p>
-                <p className="text-zinc-300 font-semibold flex-1" dir="rtl">{day.session}</p>
-                <p className="text-xs text-zinc-500">{day.duration}</p>
-                <span
-                  className={`text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full ${
-                    day.type === "hard"
-                      ? "bg-red-500/10 text-red-400"
-                      : day.type === "rest"
-                      ? "bg-zinc-800 text-zinc-500"
-                      : "bg-blue-500/10 text-blue-400"
-                  }`}
-                >
-                  {day.type === "hard" ? "Intense" : day.type === "rest" ? "Rest" : "Easy"}
-                </span>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-zinc-600" dir="rtl">
-            ⚠️ ده مجرد مثال. اضبط الـ Volume على حسب مستواك الحالي.
-          </p>
-        </section>
-
-        {/* ===== CTA ===== */}
-        <section className="bg-gradient-to-br from-red-600/20 to-zinc-900 border border-red-500/20 rounded-2xl p-8 flex flex-col gap-4 items-center text-center">
-          <span className="text-4xl">⌚</span>
-          <h3 className="text-xl font-black uppercase text-white">
-            عايز تتأكد إنك في الـ Zone 2 الصح؟
-          </h3>
-          <p className="text-zinc-400 text-sm max-w-md leading-relaxed" dir="rtl">
-            محتاج Heart Rate Monitor دقيق عشان تتدرب في الـ Zone الصح.
-            شوف مجموعتنا من الـ Chest Straps والـ GPS Watches.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link
-              href="/products"
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-colors duration-200"
-            >
-              Browse Heart Rate Monitors
-            </Link>
-          </div>
-        </section>
-
-        {/* ===== RELATED POSTS ===== */}
-        <section className="flex flex-col gap-6">
-          <h2 className="text-xl font-black uppercase text-white">اقرأ كمان 📚</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {relatedPosts.map((post) => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col gap-3 bg-zinc-900 border border-zinc-800 hover:border-red-600 rounded-2xl p-5 transition-all duration-300"
-              >
-                <span className="text-3xl">{post.emoji}</span>
-                <span className="text-xs font-bold uppercase tracking-wide text-red-500">
-                  {post.tag}
-                </span>
-                <h3 className="text-sm font-black uppercase text-white leading-tight group-hover:text-red-400 transition-colors duration-200" dir="rtl">
-                  {post.title}
-                </h3>
-                <span className="text-xs text-red-500 font-semibold">اقرأ المقال →</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        {/* ===== BACK ===== */}
-        <div className="flex justify-center pt-4">
-          <Link
-            href="/blog"
-            className="border border-zinc-700 hover:border-white text-zinc-400 hover:text-white px-6 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all duration-200"
-          >
-            ← Back to Blog
-          </Link>
-        </div>
-
-      </article>
-    </main>
-  );
+      <FaqList items={faqs} />
+    </ArticleShell>
+  )
 }

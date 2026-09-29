@@ -1,11 +1,22 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next'
+import { SITE_URL } from '@/lib/site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: [
+        '/admin',
+        '/admin-login',
+        '/account',
+        '/api',
+        '/auth',
+        '/reset-password',
+        '/unsubscribe',
+      ],
     },
-    sitemap: 'https://pulsegear-platform.vercel.app/sitemap.xml',
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   }
 }

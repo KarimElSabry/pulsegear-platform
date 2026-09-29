@@ -1,12 +1,17 @@
 // src/components/layout/Footer.tsx
 
+'use client'
+
 import Image from 'next/image'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import NewsletterSignup from '@/components/newsletter/NewsletterSignup'
 
 const navLinks = [
   { label: 'Products', href: '/products' },
+  { label: 'Hot Deals', href: '/deals' },
   { label: 'Brands', href: '/brands' },
+  { label: 'Sold Archive', href: '/sold' },
   { label: 'Request Product', href: '/request-product' },
   { label: 'Wishlist', href: '/wishlist' },
   { label: 'Blog', href: '/blog' },
@@ -20,12 +25,21 @@ const accountLinks = [
 ]
 
 export default function Footer() {
+  const pathname = usePathname()
+  if (pathname?.startsWith('/admin')) return null
+
+  // The homepage has its own large newsletter section, so the footer copy is hidden
+  // there. Every other page shows the newsletter form exactly once, here.
+  const showNewsletter = pathname !== '/'
+
   return (
-    <footer className="mt-0 w-full border-t border-white/10 bg-[#111111]">
+    <footer className="mt-0 w-full border-t border-line bg-surface-1">
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="mb-12">
-          <NewsletterSignup source="footer" compact />
-        </div>
+        {showNewsletter && (
+          <div className="mb-12">
+            <NewsletterSignup source="footer" compact />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="flex flex-col gap-4 md:col-span-1">
@@ -40,7 +54,7 @@ export default function Footer() {
             </Link>
 
             <p className="max-w-xs text-sm leading-relaxed text-gray-400">
-              Egypt's home for serious runners. We source, ship, and deliver the gear you
+              Egypt&apos;s home for serious runners. We source, ship, and deliver the gear you
               actually want to train and race with.
             </p>
           </div>
