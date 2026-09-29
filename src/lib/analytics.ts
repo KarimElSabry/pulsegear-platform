@@ -12,9 +12,12 @@ function getClient(): BetaAnalyticsDataClient {
     return new BetaAnalyticsDataClient({ credentials })
   }
 
+  // Local development only (production uses GOOGLE_SERVICE_ACCOUNT_JSON). The turbopackIgnore
+  // markers stop the bundler from tracing the whole project (including public/ videos) into this
+  // serverless function just because it reads a file relative to the working directory.
   const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
-    ? path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
-    : path.join(process.cwd(), 'secrets', 'pulsegear-analytics.json')
+    ? path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
+    : path.join(/*turbopackIgnore: true*/ process.cwd(), 'secrets', 'pulsegear-analytics.json')
 
   if (!fs.existsSync(keyPath)) {
     throw new Error(`GA4 key file not found at: ${keyPath}`)

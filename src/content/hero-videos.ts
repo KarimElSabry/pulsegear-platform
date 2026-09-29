@@ -14,11 +14,11 @@ export type HeroClip = { mp4: string; webm?: string }
 
 export const HERO_CLIPS: HeroClip[] = [
 
-  { mp4: '/video/marathon1.mp4', webm: '/video/marathon1.webm' },
-  { mp4: '/video/marathon2.mp4', webm: '/video/marathon2.webm' },
-  { mp4: '/video/marathon3.mp4', webm: '/video/marathon3.webm' },
-  { mp4: '/video/marathon4.mp4', webm: '/video/marathon4.webm' },
-  { mp4: '/video/garmin_footage.mp4', webm: '/video/garmin_footage.webm' },
+  { mp4: '/video/marathon1.mp4' },
+  { mp4: '/video/marathon2.mp4' },
+  { mp4: '/video/marathon3.mp4' },
+  { mp4: '/video/marathon4.mp4' },
+  { mp4: '/video/garmin_footage.mp4' },
   // { mp4: '/video/run-sunrise.mp4', webm: '/video/run-sunrise.webm' },
   // { mp4: '/video/track-intervals.mp4' },
   // { mp4: '/video/trail-watch.mp4' },
