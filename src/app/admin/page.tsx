@@ -111,21 +111,31 @@ export default function AdminPage() {
     const uploaded: string[] = []
 
     for (const file of files) {
-      const ext = file.name.split('.').pop()
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      // Ask the server (admin-only) for a one-time signed upload token.
+      const signRes = await fetch('/api/admin/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name }),
+      })
+
+      if (!signRes.ok) {
+        const msg = await signRes.json().catch(() => ({}))
+        console.error('Upload URL error:', msg?.error ?? signRes.status)
+        continue
+      }
+
+      const { path, token, contentType, publicUrl } = await signRes.json()
 
       const { error } = await supabase.storage
         .from('product-images')
-        .upload(fileName, file, { upsert: false })
+        .uploadToSignedUrl(path, token, file, { contentType })
 
       if (error) {
         console.error('Upload error:', error.message)
         continue
       }
 
-      const { data } = supabase.storage.from('product-images').getPublicUrl(fileName)
-
-      if (data?.publicUrl) uploaded.push(data.publicUrl)
+      if (publicUrl) uploaded.push(publicUrl)
     }
 
     setImageUrls((prev) => [...prev, ...uploaded])

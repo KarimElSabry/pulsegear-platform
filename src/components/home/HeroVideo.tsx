@@ -11,7 +11,7 @@ import { HERO_CLIPS } from '@/content/hero-videos'
 
 const TRUST = [
   { label: '100% authentic', sub: 'Sourced from trusted sellers' },
-  { label: '50 / 50 payment', sub: 'Instapay deposit, cash on delivery' },
+  { label: 'We source it for you', sub: 'Send a model or your budget, we find it' },
   { label: 'Delivered in Egypt', sub: 'To your door, 1–2 weeks' },
 ]
 

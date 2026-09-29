@@ -2,16 +2,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { ProductCondition } from '@/types/product'
 import { ReservationService } from '@/services/reservationService'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-const RESERVABLE_CONDITIONS: ProductCondition[] = [
-  'Very good',
-  'Good',
-  'New without tags',
-  'Satisfactory',
-]
 
 function normalizeDiscountCode(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -53,7 +46,7 @@ export async function POST(
 
     const { data: product, error: productError } = await adminSupabase
       .from('products')
-      .select('id, title, price_egp, condition, status, reserved_until')
+      .select('id, title, price_egp, status, reserved_until, is_reservable, discount_enabled')
       .eq('id', productId)
       .single()
 
@@ -61,10 +54,20 @@ export async function POST(
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    if (!RESERVABLE_CONDITIONS.includes(product.condition)) {
+    // The admin decides per product with the "reservation" toggle. Enforce it on the
+    // server, the hidden button in the UI is not a security boundary.
+    if (product.is_reservable !== true) {
       return NextResponse.json(
-        { error: 'This product condition is not eligible for reservation' },
+        { error: 'This product cannot be reserved' },
         { status: 403 }
+      )
+    }
+
+    // Same for the "Allow Discount Codes" toggle.
+    if (discountCode && product.discount_enabled === false) {
+      return NextResponse.json(
+        { error: 'Discount codes cannot be used on this product' },
+        { status: 400 }
       )
     }
 

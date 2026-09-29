@@ -11,7 +11,7 @@ export function articleMetadata(slug: string, overrides: Partial<Metadata> = {})
   if (!post) return { title: 'Article' }
   const url = `${SITE_URL}/blog/${post.slug}`
   const title = post.titleAr ? `${post.title} | ${post.titleAr}` : post.title
-  const image = post.cover ? `${SITE_URL}${post.cover}` : `${SITE_URL}/og-default.jpg`
+  const image = `${SITE_URL}/og-default.jpg`
   return {
     title,
     description: post.excerpt,

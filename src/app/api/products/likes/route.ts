@@ -1,61 +1,52 @@
-// src/app/api/products/likes/route.ts
+// src/app/api/products/[id]/reserve/route.ts
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
+import { ReservationService } from '@/services/reservationService'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-function getIp(req: NextRequest) {
-  return (
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown'
-  )
+function normalizeDiscountCode(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const normalized = value.trim().toUpperCase()
+  return normalized.length > 0 ? normalized : null
 }
 
-export async function GET(req: NextRequest) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const supabase = createAdminSupabaseClient()
-    const productId = req.nextUrl.searchParams.get('product_id')
+    const { id: rawId } = await params
+    const productId = Number(rawId)
 
-    if (!productId) {
-      return NextResponse.json({ error: 'product_id is required' }, { status: 400 })
+    if (!Number.isInteger(productId) || productId <= 0) {
+      return NextResponse.json({ error: 'Invalid product id' }, { status: 400 })
     }
 
-    const { count, error } = await supabase
-      .from('product_likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('product_id', productId)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ likes: count ?? 0 }, { status: 200 })
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to fetch likes' }, { status: 500 })
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    const supabase = createAdminSupabaseClient()
     const body = await req.json()
+    const name = typeof body?.name === 'string' ? body.name.trim() : ''
+    const phone = typeof body?.phone === 'string' ? body.phone.trim() : ''
+    const note = typeof body?.note === 'string' ? body.note.trim() : ''
+    const discountCode = normalizeDiscountCode(body?.discount_code)
 
-    const productId = Number(body?.product_id)
-    const userIdentifier =
-      typeof body?.user_identifier === 'string' ? body.user_identifier.trim() : ''
-
-    if (!Number.isInteger(productId) || productId <= 0 || !userIdentifier) {
+    if (!name || !phone) {
       return NextResponse.json(
-        { error: 'product_id and user_identifier are required' },
+        { error: 'Name and phone are required' },
         { status: 400 }
       )
     }
 
-    const ip = getIp(req)
+    const adminSupabase = createAdminSupabaseClient()
+    const authSupabase = await createServerSupabaseClient()
 
-    const { data: product, error: productError } = await supabase
+    const {
+      data: { user },
+    } = await authSupabase.auth.getUser()
+
+    const { data: product, error: productError } = await adminSupabase
       .from('products')
-      .select('id, status')
+      .select('id, title, price_egp, status, reserved_until, is_reservable, discount_enabled')
       .eq('id', productId)
       .single()
 
@@ -63,72 +54,77 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
-    if (product.status === 'sold') {
-      const { count } = await supabase
-        .from('product_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('product_id', productId)
-
+    // The admin decides per product with the "reservation" toggle. Enforce it on the
+    // server, the hidden button in the UI is not a security boundary.
+    if (product.is_reservable !== true) {
       return NextResponse.json(
-        { error: 'Cannot like a sold product', likes: count ?? 0 },
+        { error: 'This product cannot be reserved' },
         { status: 403 }
       )
     }
 
-    const { data: existing, error: checkError } = await supabase
-      .from('product_likes')
-      .select('id')
-      .eq('product_id', productId)
-      .or(`user_identifier.eq.${userIdentifier},ip_address.eq.${ip}`)
-      .maybeSingle()
-
-    if (checkError) {
-      return NextResponse.json({ error: checkError.message }, { status: 500 })
+    // Same for the "Allow Discount Codes" toggle.
+    if (discountCode && product.discount_enabled === false) {
+      return NextResponse.json(
+        { error: 'Discount codes cannot be used on this product' },
+        { status: 400 }
+      )
     }
 
-    if (existing) {
-      const { count } = await supabase
-        .from('product_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('product_id', productId)
+    const result = await ReservationService.createReservation({
+      productId,
+      customerName: name,
+      customerPhone: phone,
+      note: note || null,
+      discountCode,
+      userId: user?.id ?? null,
+      basePriceEgp: Number(product.price_egp) || 0,
+    })
 
+    revalidatePath('/products')
+    revalidatePath(`/products/${rawId}`)
+    revalidatePath('/admin/reservations')
+    revalidatePath('/admin/analytics')
+    revalidatePath('/account/reservations')
+
+    return NextResponse.json(
+      {
+        success: true,
+        reservation: result.reservation,
+        final_price_egp: result.finalPriceEgp,
+        applied_discount_code: result.discountCode,
+      },
+      { status: 200 }
+    )
+  } catch (error: any) {
+    const message = error?.message || 'Unexpected server error'
+
+    if (message === 'PRODUCT_NOT_AVAILABLE') {
       return NextResponse.json(
-        { error: 'Already liked', likes: count ?? 0 },
+        { error: 'This product is no longer available' },
         { status: 409 }
       )
     }
 
-    const { error: insertError } = await supabase
-      .from('product_likes')
-      .insert({
-        product_id: productId,
-        user_identifier: userIdentifier,
-        ip_address: ip,
-      })
-
-    if (insertError) {
-      if (insertError.code === '23505') {
-        const { count } = await supabase
-          .from('product_likes')
-          .select('*', { count: 'exact', head: true })
-          .eq('product_id', productId)
-
-        return NextResponse.json(
-          { error: 'Already liked', likes: count ?? 0 },
-          { status: 409 }
-        )
-      }
-
-      return NextResponse.json({ error: insertError.message }, { status: 500 })
+    if (message === 'INVALID_DISCOUNT_CODE') {
+      return NextResponse.json(
+        { error: 'Discount code is invalid or no longer active' },
+        { status: 400 }
+      )
     }
 
-    const { count } = await supabase
-      .from('product_likes')
-      .select('*', { count: 'exact', head: true })
-      .eq('product_id', productId)
+    if (message === 'PRODUCT_NOT_RESERVABLE') {
+      return NextResponse.json(
+        { error: 'This product cannot be reserved' },
+        { status: 403 }
+      )
+    }
 
-    return NextResponse.json({ success: true, likes: count ?? 0 }, { status: 200 })
-  } catch (error: any) {
-    return NextResponse.json({ error: error?.message || 'Failed to add like' }, { status: 500 })
+    console.error('POST /api/products/[id]/reserve failed:', error)
+
+    return NextResponse.json(
+      { error: 'Failed to create reservation' },
+      { status: 500 }
+    )
   }
 }

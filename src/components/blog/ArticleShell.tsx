@@ -44,7 +44,7 @@ export default function ArticleShell({
     dateModified: post.updated,
     datePublished: post.updated,
     mainEntityOfPage: url,
-    image: post.cover ? `${SITE_URL}${post.cover}` : `${SITE_URL}/og-default.jpg`,
+    image: `${SITE_URL}/og-default.jpg`,
     author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
     publisher: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL, logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` } },
   }

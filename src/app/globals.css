@@ -6,7 +6,6 @@
    In new code prefer the token classes (bg-surface-2, text-brand,
    border-line and so on) over raw zinc or red palette classes.
    ────────────────────────────────────────────────────────────── */
-
 @theme {
   --color-surface-0: #09090b;   /* page background */
   --color-surface-1: #0f0f11;   /* alternating bands */

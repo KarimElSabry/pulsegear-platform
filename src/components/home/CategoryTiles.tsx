@@ -1,64 +1,91 @@
 // src/components/home/CategoryTiles.tsx
-// Bento grid of shoppable categories with imagery. Swap the images for
-// real product photography when available (keep them ≤ 1600px WebP).
+// Shop-by-category grid built from the LIVE catalogue: only categories that have available
+// products are shown, each with a real photo of its newest item and a live count.
+// The data comes from getCategoryTiles() (called in app/page.tsx).
 
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowIcon } from './SectionHeading'
 
-const TILES = [
-  {
-    title: 'GPS Watches',
-    sub: 'Garmin, Polar, Coros, Suunto',
-    href: '/products?category=Fitness%20Watches',
-    img: '/hero/hero-1.webp',
-    span: 'md:col-span-2 md:row-span-2',
-  },
-  {
-    title: 'Heart Rate Straps',
-    sub: 'Chest straps & armbands',
-    href: '/products?category=Heart%20Rate%20Straps',
-    img: '/hero/hero-4.webp',
-    span: '',
-  },
-  {
-    title: 'Replacement Straps',
-    sub: 'Bands for every watch',
-    href: '/products?category=Replacement%20Straps',
-    img: '/hero/hero-3.webp',
-    span: '',
-  },
-  {
-    title: 'Running Accessories',
-    sub: 'Belts, lights, bottles',
-    href: '/products?category=Running%20Accessories',
-    img: '/hero/hero-5.webp',
-    span: 'md:col-span-2',
-  },
-]
+export type CategoryTile = {
+  key: string
+  label: string
+  sub: string
+  filter: string // value understood by /products?category=
+  count: number
+  image: string | null
+}
 
-export default function CategoryTiles() {
+// The database mixes "Fitness Watches" and "fitness_watches", so keys are normalised.
+export const CATEGORY_META: Record<string, { label: string; sub: string; filter: string }> = {
+  fitness_watches: { label: 'GPS Watches', sub: 'Garmin, Polar, Coros, Suunto', filter: 'Fitness Watches' },
+  heart_rate_straps: { label: 'Heart Rate Straps', sub: 'Chest straps and armbands', filter: 'Heart Rate Straps' },
+  replacement_straps: { label: 'Replacement Straps', sub: 'Bands for every watch', filter: 'Replacement Straps' },
+  running_accessories: { label: 'Running Accessories', sub: 'Belts, lights, bottles', filter: 'Running Accessories' },
+  cycling_accessories: { label: 'Cycling Accessories', sub: 'Sensors, mounts and more', filter: 'Cycling Accessories' },
+}
+
+export const normalizeCategory = (c: string | null | undefined) => (c ?? '').trim().toLowerCase().replace(/[\s_]+/g, '_')
+
+type Row = {
+  category: string | null
+  images: { image_url: string; is_primary: boolean | null; display_order: number | null }[] | null
+}
+
+/** rows must be ordered newest first. */
+export function buildCategoryTiles(rows: Row[]): CategoryTile[] {
+  const acc = new Map<string, CategoryTile>()
+  for (const r of rows) {
+    const key = normalizeCategory(r.category)
+    const meta = CATEGORY_META[key]
+    if (!meta) continue
+    const imgs = r.images ?? []
+    const primary = imgs.find((i) => i.is_primary) ?? [...imgs].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))[0]
+    const cur = acc.get(key) ?? { key, ...meta, count: 0, image: null }
+    cur.count += 1
+    if (!cur.image && primary?.image_url) cur.image = primary.image_url
+    acc.set(key, cur)
+  }
+  return [...acc.values()].sort((a, b) => b.count - a.count).slice(0, 4)
+}
+
+function span(n: number, i: number): string {
+  if (n === 1) return 'md:col-span-4 md:row-span-2'
+  if (n === 2) return 'md:col-span-2 md:row-span-2'
+  if (i === 0) return 'md:col-span-2 md:row-span-2'
+  if (n === 3) return 'md:col-span-2'
+  return i === 3 ? 'md:col-span-2' : ''
+}
+
+export default function CategoryTiles({ tiles }: { tiles: CategoryTile[] }) {
+  if (tiles.length === 0) return null
   return (
     <div className="grid auto-rows-[220px] grid-cols-1 gap-4 md:grid-cols-4 md:auto-rows-[240px]">
-      {TILES.map((t, i) => (
+      {tiles.map((t, i) => (
         <Link
-          key={t.title}
-          href={t.href}
-          className={`group relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-2 ${t.span}`}
+          key={t.key}
+          href={`/products?category=${encodeURIComponent(t.filter)}&availability=${encodeURIComponent('In Stock')}`}
+          className={`group relative overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-2 ${span(tiles.length, i)}`}
         >
-          <Image
-            src={t.img}
-            alt=""
-            fill
-            sizes="(min-width: 768px) 50vw, 100vw"
-            priority={i === 0}
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          />
+          {t.image ? (
+            <Image
+              src={t.image}
+              alt=""
+              fill
+              unoptimized
+              sizes="(min-width: 768px) 50vw, 100vw"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-brand/30 via-surface-2 to-surface-2" />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-surface-0 via-surface-0/40 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5">
             <div>
-              <h3 className="text-xl font-black uppercase leading-none text-white md:text-2xl">{t.title}</h3>
-              <p className="mt-1 text-xs text-muted-strong">{t.sub}</p>
+              <h3 className="text-xl font-black uppercase leading-none text-white md:text-2xl">{t.label}</h3>
+              <p className="mt-1 text-xs text-muted-strong">
+                {t.sub} · {t.count} available
+              </p>
             </div>
             <span className="grid h-10 w-10 place-items-center rounded-full border border-line-strong bg-white/5 text-white backdrop-blur transition-all group-hover:bg-brand group-hover:border-brand">
               <ArrowIcon />

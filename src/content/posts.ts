@@ -13,7 +13,6 @@ export interface Post {
   excerpt: string
   readTime: string
   updated: string // ISO date, shown as "Updated" and used in JSON-LD
-  cover?: string
   featured?: boolean
   pillar?: boolean
 }
@@ -33,7 +32,6 @@ export const posts: Post[] = [
     excerpt: 'Zero cost, nothing to install: Kailo reads your Garmin, Claude builds your dashboard and plan. The free Level 1, verified September 2026.',
     readTime: '9 min',
     updated: '2026-09-29',
-    cover: '/hero/hero-5.webp',
     featured: true,
     pillar: true,
   },
@@ -46,7 +44,6 @@ export const posts: Post[] = [
     excerpt: 'How the five heart rate zones work and how to use them to get more out of every session.',
     readTime: '5 min',
     updated: '2026-09-29',
-    cover: '/hero/hero-2.webp',
     featured: true,
   },
   {
@@ -58,7 +55,6 @@ export const posts: Post[] = [
     excerpt: 'Why elite runners spend 80% of their time in Zone 2, and how to build the same base.',
     readTime: '6 min',
     updated: '2026-09-29',
-    cover: '/hero/hero-3.webp',
     featured: true,
   },
   {
@@ -163,7 +159,6 @@ export const posts: Post[] = [
     excerpt: 'Chest straps and wrist sensors compared on accuracy, comfort and price.',
     readTime: '5 min',
     updated: '2026-09-29',
-    cover: '/hero/hero-4.webp',
     featured: true,
   },
   {

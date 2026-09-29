@@ -2,6 +2,7 @@
 
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Product } from '@/types/product'
@@ -26,6 +27,7 @@ const conditionStyles: Record<string, { text: string; bg: string }> = {
 export default function ProductCard({ product }: Props) {
   const { isLoved, toggleLove } = useWishlist()
   const { likes, loading, addLike, liked, isSold } = useLikes(product.id!, product.status)
+  const [imageFailed, setImageFailed] = useState(false) // dead external photo (e.g. expired Vinted link)
 
   const primaryImage =
     product.images?.find((img) => img.is_primary)?.image_url ??
@@ -45,13 +47,14 @@ export default function ProductCard({ product }: Props) {
 
         {/* Image */}
         <div className="relative aspect-square bg-zinc-800 overflow-hidden">
-          {primaryImage ? (
+          {primaryImage && !imageFailed ? (
             <Image
               src={primaryImage}
               alt={product.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               unoptimized
+              onError={() => setImageFailed(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">

@@ -1,26 +1,26 @@
 // src/hooks/useWishlist.ts
+//
+// One shared wishlist store per page. Before, every ProductCard created its own copy of this
+// hook (own auth check, own wishlist fetch, own auth listener), so a page with 100 cards made
+// hundreds of requests and logged "Auth session missing" once per card. Now all cards read the
+// same module-level state and the work happens once.
 
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Product } from '@/types/product'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
+import type { Product } from '@/types/product'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 const WISHLIST_KEY = 'pulsegear_wishlist'
 
 function readLocalWishlist(): number[] {
   if (typeof window === 'undefined') return []
-
   try {
     const raw = localStorage.getItem(WISHLIST_KEY)
     if (!raw) return []
-
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-
-    return parsed
-      .map((id) => Number(id))
-      .filter((id) => Number.isInteger(id) && id > 0)
+    return parsed.map((id) => Number(id)).filter((id) => Number.isInteger(id) && id > 0)
   } catch {
     return []
   }
@@ -35,228 +35,222 @@ function uniqueIds(ids: number[]) {
   return [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))]
 }
 
-export function useWishlist() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), [])
+/* ── Store ─────────────────────────────────────────────────── */
 
-  const [wishlistIds, setWishlistIds] = useState<number[]>([])
-  const [wishlist, setWishlist] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [authLoading, setAuthLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+type State = {
+  wishlistIds: number[]
+  wishlist: Product[]
+  loading: boolean
+  authLoading: boolean
+  isAuthenticated: boolean
+}
 
-  const mergeAttemptedRef = useRef(false)
+const INITIAL: State = { wishlistIds: [], wishlist: [], loading: true, authLoading: true, isAuthenticated: false }
+let state: State = INITIAL
+const listeners = new Set<() => void>()
 
-  const fetchProductsByIds = useCallback(async (ids: number[]) => {
-    if (ids.length === 0) {
-      setWishlist([])
+let client: ReturnType<typeof createBrowserSupabaseClient> | null = null
+const supabase = () => (client ??= createBrowserSupabaseClient())
+
+function setState(patch: Partial<State>) {
+  state = { ...state, ...patch }
+  // Guests keep their wishlist in localStorage; signed-in users keep it in the database.
+  if (!state.authLoading && !state.isAuthenticated) writeLocalWishlist(state.wishlistIds)
+  listeners.forEach((l) => l())
+}
+
+function subscribe(cb: () => void) {
+  listeners.add(cb)
+  return () => {
+    listeners.delete(cb)
+  }
+}
+
+async function loadProducts(ids: number[]) {
+  if (ids.length === 0) {
+    setState({ wishlist: [] })
+    return
+  }
+  try {
+    const params = new URLSearchParams()
+    ids.forEach((id) => params.append('ids', String(id)))
+    const res = await fetch(`/api/products?${params.toString()}`, { cache: 'no-store' })
+    if (!res.ok) {
+      setState({ wishlist: [] })
+      return
+    }
+    const data = await res.json()
+    const products: Product[] = Array.isArray(data) ? data : data?.data ?? []
+    const ordered = ids
+      .map((id) => products.find((p) => Number(p.id) === id))
+      .filter((p): p is Product => Boolean(p))
+    setState({ wishlist: ordered })
+  } catch (err) {
+    console.error('Failed to fetch wishlist products:', err)
+    setState({ wishlist: [] })
+  }
+}
+
+async function loadAuthenticatedIds(): Promise<number[]> {
+  const { data, error } = await supabase()
+    .from('wishlist_items')
+    .select('product_id')
+    .order('created_at', { ascending: false })
+  if (error) {
+    console.error('Failed to load authenticated wishlist:', error.message)
+    return []
+  }
+  return uniqueIds((data ?? []).map((item) => Number(item.product_id)))
+}
+
+async function mergeGuestIntoDatabase(localIds: number[], userId: string) {
+  if (localIds.length === 0) return
+  const rows = localIds.map((productId) => ({ user_id: userId, product_id: productId }))
+  const { error } = await supabase()
+    .from('wishlist_items')
+    .upsert(rows, { onConflict: 'user_id,product_id', ignoreDuplicates: false })
+  if (error) console.error('Failed to merge guest wishlist into database:', error.message)
+}
+
+let mergeAttempted = false
+let inflight: Promise<void> | null = null
+let rerun = false
+
+async function doRefresh() {
+  setState({ loading: true })
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase().auth.getUser()
+
+    // A visitor who is not logged in is normal, not an error.
+    if (userError && userError.name !== 'AuthSessionMissingError' && !/session missing/i.test(userError.message)) {
+      console.error('Failed to get auth user:', userError.message)
+    }
+
+    const localIds = uniqueIds(readLocalWishlist())
+
+    if (!user) {
+      setState({ isAuthenticated: false, wishlistIds: localIds })
+      await loadProducts(localIds)
       return
     }
 
-    try {
-      const params = new URLSearchParams()
-      ids.forEach((id) => params.append('ids', String(id)))
+    setState({ isAuthenticated: true })
+    const dbIds = await loadAuthenticatedIds()
 
-      const res = await fetch(`/api/products?${params.toString()}`, {
-        cache: 'no-store',
-      })
-
-      if (!res.ok) {
-        setWishlist([])
-        return
+    if (!mergeAttempted) {
+      mergeAttempted = true
+      const merged = uniqueIds([...dbIds, ...localIds])
+      if (localIds.length > 0) {
+        await mergeGuestIntoDatabase(localIds, user.id)
+        writeLocalWishlist([])
       }
-
-      const data = await res.json()
-      const products = Array.isArray(data) ? data : data?.data ?? []
-
-      const ordered = ids
-        .map((id) => products.find((p: Product) => Number(p.id) === id))
-        .filter(Boolean)
-
-      setWishlist(ordered)
-    } catch (err) {
-      console.error('Failed to fetch wishlist products:', err)
-      setWishlist([])
-    }
-  }, [])
-
-  const loadAuthenticatedWishlistIds = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('wishlist_items')
-      .select('product_id')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Failed to load authenticated wishlist:', error.message)
-      return []
+      setState({ wishlistIds: merged })
+      await loadProducts(merged)
+      return
     }
 
-    return uniqueIds((data ?? []).map((item) => Number(item.product_id)))
-  }, [supabase])
+    setState({ wishlistIds: dbIds })
+    await loadProducts(dbIds)
+  } finally {
+    setState({ loading: false, authLoading: false })
+  }
+}
 
-  const syncLocalWishlistToDatabase = useCallback(
-    async (localIds: number[]) => {
-      if (localIds.length === 0) return
+/** Runs one refresh at a time; a request that arrives mid-run triggers exactly one more run. */
+function refresh(): Promise<void> {
+  if (inflight) {
+    rerun = true
+    return inflight
+  }
+  inflight = (async () => {
+    do {
+      rerun = false
+      await doRefresh()
+    } while (rerun)
+  })().finally(() => {
+    inflight = null
+  })
+  return inflight
+}
 
-      const { data: userData } = await supabase.auth.getUser()
-      const userId = userData.user?.id
-      if (!userId) return
+let started = false
+function start() {
+  if (started || typeof window === 'undefined') return
+  started = true
+  void refresh()
+  supabase().auth.onAuthStateChange((event) => {
+    if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return
+    mergeAttempted = false
+    void refresh()
+  })
+}
 
-      const rows = localIds.map((productId) => ({ user_id: userId, product_id: productId }))
+async function toggleLove(product: Product) {
+  const productId = Number(product.id)
+  if (!Number.isInteger(productId) || productId <= 0) return
 
-      const { error } = await supabase
+  const currentlyLoved = state.wishlistIds.includes(productId)
+  const previousIds = state.wishlistIds
+  const nextIds = currentlyLoved ? previousIds.filter((id) => id !== productId) : uniqueIds([...previousIds, productId])
+
+  setState({ wishlistIds: nextIds })
+
+  if (!state.isAuthenticated) {
+    await loadProducts(nextIds)
+    return
+  }
+
+  await loadProducts(nextIds)
+
+  try {
+    const { data: userData } = await supabase().auth.getUser()
+    const userId = userData.user?.id
+    if (!userId) throw new Error('Not signed in')
+
+    if (currentlyLoved) {
+      const { error } = await supabase()
         .from('wishlist_items')
-        .upsert(rows, {
+        .delete()
+        .eq('user_id', userId)
+        .eq('product_id', productId)
+      if (error) throw error
+    } else {
+      const { error } = await supabase()
+        .from('wishlist_items')
+        .upsert([{ user_id: userId, product_id: productId }], {
           onConflict: 'user_id,product_id',
           ignoreDuplicates: false,
         })
-
-      if (error) {
-        console.error('Failed to merge guest wishlist into database:', error.message)
-      }
-    },
-    [supabase]
-  )
-
-  const refreshWishlist = useCallback(async () => {
-    setLoading(true)
-
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError) {
-        console.error('Failed to get auth user:', userError.message)
-      }
-
-      const loggedIn = !!user
-      setIsAuthenticated(loggedIn)
-
-      if (!loggedIn) {
-        const localIds = uniqueIds(readLocalWishlist())
-        setWishlistIds(localIds)
-        await fetchProductsByIds(localIds)
-        return
-      }
-
-      const localIds = uniqueIds(readLocalWishlist())
-      const dbIds = await loadAuthenticatedWishlistIds()
-
-      if (!mergeAttemptedRef.current) {
-        mergeAttemptedRef.current = true
-
-        const mergedIds = uniqueIds([...dbIds, ...localIds])
-
-        if (localIds.length > 0) {
-          await syncLocalWishlistToDatabase(localIds)
-          writeLocalWishlist([])
-        }
-
-        setWishlistIds(mergedIds)
-        await fetchProductsByIds(mergedIds)
-        return
-      }
-
-      setWishlistIds(dbIds)
-      await fetchProductsByIds(dbIds)
-    } finally {
-      setLoading(false)
-      setAuthLoading(false)
+      if (error) throw error
     }
-  }, [supabase, fetchProductsByIds, loadAuthenticatedWishlistIds, syncLocalWishlistToDatabase])
+  } catch (err) {
+    console.error('Failed to update wishlist:', err)
+    setState({ wishlistIds: previousIds })
+    await loadProducts(previousIds)
+  }
+}
 
+/* ── Hook ──────────────────────────────────────────────────── */
+
+export function useWishlist() {
   useEffect(() => {
-    refreshWishlist()
+    start()
+  }, [])
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(() => {
-      mergeAttemptedRef.current = false
-      refreshWishlist()
-    })
+  const s = useSyncExternalStore(subscribe, () => state, () => INITIAL)
 
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [supabase, refreshWishlist])
-
-  useEffect(() => {
-    if (authLoading) return
-    if (isAuthenticated) return
-
-    writeLocalWishlist(wishlistIds)
-  }, [wishlistIds, authLoading, isAuthenticated])
-
-  const isLoved = useCallback(
-    (id: number) => {
-      return wishlistIds.includes(id)
-    },
-    [wishlistIds]
-  )
-
-  const toggleLove = useCallback(
-    async (product: Product) => {
-      const productId = Number(product.id)
-      if (!Number.isInteger(productId) || productId <= 0) return
-
-      const currentlyLoved = wishlistIds.includes(productId)
-
-      if (!isAuthenticated) {
-        setWishlistIds((prev) =>
-          currentlyLoved ? prev.filter((id) => id !== productId) : uniqueIds([...prev, productId])
-        )
-        return
-      }
-
-      const previousIds = wishlistIds
-
-      const optimisticIds = currentlyLoved
-        ? previousIds.filter((id) => id !== productId)
-        : uniqueIds([...previousIds, productId])
-
-      setWishlistIds(optimisticIds)
-      await fetchProductsByIds(optimisticIds)
-
-      try {
-        const { data: userData } = await supabase.auth.getUser()
-        const userId = userData.user?.id
-        if (!userId) throw new Error('Not signed in')
-
-        if (currentlyLoved) {
-          const { error } = await supabase
-            .from('wishlist_items')
-            .delete()
-            .eq('user_id', userId)
-            .eq('product_id', productId)
-
-          if (error) throw error
-        } else {
-          const { error } = await supabase
-            .from('wishlist_items')
-            .upsert(
-              [{ user_id: userId, product_id: productId }],
-              { onConflict: 'user_id,product_id', ignoreDuplicates: false }
-            )
-
-          if (error) throw error
-        }
-      } catch (err) {
-        console.error('Failed to update wishlist:', err)
-        setWishlistIds(previousIds)
-        await fetchProductsByIds(previousIds)
-      }
-    },
-    [wishlistIds, isAuthenticated, supabase, fetchProductsByIds]
-  )
+  const isLoved = useCallback((id: number) => s.wishlistIds.includes(id), [s.wishlistIds])
 
   return {
-    wishlist,
-    wishlistIds,
+    wishlist: s.wishlist,
+    wishlistIds: s.wishlistIds,
     isLoved,
     toggleLove,
-    loading,
-    isAuthenticated,
-    refreshWishlist,
+    loading: s.loading,
+    isAuthenticated: s.isAuthenticated,
+    refreshWishlist: refresh,
   }
 }

@@ -1,7 +1,7 @@
 // src/app/products/ProductsContent.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductGrid from '@/components/product/ProductGrid'
 
@@ -19,19 +19,30 @@ const categories = [
   'Cycling Accessories', 'Other',
 ]
 
+// Match a URL value like "fitness_watches" or "Fitness Watches" to a canonical list entry.
+const canon = (list: string[], value: string | null) =>
+  value
+    ? list.find((x) => x.toLowerCase().replace(/[\s_]+/g, '') === value.toLowerCase().replace(/[\s_]+/g, '')) ?? 'All'
+    : 'All'
+
 export default function ProductsContent({ initialBrands }: { initialBrands: string[] }) {
   const searchParams = useSearchParams()
-  const [brand, setBrand]               = useState('All')
+  const [brand, setBrand]               = useState(() => searchParams.get('brand') ?? 'All')
   const [condition, setCondition]       = useState('All')
-  const [availability, setAvailability] = useState('All')
-  const [category, setCategory]         = useState('All') // ✅ NEW
+  const [availability, setAvailability] = useState(() => canon(availabilities, searchParams.get('availability')))
+  const [category, setCategory]         = useState(() => canon(categories, searchParams.get('category')))
+
+  // When the URL changes (e.g. a header or homepage link), re-apply it during render.
+  const urlKey = searchParams.toString()
+  const [seenKey, setSeenKey] = useState(urlKey)
+  if (seenKey !== urlKey) {
+    setSeenKey(urlKey)
+    setBrand(searchParams.get('brand') ?? 'All')
+    setAvailability(canon(availabilities, searchParams.get('availability')))
+    setCategory(canon(categories, searchParams.get('category')))
+  }
 
   const brands = ['All', ...initialBrands]
-
-  useEffect(() => {
-    const brandFromURL = searchParams.get('brand')
-    setBrand(brandFromURL ?? 'All')
-  }, [searchParams])
 
   return (
     <main className="max-w-6xl mx-auto px-6 py-16">

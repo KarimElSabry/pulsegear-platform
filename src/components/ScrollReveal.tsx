@@ -1,7 +1,13 @@
 // src/components/ScrollReveal.tsx
+// Fade-up on scroll. Progressive by design:
+//  - Server HTML and no-JS visitors see the content normally (nothing is hidden).
+//  - After hydration, blocks that are BELOW the fold are marked data-reveal="pending"
+//    (hidden by CSS) and switch to "shown" when they scroll into view.
+//  - Visitors who prefer reduced motion never get the pending state; the CSS in
+//    globals.css also forces everything visible as a second safety net.
 'use client'
 
-import { motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 
 export default function ScrollReveal({
   children,
@@ -12,21 +18,31 @@ export default function ScrollReveal({
   className?: string
   delay?: number
 }) {
-  const reduce = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
 
-  if (reduce) {
-    return <div className={className}>{children}</div>
-  }
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    if (el.getBoundingClientRect().top < window.innerHeight * 0.92) return // already in view
+
+    el.dataset.reveal = 'pending'
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.dataset.reveal = 'shown'
+          io.disconnect()
+        }
+      },
+      { rootMargin: '0px 0px -60px 0px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay }}
-      viewport={{ once: true, margin: '-60px' }}
-      className={className}
-    >
+    <div ref={ref} className={className} style={delay ? { transitionDelay: `${delay}s` } : undefined}>
       {children}
-    </motion.div>
+    </div>
   )
 }
