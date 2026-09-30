@@ -45,7 +45,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4 md:col-span-1">
             <Link href="/" className="inline-flex w-fit items-center">
               <Image
-                src="/hero/logo.png"
+                src="/hero/logo_transparent.png"
                 alt="Pulse Gear Logo"
                 width={150}
                 height={80}

@@ -6,8 +6,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowIcon } from './SectionHeading'
-import HeroVideoPlayer from './HeroVideoPlayer'
+import HeroMedia from './HeroMedia'
 import { HERO_CLIPS } from '@/content/hero-videos'
+import { HERO_SLIDES } from '@/content/hero-slides'
 
 const TRUST = [
   { label: '100% authentic', sub: 'Sourced from trusted sellers' },
@@ -31,8 +32,8 @@ export default function HeroVideo() {
         className="object-cover object-center"
       />
 
-      {/* Background clips: random order, crossfaded. Edit src/content/hero-videos.ts to add videos. */}
-      <HeroVideoPlayer clips={HERO_CLIPS} />
+      {/* Desktop: random crossfading clips (src/content/hero-videos.ts). Phones/slow: pictures (src/content/hero-slides.ts). */}
+      <HeroMedia clips={HERO_CLIPS} slides={HERO_SLIDES} />
 
       {/* Scrims: keep text readable on any frame of the video */}
       <div className="absolute inset-0 bg-gradient-to-t from-surface-0 via-surface-0/70 to-surface-0/20" />
