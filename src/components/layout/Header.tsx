@@ -81,12 +81,12 @@ export default function Header() {
       <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-6 px-4 py-3 md:px-6 lg:px-8">
         <Link href="/" className="shrink-0 flex items-center">
           <Image
-            src="/hero/logo_transparent.png"
-            alt="Pulse Gear Logo"
-            width={140}
-            height={109}
-            priority
-            className="h-12 w-auto sm:h-16 lg:h-[120px]"
+           src="/hero/pulsegear-logo-header.png"
+           alt="Pulse Gear"
+           width={865}
+           height={90}
+           priority
+           className="h-8 w-auto sm:h-9 lg:h-10"
           />
         </Link>
 
