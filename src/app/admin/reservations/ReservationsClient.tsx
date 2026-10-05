@@ -76,16 +76,24 @@ export default function ReservationsClient({
               </div>
             )}
 
-            {r.status === 'pending' && (
+            {(r.status === 'pending' || r.status === 'confirmed') && (
               <div className="flex gap-3 mt-2">
+                {r.status === 'pending' && (
+                  <button
+                    onClick={() => updateStatus(r.id, 'confirmed')}
+                    className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-xl text-sm transition"
+                  >
+                    ✅ Confirm
+                  </button>
+                )}
                 <button
-                  onClick={() => updateStatus(r.id, 'confirmed')}
-                  className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-xl text-sm transition"
-                >
-                  ✅ Confirm
-                </button>
-                <button
-                  onClick={() => updateStatus(r.id, 'cancelled')}
+                  onClick={() => {
+                    if (
+                      r.status === 'confirmed' &&
+                      !window.confirm('Cancel this confirmed reservation and release the product?')
+                    ) return
+                    updateStatus(r.id, 'cancelled')
+                  }}
                   className="flex-1 bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-xl text-sm transition"
                 >
                   ❌ Cancel
