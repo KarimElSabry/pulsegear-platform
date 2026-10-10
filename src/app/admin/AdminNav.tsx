@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/admin/discounts',           label: '🏷️ Discount Codes'  },
   { href: '/admin/analytics',           label: '📊 Analytics'       },
   { href: '/admin/analytics/traffic',   label: '🌐 Traffic'         },
+  { href: '/admin/requests',         label: '📝 Requests'        },
   { href: '/admin/deals', label: '🤝 Deals' },
 ]
 

@@ -28,6 +28,7 @@ export default function ReservationsClient({
     <div className="space-y-4">
       {reservations.map((r) => {
         const product = Array.isArray(r.product) ? r.product[0] : r.product
+        const isSold = product?.status === 'sold' && r.status !== 'cancelled'
 
         return (
           <div
@@ -38,14 +39,16 @@ export default function ReservationsClient({
               <h2 className="text-white font-bold text-lg">{r.name}</h2>
               <span
                 className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${
-                  r.status === 'confirmed'
+                  isSold
+                    ? 'bg-zinc-600 text-white'
+                    : r.status === 'confirmed'
                     ? 'bg-green-600 text-white'
                     : r.status === 'cancelled'
                     ? 'bg-red-600 text-white'
                     : 'bg-yellow-500 text-black'
                 }`}
               >
-                {r.status}
+                {isSold ? 'sold' : r.status}
               </span>
             </div>
 
@@ -76,7 +79,7 @@ export default function ReservationsClient({
               </div>
             )}
 
-            {(r.status === 'pending' || r.status === 'confirmed') && (
+            {!isSold && (r.status === 'pending' || r.status === 'confirmed') && (
               <div className="flex gap-3 mt-2">
                 {r.status === 'pending' && (
                   <button

@@ -4,8 +4,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { REQUEST_STATUSES } from './statuses'
 
-const allowedStatuses = ['pending', 'contacted', 'sourcing', 'completed', 'cancelled']
+const allowedStatuses: string[] = REQUEST_STATUSES.map((s) => s.value)
 
 export async function updateProductRequestStatus(formData: FormData) {
   const supabase = createAdminSupabaseClient()
@@ -27,5 +28,6 @@ export async function updateProductRequestStatus(formData: FormData) {
   }
 
   revalidatePath('/admin/requests')
+  revalidatePath('/admin/deals')
   revalidatePath('/account/requests')
 }

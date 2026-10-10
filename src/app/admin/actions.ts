@@ -34,6 +34,7 @@ export async function deleteProduct(id: number): Promise<void> {
 export async function updateProductStatus(id: number, status: ProductStatus): Promise<void> {
   await ProductService.updateStatus(id, status)
   revalidatePath('/admin/products')
+  revalidatePath('/admin/reservations')
   revalidatePath('/products')
   revalidatePath('/sold')
   revalidatePath(`/products/${id}`)
@@ -59,6 +60,21 @@ export async function triggerVintedSync(): Promise<SyncResult> {
   return res.json()
 }
 
+// Next free Product ID: highest small numeric ID in use + 1. Real Vinted IDs (10 digits) are ignored
+// so manually typed or old Vinted IDs don't push the counter into the billions.
+export async function getNextProductId(): Promise<string> {
+  const { data, error } = await supabase.from('products').select('vinted_id').not('vinted_id', 'is', null)
+  if (error) throw new Error(error.message)
+
+  let max = 0
+  for (const row of data ?? []) {
+    const raw = String(row.vinted_id ?? '').trim()
+    if (!/^\d{1,8}$/.test(raw)) continue
+    max = Math.max(max, Number(raw))
+  }
+  return String(max + 1)
+}
+
 export async function addProduct(formData: FormData): Promise<void> {
   const imagesRaw = formData.get('images') as string
   const imageUrls = imagesRaw
@@ -81,7 +97,7 @@ export async function addProduct(formData: FormData): Promise<void> {
     : undefined
 
   const isReservable = formData.get('is_reservable') === 'true'
-  const vintedId = (formData.get('vinted_id') as string)?.trim() || undefined
+  const vintedId = (formData.get('vinted_id') as string)?.trim() || (await getNextProductId())
 
   try {
     await ProductService.createProduct(
@@ -109,7 +125,7 @@ export async function addProduct(formData: FormData): Promise<void> {
     const message = error?.message || ''
 
     if (code === '23505' || message.includes('products_vinted_id_key')) {
-      throw new Error(`This Vinted item already exists. Duplicate ID: ${vintedId}`)
+      throw new Error(`This Product ID is already in use. Duplicate ID: ${vintedId}`)
     }
 
     throw new Error(message || 'Failed to add product')

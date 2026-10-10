@@ -403,7 +403,7 @@ function EditProductModal({
 
             {product.vinted_id && (
               <div className="bg-zinc-800/60 border border-zinc-700 rounded-xl px-4 py-3">
-                <p className="text-zinc-500 text-xs mb-1">Vinted ID</p>
+                <p className="text-zinc-500 text-xs mb-1">Product ID</p>
                 <p className="text-violet-400 text-sm font-mono">{product.vinted_id}</p>
               </div>
             )}

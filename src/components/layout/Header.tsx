@@ -82,7 +82,7 @@ export default function Header() {
         <Link href="/" className="shrink-0 flex items-center">
           <Image
            src="/hero/pulsegear-logo-header.png"
-           alt="Pulse Gear"
+           alt="Pulse Gear Egypt"
            width={865}
            height={90}
            priority

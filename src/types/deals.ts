@@ -31,6 +31,8 @@ export type SourcePlatform =
   | 'Vinted'
   | 'Amazon'
   | 'eBay'
+  | 'Idealo'
+  | 'Official Store'
   | 'Other'
 
 // ─── Product Request Relation ─────────────────────────────────────────────────
@@ -56,6 +58,7 @@ export interface Deal {
   customer_name: string | null
   phone: string | null
   customer_instagram: string | null
+  customer_address: string | null
 
   // Status
   status: DealStatus
@@ -198,5 +201,7 @@ export const SOURCE_PLATFORMS: SourcePlatform[] = [
   'Vinted',
   'Amazon',
   'eBay',
+  'Idealo',
+  'Official Store',
   'Other',
 ]

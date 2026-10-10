@@ -106,6 +106,9 @@ export async function getOpenProductRequests() {
       customer_name,
       phone,
       instagram,
+      governorate,
+      city,
+      street,
       budget,
       status,
       notes
@@ -129,6 +132,7 @@ export async function createDeal(formData: FormData) {
     customer_name: getStr(formData, 'customer_name'),
     phone: getStr(formData, 'phone'),
     customer_instagram: getStr(formData, 'customer_instagram'),
+    customer_address: getStr(formData, 'customer_address'),
     status: getStr(formData, 'status') ?? 'deposit_pending',
     source_link: getStr(formData, 'source_link'),
     source_platform: getStr(formData, 'source_platform'),
@@ -175,6 +179,8 @@ export async function updateDeal(id: string, formData: FormData) {
     customer_name: getStr(formData, 'customer_name'),
     phone: getStr(formData, 'phone'),
     customer_instagram: getStr(formData, 'customer_instagram'),
+
+    customer_address: getStr(formData, 'customer_address'),
     status: getStr(formData, 'status') ?? 'deposit_pending',
     source_link: getStr(formData, 'source_link'),
     source_platform: getStr(formData, 'source_platform'),

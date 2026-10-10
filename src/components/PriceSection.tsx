@@ -4,6 +4,7 @@
 
 import { useMemo, useState } from 'react'
 import ReserveButton from '@/components/ReserveButton'
+import OrderButtons from '@/components/OrderButtons'
 
 type Props = {
   originalPrice: number
@@ -187,7 +188,11 @@ export default function PriceSection({
         )}
       </div>
 
-      <div className="border-t border-zinc-800 pt-5">
+      <div className="border-t border-zinc-800 pt-5 space-y-3">
+        {!isUnavailable && (
+          <OrderButtons productId={productId} productTitle={productTitle} price={finalPrice} />
+        )}
+
         {isReservable ? (
           <ReserveButton
             productId={productId}
@@ -198,22 +203,14 @@ export default function PriceSection({
             discountCode={discountPercent > 0 ? discountCode : undefined}
           />
         ) : (
-          <button
-            disabled={isUnavailable}
-            className={`w-full font-bold py-3 rounded-xl transition ${
-              isUnavailable
-                ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
-                : 'bg-white hover:bg-zinc-200 text-black'
-            }`}
-          >
-            {status === 'sold'
-              ? 'تم البيع'
-              : status === 'reserved'
-              ? 'محجوز'
-              : status === 'out_of_stock'
-              ? 'غير متوفر'
-              : 'اطلب الآن'}
-          </button>
+          isUnavailable && (
+            <button
+              disabled
+              className="w-full font-bold py-3 rounded-xl bg-zinc-700 text-zinc-400 cursor-not-allowed"
+            >
+              {status === 'sold' ? 'تم البيع' : status === 'reserved' ? 'محجوز' : 'غير متوفر'}
+            </button>
+          )
         )}
       </div>
 

@@ -4,11 +4,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
-import { addProduct, addSale } from './actions'
+import { addProduct, addSale, getNextProductId } from './actions'
 
 const FALLBACK_RATE = 55
 const DEFAULT_SHIPPING_EUR = 10
 const supabase = createBrowserSupabaseClient()
+
+const SIZE_OPTIONS = ['39 - 42 mm', '43 - 46 mm', '47 mm & above', 'One Size']
 
 export default function AdminPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
@@ -17,6 +19,15 @@ export default function AdminPage() {
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState('')
   const formRef = useRef<HTMLFormElement>(null)
+  const [productId, setProductId] = useState('')
+
+  function loadNextProductId() {
+    getNextProductId().then(setProductId).catch(() => setProductId(''))
+  }
+
+  useEffect(() => {
+    loadNextProductId()
+  }, [])
 
   const [eurRate, setEurRate] = useState<number | null>(null)
   const [rateLoading, setRateLoading] = useState(false)
@@ -157,6 +168,7 @@ export default function AdminPage() {
     setManualRate('')
     setSubmitError('')
     formRef.current?.reset()
+    loadNextProductId()
   }
 
   async function handleSubmit(formData: FormData) {
@@ -189,16 +201,18 @@ export default function AdminPage() {
       <form ref={formRef} action={handleSubmit} className="space-y-6">
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">
-            Vinted Item ID <span className="text-purple-400">*</span>
+            Product ID <span className="text-purple-400">*</span>
           </label>
           <input
             name="vinted_id"
             required
+            value={productId}
+            onChange={(e) => setProductId(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition font-mono tracking-widest"
-            placeholder="e.g. 9221330612"
+            placeholder="Auto"
           />
           <p className="text-xs text-gray-500 mt-1">
-            📌 The numeric ID from the Vinted URL — used to identify this exact listing
+            📌 Filled in automatically with the next free number — type over it to use your own ID
           </p>
         </div>
 
@@ -422,12 +436,16 @@ export default function AdminPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-semibold text-gray-200">Size / Model</label>
-            <input
+            <label className="block text-sm font-semibold text-gray-200">Size</label>
+            <select
               name="size"
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-              placeholder="e.g. HRM-Pro, Forerunner 965..."
-            />
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
+            >
+              <option value="">Select...</option>
+              {SIZE_OPTIONS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
           </div>
         </div>
 

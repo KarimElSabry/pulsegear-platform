@@ -13,6 +13,9 @@ type ProductRequest = {
   customer_name:       string | null
   phone?:              string | null
   customer_instagram?: string | null
+  governorate?:        string | null
+  city?:               string | null
+  street?:             string | null
   budget:              number | null
   status:              string
   notes?:              string | null
@@ -104,6 +107,7 @@ function DealFormFields({
   const [customerName,      setCustomerName]     = useState(deal?.customer_name ?? '')
   const [customerPhone,     setCustomerPhone]     = useState(deal?.phone ?? '')
   const [customerInstagram, setCustomerInstagram] = useState(deal?.customer_instagram ?? '')
+  const [customerAddress,   setCustomerAddress]   = useState(deal?.customer_address ?? '')
   const [sellingPrice,      setSellingPrice]      = useState(deal?.selling_price_egp?.toString() ?? '')
   const [depositAmount,     setDepositAmount]     = useState(deal?.deposit_amount_egp?.toString() ?? '')
   const [remainingAmount,   setRemainingAmount]   = useState(deal?.remaining_amount_egp?.toString() ?? '')
@@ -149,6 +153,8 @@ function DealFormFields({
     if (req.customer_name)      setCustomerName(req.customer_name)
     if (req.phone)              setCustomerPhone(req.phone)
     if (req.customer_instagram) setCustomerInstagram(req.customer_instagram)
+    const address = [req.street, req.city, req.governorate].filter(Boolean).join(', ')
+    if (address)                setCustomerAddress(address)
     if (req.budget)             setSellingPrice(String(req.budget))
     if (req.notes)              setNotes(req.notes)
   }
@@ -204,6 +210,10 @@ function DealFormFields({
 
       <Field label="Customer Instagram">
         <input name="customer_instagram" value={customerInstagram} onChange={(e) => setCustomerInstagram(e.target.value)} className={inputClass} placeholder="e.g. @username" />
+      </Field>
+
+ <Field label="Customer Address">
+        <textarea name="customer_address" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} rows={2} className={inputClass} placeholder="Street, city, governorate" />
       </Field>
 
       <Field label="Sale Channel">
@@ -465,6 +475,7 @@ function DealCard({
         <div>
           <p className="font-semibold text-white text-sm">{productName}</p>
           <p className="text-xs text-gray-500 mt-0.5">{deal.phone ?? deal.customer_instagram ?? 'No contact info'}</p>
+          {deal.customer_address && <p className="text-xs text-gray-500 mt-0.5">📍 {deal.customer_address}</p>}
         </div>
         <StatusBadge status={deal.status} />
       </div>

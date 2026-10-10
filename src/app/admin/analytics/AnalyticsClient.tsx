@@ -29,9 +29,9 @@ interface AnalyticsData {
   soldProducts: number
   reservedProducts: number
   outOfStockProducts: number
-  totalRevenue: number
-  discountedRevenue: number
-  totalSavingsGiven: number
+  confirmedReservedValue: number
+  pendingReservedValue: number
+  confirmedDiscountGiven: number
   avgProductPrice: number
   totalReservations: number
   pendingReservations: number
@@ -605,6 +605,46 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       <div className="border-t border-zinc-800" />
 
       <section>
+        <h2 className="text-white text-xl font-bold mb-4">💵 Earnings So Far — actual sales</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <StatCard title="Total Sales" value={data.totalSalesCount} icon="🛍️" color="purple" />
+          <StatCard
+            title="Total Earned (Revenue)"
+            value={formatEGP(data.totalSalesRevenue)}
+            subtitle={formatEUR(data.totalSalesRevenueEur)}
+            icon="💵"
+            color="green"
+          />
+          <StatCard
+            title="Net Profit"
+            value={formatEGP(data.totalSalesProfit)}
+            subtitle={formatEUR(data.totalSalesProfitEur)}
+            icon="📈"
+            color="blue"
+          />
+          <StatCard
+            title="Total Cost"
+            value={formatEGP(data.totalSalesCost)}
+            subtitle={formatEUR(data.totalSalesCostEur)}
+            icon="🧾"
+            color="yellow"
+          />
+          <StatCard
+            title="Avg Margin"
+            value={`${data.avgProfitMargin.toFixed(1)}%`}
+            subtitle="Based on saved historical FX rate"
+            icon="📊"
+            color="pink"
+          />
+        </div>
+        <p className="text-zinc-500 text-xs mt-3">
+          Counts only sales you recorded in the Sales ledger — reservations are never included.
+          {data.soldProducts > data.totalSalesCount &&
+            ` ${data.soldProducts} products are marked sold but only ${data.totalSalesCount} sales are recorded, so add the missing sales to get an accurate total.`}
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-white text-xl font-bold mb-4">📦 Products Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <StatCard title="Total Products" value={data.totalProducts} icon="📦" color="purple" />
@@ -616,26 +656,26 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
       </section>
 
       <section>
-        <h2 className="text-white text-xl font-bold mb-4">💰 Revenue — Reservations</h2>
+        <h2 className="text-white text-xl font-bold mb-4">🔒 On Hold — Reserved, Not Earned Yet</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard
-            title="Total Revenue"
-            value={formatEGP(data.totalRevenue)}
-            subtitle="From confirmed reservations"
-            icon="💰"
+            title="Confirmed Reservations"
+            value={formatEGP(data.confirmedReservedValue)}
+            subtitle="Expected, not paid yet"
+            icon="✅"
             color="green"
           />
           <StatCard
-            title="Discounted Revenue"
-            value={formatEGP(data.discountedRevenue)}
-            subtitle="After discount codes"
-            icon="🏷️"
-            color="blue"
+            title="Pending Reservations"
+            value={formatEGP(data.pendingReservedValue)}
+            subtitle="Waiting for your confirmation"
+            icon="⏳"
+            color="yellow"
           />
           <StatCard
-            title="Total Savings Given"
-            value={formatEGP(data.totalSavingsGiven)}
-            subtitle="Discount value given"
+            title="Discounts Given"
+            value={formatEGP(data.confirmedDiscountGiven)}
+            subtitle="On confirmed reservations"
             icon="🎁"
             color="pink"
           />
@@ -656,41 +696,6 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
           <StatCard title="Pending" value={data.pendingReservations} icon="⏳" color="yellow" />
           <StatCard title="Confirmed" value={data.confirmedReservations} icon="✅" color="green" />
           <StatCard title="Cancelled" value={data.cancelledReservations} icon="❌" color="red" />
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-white text-xl font-bold mb-4">🛍️ Sales Overview</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard title="Total Sales" value={data.totalSalesCount} icon="🛍️" color="purple" />
-          <StatCard
-            title="Sales Revenue"
-            value={formatEGP(data.totalSalesRevenue)}
-            subtitle={formatEUR(data.totalSalesRevenueEur)}
-            icon="💵"
-            color="green"
-          />
-          <StatCard
-            title="Total Profit"
-            value={formatEGP(data.totalSalesProfit)}
-            subtitle={formatEUR(data.totalSalesProfitEur)}
-            icon="📈"
-            color="blue"
-          />
-          <StatCard
-            title="Total Cost"
-            value={formatEGP(data.totalSalesCost)}
-            subtitle={formatEUR(data.totalSalesCostEur)}
-            icon="🧾"
-            color="yellow"
-          />
-          <StatCard
-            title="Avg Margin"
-            value={`${data.avgProfitMargin.toFixed(1)}%`}
-            subtitle="Based on saved historical FX rate"
-            icon="📊"
-            color="pink"
-          />
         </div>
       </section>
 
@@ -754,7 +759,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
 
       {data.reservationsOverTime.length > 0 && (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-          <h3 className="text-white font-bold mb-4">📈 Reservations & Revenue — Last 30 Days</h3>
+          <h3 className="text-white font-bold mb-4">📈 Reservations & Confirmed Value — Last 30 Days</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={data.reservationsOverTime}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -790,7 +795,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                 stroke="#22c55e"
                 strokeWidth={2}
                 dot={false}
-                name="Revenue (EGP)"
+                name="Confirmed value (EGP)"
               />
             </LineChart>
           </ResponsiveContainer>
@@ -980,7 +985,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                   <th className="text-left py-3 pr-4">#</th>
                   <th className="text-left py-3 pr-4">Product</th>
                   <th className="text-right py-3 pr-4">Reservations</th>
-                  <th className="text-right py-3">Revenue</th>
+                  <th className="text-right py-3">Confirmed value</th>
                 </tr>
               </thead>
               <tbody>

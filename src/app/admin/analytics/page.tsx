@@ -56,7 +56,7 @@ async function getAnalyticsData() {
       .select(`
         id, status, created_at,
         discount_code, discounted_price,
-        product:products(id, title, price_egp)
+        product:products(id, title, price_egp, status)
       `)
       .order('created_at', { ascending: true }),
     supabase
@@ -126,20 +126,23 @@ async function getAnalyticsData() {
   const confirmedReservations = reservations.filter((r: any) => r.status === 'confirmed').length
   const cancelledReservations = reservations.filter((r: any) => r.status === 'cancelled').length
 
-  const confirmedRes = reservations.filter((r: any) => r.status === 'confirmed')
+  // Reservations are NOT earnings: nothing is paid yet, and the customer can still back out.
+  // Real earnings come only from the `sales` ledger below. These figures are the money still "on hold":
+  // reservations whose product has not been marked sold (once sold, it belongs in the sales ledger).
+  const productOf = (r: any) => (Array.isArray(r.product) ? r.product[0] : r.product)
+  const openReservations = reservations.filter((r: any) => productOf(r)?.status !== 'sold')
+  const confirmedOpen = openReservations.filter((r: any) => r.status === 'confirmed')
+  const pendingOpen = openReservations.filter((r: any) => r.status === 'pending')
 
-  const totalRevenue = confirmedRes.reduce((sum: number, r: any) => {
-    const product = Array.isArray(r.product) ? r.product[0] : r.product
-    return sum + (Number(product?.price_egp) || 0)
-  }, 0)
+  const listPrice = (r: any) => Number(productOf(r)?.price_egp) || 0
+  const dealPrice = (r: any) => Number(r.discounted_price ?? productOf(r)?.price_egp ?? 0) || 0
 
-  const discountedRevenue = confirmedRes.reduce((sum: number, r: any) => {
-    const product = Array.isArray(r.product) ? r.product[0] : r.product
-    const price = Number(r.discounted_price ?? product?.price_egp ?? 0) || 0
-    return sum + price
-  }, 0)
-
-  const totalSavingsGiven = totalRevenue - discountedRevenue
+  const confirmedReservedValue = confirmedOpen.reduce((sum: number, r: any) => sum + dealPrice(r), 0)
+  const pendingReservedValue = pendingOpen.reduce((sum: number, r: any) => sum + dealPrice(r), 0)
+  const confirmedDiscountGiven = confirmedOpen.reduce(
+    (sum: number, r: any) => sum + Math.max(0, listPrice(r) - dealPrice(r)),
+    0
+  )
 
   const productReservationMap = new Map<number, { title: string; reservations: number; revenue: number }>()
   reservations.forEach((r: any) => {
@@ -304,9 +307,9 @@ async function getAnalyticsData() {
     soldProducts,
     reservedProducts,
     outOfStockProducts,
-    totalRevenue,
-    discountedRevenue,
-    totalSavingsGiven,
+    confirmedReservedValue,
+    pendingReservedValue,
+    confirmedDiscountGiven,
     avgProductPrice,
     totalReservations,
     pendingReservations,

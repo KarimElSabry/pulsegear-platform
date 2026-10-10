@@ -286,12 +286,26 @@ export class ProductService {
       .update({
         status,
         sold_at: status === 'sold' ? new Date().toISOString() : null,
+        // a sold item is no longer on hold
+        ...(status === 'sold' ? { reserved_until: null } : {}),
       })
       .eq('id', id)
 
     if (error) {
       console.error('[ProductService] updateStatus error:', error.message)
       throw error
+    }
+
+    if (status === 'sold') {
+      // Confirmed reservations stay as the record of the sale; ones nobody confirmed are dropped.
+      const { error: resError } = await supabase
+        .from('reservations')
+        .update({ status: 'cancelled' })
+        .eq('product_id', id)
+        .eq('status', 'pending')
+      if (resError) {
+        console.error('[ProductService] updateStatus reservation cleanup error:', resError.message)
+      }
     }
 
     if (previousStatus !== 'sold' && status === 'sold') {

@@ -3,6 +3,8 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { escapeTelegramHtml as esc, sendTelegramMessage } from '@/lib/telegram'
+
 function cleanString(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
@@ -71,6 +73,25 @@ export async function POST(req: Request) {
     ])
 
     if (error) throw error
+
+    // Awaited so the serverless function doesn't exit before Telegram is called; failures are swallowed.
+    await sendTelegramMessage(
+      [
+        '🛒 <b>New product request</b>',
+        '',
+        `<b>Product:</b> ${esc(product)}`,
+        budget ? `<b>Budget:</b> ${budget.toLocaleString('en-US')} EGP` : null,
+        `<b>Name:</b> ${esc(name)}`,
+        `<b>Phone:</b> ${esc(phone)}`,
+        `<b>Email:</b> ${esc(email)}`,
+        `<b>Address:</b> ${esc(`${street}, ${city}, ${governorate}`)}`,
+        notes ? `<b>Notes:</b> ${esc(notes)}` : null,
+        '',
+        'Manage it in Admin → Requests.',
+      ]
+        .filter((line): line is string => line !== null)
+        .join('\n')
+    )
 
     return NextResponse.json({ status: 'success' }, { status: 200 })
   } catch (err: any) {
