@@ -4,31 +4,53 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { assertAdmin } from '@/lib/admin-auth'
+import { recordServerEvent } from '@/lib/tracking/server'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-// ─── Add Sale ────────────────────────────────────────────────────────────────
-export async function addSale(formData: FormData) {
+// Shared by add/update: profit and margin are always computed here, never taken from the browser.
+// Margin keeps the historical definition (profit / cost) so old and new rows stay comparable;
+// the financial reports recompute true margins from revenue and do not read this column.
+function computeFigures(formData: FormData) {
   const originalEur     = parseFloat(formData.get('original_eur')      as string) || 0
   const shippingEur     = parseFloat(formData.get('shipping_eur')      as string) || 0
+  const egyptShippingEgp = parseFloat(formData.get('egypt_shipping_egp') as string) || 0
   const exchangeRate    = parseFloat(formData.get('exchange_rate')     as string) || 0
   const sellingPriceEgp = parseFloat(formData.get('selling_price_egp') as string) || 0
   const commissionEgp   = parseFloat(formData.get('commission_egp')    as string) || 0
-  const marginPct       = parseFloat(formData.get('profit_margin_pct') as string) || 0
+
+  if (originalEur + shippingEur > 0 && exchangeRate <= 0) {
+    // a blank rate used to make cost 0 and profit equal to the whole price
+    throw new Error('Exchange rate is required when a EUR cost is entered')
+  }
+  if (sellingPriceEgp < 0 || commissionEgp < 0 || originalEur < 0 || shippingEur < 0 || egyptShippingEgp < 0) {
+    throw new Error('Amounts cannot be negative')
+  }
+
+  const round = (n: number) => Math.round(n * 100) / 100
+  const costEgp   = round((originalEur + shippingEur) * exchangeRate + egyptShippingEgp)
+  const profitEgp = round(sellingPriceEgp - costEgp - commissionEgp)
+  const marginPct = costEgp > 0 ? round((profitEgp / costEgp) * 100) : 0
+  return { originalEur, shippingEur, egyptShippingEgp, exchangeRate, sellingPriceEgp, commissionEgp, costEgp, profitEgp, marginPct }
+}
+
+// ─── Add Sale ────────────────────────────────────────────────────────────────
+export async function addSale(formData: FormData) {
+  await assertAdmin()
+  const { originalEur, shippingEur, egyptShippingEgp, exchangeRate, sellingPriceEgp, commissionEgp, costEgp, profitEgp, marginPct } = computeFigures(formData)
   const discountCode    = (formData.get('discount_code') as string) || null
 
-  const costEgp   = (originalEur + shippingEur) * exchangeRate
-  const profitEgp = sellingPriceEgp - costEgp - commissionEgp
-
-  const { error } = await supabase.from('sales').insert({
+  const { data: created, error } = await supabase.from('sales').insert({
     // ✅ deal_id is null for manually added sales
     deal_id:           null,
     product_name:      formData.get('product_name'),
     original_eur:      originalEur,
     shipping_eur:      shippingEur,
+    egypt_shipping_egp: egyptShippingEgp,
     exchange_rate:     exchangeRate,
     cost_egp:          costEgp,
     selling_price_egp: sellingPriceEgp,
@@ -41,12 +63,17 @@ export async function addSale(formData: FormData) {
     source_url:        formData.get('source_url') || null,
     notes:             formData.get('notes')       || null,
     discount_code:     discountCode,
-  })
+  }).select('id').single()
 
   if (error) throw new Error(error.message)
 
   if (discountCode) {
     await supabase.rpc('increment_discount_usage', { code_value: discountCode })
+  }
+
+  if (created?.id) {
+    await recordServerEvent({ event: 'order_created', saleId: created.id })
+    await recordServerEvent({ event: 'sale_completed', saleId: created.id })
   }
 
   revalidatePath('/admin/analytics')
@@ -55,18 +82,11 @@ export async function addSale(formData: FormData) {
 
 // ─── Update Sale ─────────────────────────────────────────────────────────────
 export async function updateSale(id: string, formData: FormData) {
-  const originalEur     = parseFloat(formData.get('original_eur')      as string) || 0
-  const shippingEur     = parseFloat(formData.get('shipping_eur')      as string) || 0
-  const exchangeRate    = parseFloat(formData.get('exchange_rate')     as string) || 0
-  const sellingPriceEgp = parseFloat(formData.get('selling_price_egp') as string) || 0
-  const commissionEgp   = parseFloat(formData.get('commission_egp')    as string) || 0
-  const marginPct       = parseFloat(formData.get('profit_margin_pct') as string) || 0
+  await assertAdmin()
+  const { originalEur, shippingEur, egyptShippingEgp, exchangeRate, sellingPriceEgp, commissionEgp, costEgp, profitEgp, marginPct } = computeFigures(formData)
 
   const rawCode      = formData.get('discount_code') as string | null
   const discountCode = rawCode && rawCode.trim() !== '' ? rawCode.trim() : null
-
-  const costEgp   = (originalEur + shippingEur) * exchangeRate
-  const profitEgp = sellingPriceEgp - costEgp - commissionEgp
 
   // fetch old code before updating to adjust usage_count
   const { data: existingSale } = await supabase
@@ -83,6 +103,7 @@ export async function updateSale(id: string, formData: FormData) {
       product_name:      formData.get('product_name'),
       original_eur:      originalEur,
       shipping_eur:      shippingEur,
+    egypt_shipping_egp: egyptShippingEgp,
       exchange_rate:     exchangeRate,
       cost_egp:          costEgp,
       selling_price_egp: sellingPriceEgp,
@@ -91,6 +112,9 @@ export async function updateSale(id: string, formData: FormData) {
       commission_egp:    commissionEgp,
       sale_channel:      formData.get('sale_channel'),
       sale_date:         formData.get('sale_date'),
+      // only overwrite when the form actually sends them (the analytics edit form does not)
+      ...(formData.has('source_platform') ? { source_platform: formData.get('source_platform') } : {}),
+      ...(formData.has('source_url') ? { source_url: formData.get('source_url') || null } : {}),
       notes:             formData.get('notes') || null,
       discount_code:     discountCode,
       // ✅ NOTE — we never overwrite deal_id on update
@@ -116,6 +140,7 @@ export async function updateSale(id: string, formData: FormData) {
 
 // ─── Delete Sale ─────────────────────────────────────────────────────────────
 export async function deleteSale(id: string) {
+  await assertAdmin()
   // decrement usage_count when deleting a sale that had a code
   const { data: sale } = await supabase
     .from('sales')
@@ -136,6 +161,7 @@ export async function deleteSale(id: string) {
 
 // ─── Get All Sales ────────────────────────────────────────────────────────────
 export async function getSales() {
+  await assertAdmin()
   const { data, error } = await supabase
     .from('sales')
     .select('*')
@@ -147,6 +173,7 @@ export async function getSales() {
 
 // ─── Get Discount Codes ───────────────────────────────────────────────────────
 export async function getDiscountCodes() {
+  await assertAdmin()
   const { data, error } = await supabase
     .from('discount_codes')
     .select('code, discount_percent')
@@ -159,6 +186,7 @@ export async function getDiscountCodes() {
 
 // ─── Update Discount Code Usage Count ────────────────────────────────────────
 export async function updateDiscountUsage(code: string, newCount: number) {
+  await assertAdmin()
   const { error } = await supabase
     .from('discount_codes')
     .update({ usage_count: newCount })

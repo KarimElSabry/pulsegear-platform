@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { INSTAGRAM_URL, whatsappOrderUrl } from '@/lib/contact'
 
 export default function OrderButtons({
@@ -14,21 +14,21 @@ export default function OrderButtons({
   productTitle: string
   price: number
 }) {
-  const [pageUrl, setPageUrl] = useState('')
-
-  useEffect(() => {
-    setPageUrl(window.location.href)
-  }, [])
-
-  const message =
+  const message = (pageUrl?: string) =>
     `Hi Pulse Gear, I'd like to order:\n${productTitle} (#${productId})\n` +
     `Price: ${price.toLocaleString('en-EG')} EGP` +
     (pageUrl ? `\n${pageUrl}` : '')
 
+  // The page link is only known in the browser, so it is added to the message at click time.
+  const openWhatsApp = (e: MouseEvent<HTMLAnchorElement>) => {
+    e.currentTarget.href = whatsappOrderUrl(message(window.location.href))
+  }
+
   return (
     <div className="space-y-3">
       <a
-        href={whatsappOrderUrl(message)}
+        href={whatsappOrderUrl(message())}
+        onClick={openWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3 font-bold text-white transition hover:bg-green-500"

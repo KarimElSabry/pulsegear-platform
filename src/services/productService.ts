@@ -1,5 +1,6 @@
 // src/services/productService.ts
 
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { sendWishlistSoldAlerts } from '@/lib/brevo'
 import type {
@@ -311,8 +312,8 @@ export class ProductService {
     if (previousStatus !== 'sold' && status === 'sold') {
       try {
         await sendWishlistSoldAlerts(id)
-      } catch (alertError: any) {
-        console.error('[ProductService] wishlist sold alert error:', alertError?.message || alertError)
+      } catch (alertError: unknown) {
+        console.error('[ProductService] wishlist sold alert error:', alertError instanceof Error ? alertError.message : alertError)
       }
     }
   }
@@ -341,7 +342,7 @@ function slugify(text: string): string {
     .replace(/--+/g, '-')
 }
 
-async function generateUniqueSlug(supabase: any, title: string): Promise<string> {
+async function generateUniqueSlug(supabase: SupabaseClient, title: string): Promise<string> {
   const baseSlug = slugify(title)
 
   const { data } = await supabase
@@ -351,7 +352,7 @@ async function generateUniqueSlug(supabase: any, title: string): Promise<string>
 
   if (!data || data.length === 0) return baseSlug
 
-  const existingSlugs = data.map((p: any) => p.slug)
+  const existingSlugs = data.map((p: { slug: string }) => p.slug)
 
   if (!existingSlugs.includes(baseSlug)) return baseSlug
 

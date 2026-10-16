@@ -114,7 +114,8 @@ function DealFormFields({
   const [commissionEgp,     setCommissionEgp]     = useState(deal?.commission_egp?.toString() ?? '0')
   const [notes,             setNotes]             = useState(deal?.notes ?? '')
   const [sourcePriceEur,    setSourcePriceEur]    = useState(deal?.source_price_eur?.toString() ?? '')
-  const [shippingEur,       setShippingEur]       = useState(deal?.shipping_eur?.toString() ?? '0')  // ✅ NEW
+  const [shippingEur,       setShippingEur]       = useState(deal?.shipping_eur?.toString() ?? '0')
+  const [egyptShipping,     setEgyptShipping]     = useState(deal?.egypt_shipping_egp?.toString() ?? '0')
   const [status,            setStatus]            = useState<DealStatusValue>((deal?.status as DealStatusValue) ?? 'deposit_pending')
   const [sourcePlatform,    setSourcePlatform]    = useState<string>(deal?.source_platform ?? '')
   const [saleChannel,       setSaleChannel]       = useState<SaleChannel>((deal?.sale_channel as SaleChannel) ?? 'whatsapp')
@@ -129,20 +130,29 @@ function DealFormFields({
     }
   }, [liveRate, deal])
 
-  // ✅ Total cost = source + shipping
+  // Total cost = (item + shipping from Germany) in EUR x rate, plus shipping inside Egypt (EGP)
   const totalSourceEur =
     sourcePriceEur || shippingEur
       ? (parseFloat(sourcePriceEur || '0') + parseFloat(shippingEur || '0'))
       : null
 
+  const egyptShippingNum = Math.max(0, parseFloat(egyptShipping || '0') || 0)
+
   const calculatedEgp =
     totalSourceEur !== null && exchangeRate
-      ? Math.round(totalSourceEur * parseFloat(exchangeRate))
-      : null
+      ? Math.round(totalSourceEur * parseFloat(exchangeRate) + egyptShippingNum)
+      : egyptShippingNum > 0
+        ? Math.round(egyptShippingNum)
+        : null
 
   const shippingEgp =
     shippingEur && exchangeRate && parseFloat(shippingEur) > 0
       ? Math.round(parseFloat(shippingEur) * parseFloat(exchangeRate))
+      : null
+
+  const expectedProfit =
+    calculatedEgp !== null && parseFloat(sellingPrice) > 0
+      ? Math.round(parseFloat(sellingPrice) - calculatedEgp - (parseFloat(commissionEgp) || 0))
       : null
 
   function handleRequestChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -277,8 +287,8 @@ function DealFormFields({
         />
       </Field>
 
-      {/* ✅ NEW — Shipping Price */}
-      <Field label="Shipping Price (EUR)" optional>
+      {/* Shipping from Germany */}
+      <Field label="Shipping from Germany (EUR)" optional>
         <input
           name="shipping_eur"
           type="number"
@@ -293,6 +303,20 @@ function DealFormFields({
             ≈ {shippingEgp.toLocaleString()} EGP shipping cost
           </p>
         )}
+      </Field>
+
+      {/* Shipping inside Egypt */}
+      <Field label="Shipping in Egypt (EGP)" optional>
+        <input
+          name="egypt_shipping_egp"
+          type="number"
+          step="0.01"
+          min="0"
+          value={egyptShipping}
+          onChange={(e) => setEgyptShipping(e.target.value)}
+          className={inputClass}
+          placeholder="0.00"
+        />
       </Field>
 
       {/* Exchange Rate */}
@@ -327,7 +351,7 @@ function DealFormFields({
       </Field>
 
       {/* ✅ Total Cost Summary */}
-      {calculatedEgp !== null && exchangeRate && (
+      {calculatedEgp !== null && (exchangeRate || egyptShippingNum > 0) && (
         <div className="col-span-2 bg-indigo-900/20 border border-indigo-700/30 rounded-lg px-4 py-3">
           <p className="text-xs text-indigo-300 font-semibold mb-1">Total Cost Breakdown</p>
           <div className="flex flex-wrap gap-4 text-xs text-gray-400">
@@ -339,13 +363,23 @@ function DealFormFields({
             )}
             {shippingEur && parseFloat(shippingEur) > 0 && (
               <span>
-                Shipping: <span className="text-cyan-400">€{shippingEur}</span>
+                Shipping from Germany: <span className="text-cyan-400">€{shippingEur}</span>
                 {' '}≈ <span className="text-cyan-400">{shippingEgp?.toLocaleString()} EGP</span>
+              </span>
+            )}
+            {egyptShippingNum > 0 && (
+              <span>
+                Shipping in Egypt: <span className="text-cyan-400">{egyptShippingNum.toLocaleString()} EGP</span>
               </span>
             )}
             <span className="font-bold text-indigo-300">
               Total: {calculatedEgp.toLocaleString()} EGP
             </span>
+            {expectedProfit !== null && (
+              <span className={`font-bold ${expectedProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                Expected profit: {expectedProfit.toLocaleString()} EGP
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -505,11 +539,16 @@ function DealCard({
             <span className="font-semibold text-white">€{deal.source_price_eur}</span>
           </div>
         )}
-        {/* ✅ NEW — Shipping display */}
         {deal.shipping_eur != null && deal.shipping_eur > 0 && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Shipping </span>
+            <span className="text-gray-500">Shipping (Germany) </span>
             <span className="font-semibold text-cyan-400">€{deal.shipping_eur}</span>
+          </div>
+        )}
+        {deal.egypt_shipping_egp != null && deal.egypt_shipping_egp > 0 && (
+          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
+            <span className="text-gray-500">Shipping (Egypt) </span>
+            <span className="font-semibold text-cyan-400">{deal.egypt_shipping_egp.toLocaleString('en-EG')} EGP</span>
           </div>
         )}
         {deal.source_platform && (

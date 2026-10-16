@@ -67,7 +67,10 @@ export interface Deal {
   source_link: string | null
   source_platform: string | null
   source_price_eur: number | null
+  /** Shipping from Germany (EUR), converted with exchange_rate. */
   shipping_eur: number | null
+  /** Shipping inside Egypt (EGP), added to cost as is. */
+  egypt_shipping_egp: number | null
 
   // Financials
   exchange_rate: number | null

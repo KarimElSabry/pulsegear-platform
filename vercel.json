@@ -1,7 +1,20 @@
 {
   "crons": [
-    { "path": "/api/check-vinted-status", "schedule": "0 0 * * *" },
-    { "path": "/api/newsletter/send-weekly", "schedule": "0 10 * * 1" },
-    { "path": "/api/reservations/release-expired", "schedule": "17 3 * * *" }
+    {
+      "path": "/api/check-vinted-status",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/newsletter/send-weekly",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/reservations/release-expired",
+      "schedule": "17 3 * * *"
+    },
+    {
+      "path": "/api/cron/meta-spend",
+      "schedule": "37 4 * * *"
+    }
   ]
 }

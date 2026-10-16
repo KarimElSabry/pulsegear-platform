@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { escapeTelegramHtml as esc, sendTelegramMessage } from '@/lib/telegram'
+import { recordServerEvent } from '@/lib/tracking/server'
 
 function cleanString(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const { error } = await adminSupabase.from('product_requests').insert([
+    const { data: created, error } = await adminSupabase.from('product_requests').insert([
       {
         customer_name: name,
         email,
@@ -70,9 +71,11 @@ export async function POST(req: Request) {
         status: 'new',
         user_id: user?.id ?? null,
       },
-    ])
+    ]).select('id').single()
 
     if (error) throw error
+
+    await recordServerEvent({ event: 'product_request_submitted', request: req, path: '/request-product', refType: 'product_request', refId: created?.id })
 
     // Awaited so the serverless function doesn't exit before Telegram is called; failures are swallowed.
     await sendTelegramMessage(
@@ -94,10 +97,11 @@ export async function POST(req: Request) {
     )
 
     return NextResponse.json({ status: 'success' }, { status: 200 })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    // log the detail, but never send database error text to the browser
     console.error('Submit error:', err)
     return NextResponse.json(
-      { status: 'error', message: err?.message ?? 'Something went wrong' },
+      { status: 'error', message: 'Something went wrong, please try again' },
       { status: 500 }
     )
   }

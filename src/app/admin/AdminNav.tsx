@@ -12,7 +12,10 @@ const NAV_LINKS = [
   { href: '/admin/reservations',        label: '📋 Reservations'    },
   { href: '/admin/discounts',           label: '🏷️ Discount Codes'  },
   { href: '/admin/analytics',           label: '📊 Analytics'       },
+  { href: '/admin/analytics/sales-performance', label: '💹 Sales Performance' },
+  { href: '/admin/analytics/reports',  label: '📑 Reports'         },
   { href: '/admin/analytics/traffic',   label: '🌐 Traffic'         },
+  { href: '/admin/audience',         label: '👥 Audience'        },
   { href: '/admin/requests',         label: '📝 Requests'        },
   { href: '/admin/deals', label: '🤝 Deals' },
 ]

@@ -40,6 +40,11 @@ async function handle(req: Request) {
     if (newErr) throw newErr
     if (soldErr) throw soldErr
 
+    // Nothing new and nothing sold: skip, rather than emailing subscribers an empty update.
+    if ((newProducts?.length ?? 0) === 0 && (soldProducts?.length ?? 0) === 0) {
+      return NextResponse.json({ success: true, skipped: 'no new or sold products this week' })
+    }
+
     await sendWeeklyNewsletter(newProducts || [], soldProducts || [])
 
     return NextResponse.json({

@@ -19,11 +19,13 @@ const PUBLIC_API: PublicRule[] = [
   { pattern: /^\/api\/products\/[^/]+\/reserve$/, methods: ['POST'] },
   { pattern: /^\/api\/submit$/, methods: ['POST'] },
   { pattern: /^\/api\/contact$/, methods: ['POST'] },
+  { pattern: /^\/api\/track$/, methods: ['POST'] }, // write-only marketing events, validated in the route
   { pattern: /^\/api\/discount\/validate$/, methods: ['POST'] },
   { pattern: /^\/api\/newsletter\/(subscribe|unsubscribe)$/, methods: ['POST'] },
   { pattern: /^\/api\/newsletter\/send-weekly$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/check-vinted-status$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/reservations\/release-expired$/ }, // checks CRON_SECRET itself
+  { pattern: /^\/api\/cron\/meta-spend$/ }, // checks CRON_SECRET or the admin cookie itself
   { pattern: /^\/api\/admin-(login|logout)$/ },
   { pattern: /^\/api\/account\/profile$/ }, // checks the Supabase session itself
 ]

@@ -5,6 +5,8 @@ import { revalidatePath } from 'next/cache'
 import { ReservationService } from '@/services/reservationService'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { escapeTelegramHtml as esc, sendTelegramMessage } from '@/lib/telegram'
+import { recordServerEvent } from '@/lib/tracking/server'
 
 function normalizeDiscountCode(value: unknown): string | null {
   if (typeof value !== 'string') return null
@@ -81,6 +83,31 @@ export async function POST(
       basePriceEgp: Number(product.price_egp) || 0,
     })
 
+    await recordServerEvent({
+      event: 'reservation_created',
+      request: req,
+      path: `/products/${rawId}`,
+      productId,
+      refType: 'reservation',
+      refId: (result.reservation as { id?: number } | null)?.id,
+    })
+
+    await sendTelegramMessage(
+      [
+        '🔒 <b>New reservation</b>',
+        '',
+        `<b>Product:</b> ${esc(String(product.title ?? productId))} (#${productId})`,
+        `<b>Price:</b> ${result.finalPriceEgp.toLocaleString('en-US')} EGP`,
+        `<b>Name:</b> ${esc(name)}`,
+        `<b>Phone:</b> ${esc(phone)}`,
+        note ? `<b>Note:</b> ${esc(note)}` : null,
+        '',
+        'Confirm or cancel it in Admin → Reservations.',
+      ]
+        .filter((line): line is string => line !== null)
+        .join('\n')
+    )
+
     revalidatePath('/products')
     revalidatePath(`/products/${rawId}`)
     revalidatePath('/admin/reservations')
@@ -96,8 +123,8 @@ export async function POST(
       },
       { status: 200 }
     )
-  } catch (error: any) {
-    const message = error?.message || 'Unexpected server error'
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unexpected server error'
 
     if (message === 'PRODUCT_NOT_AVAILABLE') {
       return NextResponse.json(

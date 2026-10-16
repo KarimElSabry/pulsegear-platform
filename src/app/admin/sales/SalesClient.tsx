@@ -15,6 +15,7 @@ type Sale = {
   source_url: string | null
   original_eur: number
   shipping_eur: number
+  egypt_shipping_egp?: number
   exchange_rate: number
   cost_egp: number
   selling_price_egp: number
@@ -309,12 +310,24 @@ function SaleFormFields({
       </div>
 
       <div>
-        <label className="text-sm font-medium">Shipping (EUR)</label>
+        <label className="text-sm font-medium">Shipping from Germany (EUR)</label>
         <input
           name="shipping_eur"
           type="number"
           step="0.01"
           defaultValue={sale?.shipping_eur ?? 0}
+          className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Shipping in Egypt (EGP)</label>
+        <input
+          name="egypt_shipping_egp"
+          type="number"
+          step="0.01"
+          min="0"
+          defaultValue={sale?.egypt_shipping_egp ?? 0}
           className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
         />
       </div>

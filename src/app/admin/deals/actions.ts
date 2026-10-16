@@ -30,6 +30,14 @@ function getInt(formData: FormData, key: string): number | null {
   return Number.isNaN(number) ? null : number
 }
 
+/** Shipping and prices can never be negative; a typo like -50 would silently inflate profit. */
+function assertNotNegative(payload: Record<string, unknown>) {
+  for (const key of ['source_price_eur', 'shipping_eur', 'egypt_shipping_egp', 'selling_price_egp', 'commission_egp']) {
+    const v = payload[key]
+    if (typeof v === 'number' && v < 0) throw new Error(`${key.replace(/_/g, ' ')} cannot be negative`)
+  }
+}
+
 function safeNumber(value: unknown, fallback = 0): number {
   const n = Number(value)
   return Number.isFinite(n) ? n : fallback
@@ -140,6 +148,7 @@ export async function createDeal(formData: FormData) {
     notes: getStr(formData, 'notes'),
     source_price_eur: getFloat(formData, 'source_price_eur'),
     shipping_eur: getFloat(formData, 'shipping_eur') ?? 0,
+    egypt_shipping_egp: getFloat(formData, 'egypt_shipping_egp') ?? 0,
     exchange_rate: getFloat(formData, 'exchange_rate'),
     selling_price_egp: getFloat(formData, 'selling_price_egp'),
     deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
@@ -147,6 +156,7 @@ export async function createDeal(formData: FormData) {
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
   }
 
+  assertNotNegative(payload)
   const { error } = await supabase.from('deals').insert(payload).select('id').single()
 
   if (error) {
@@ -188,6 +198,7 @@ export async function updateDeal(id: string, formData: FormData) {
     notes: getStr(formData, 'notes'),
     source_price_eur: getFloat(formData, 'source_price_eur'),
     shipping_eur: getFloat(formData, 'shipping_eur') ?? 0,
+    egypt_shipping_egp: getFloat(formData, 'egypt_shipping_egp') ?? 0,
     exchange_rate: getFloat(formData, 'exchange_rate'),
     selling_price_egp: getFloat(formData, 'selling_price_egp'),
     deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
@@ -195,6 +206,7 @@ export async function updateDeal(id: string, formData: FormData) {
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
   }
 
+  assertNotNegative(payload)
   const { error } = await supabase.from('deals').update(payload).eq('id', id)
 
   if (error) {
@@ -335,11 +347,13 @@ async function syncDealToSales(dealId: string) {
 
   const sourceEur = safeNumber(deal.source_price_eur, 0)
   const shippingEur = safeNumber(deal.shipping_eur, 0)
+  const egyptShippingEgp = safeNumber(deal.egypt_shipping_egp, 0)
   const exchangeRate = safeNumber(deal.exchange_rate, 0)
   const sellingPrice = safeNumber(deal.selling_price_egp, 0)
   const commission = safeNumber(deal.commission_egp, 0)
 
-  const costEgp = Number(((sourceEur + shippingEur) * exchangeRate).toFixed(2))
+  // cost = (item + shipping from Germany) in EUR converted, plus shipping inside Egypt in EGP
+  const costEgp = Number(((sourceEur + shippingEur) * exchangeRate + egyptShippingEgp).toFixed(2))
   const profitEgp = Number((sellingPrice - costEgp - commission).toFixed(2))
   const profitMarginPct =
     sellingPrice > 0 ? Number(((profitEgp / sellingPrice) * 100).toFixed(2)) : 0
@@ -360,6 +374,7 @@ async function syncDealToSales(dealId: string) {
     product_name: productName,
     original_eur: sourceEur,
     shipping_eur: shippingEur,
+    egypt_shipping_egp: egyptShippingEgp,
     exchange_rate: exchangeRate,
     cost_egp: costEgp,
     selling_price_egp: sellingPrice,
