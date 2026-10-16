@@ -22,21 +22,20 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 /** A form bound to a server action that returns {ok, message}; the message is shown under the button. */
 export default function ActionForm({
-  action, title, description, children, submitLabel = 'Save', encType,
+  action, title, description, children, submitLabel = 'Save',
 }: {
   action: Action
   title: string
   description?: string
   children: React.ReactNode
   submitLabel?: string
-  encType?: 'multipart/form-data'
 }) {
   const [state, formAction, pending] = useActionState(action, null)
   return (
     <section className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
       <h2 className="text-white font-bold text-lg">{title}</h2>
       {description && <p className="text-gray-400 text-sm mt-1 mb-4">{description}</p>}
-      <form action={formAction} encType={encType} className="space-y-3 mt-3">
+      <form action={formAction} className="space-y-3 mt-3">
         {children}
         <div className="flex items-center gap-3 pt-1">
           <button
