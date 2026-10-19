@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import type { TrackEvent } from '@/lib/finance/types'
+import { buildCapiEvent, sendCapiEvents } from '@/lib/meta/capi'
 
 const CLIENT_EVENTS: TrackEvent[] = ['page_view', 'product_view', 'contact_click', 'whatsapp_click', 'checkout_started']
 
@@ -62,6 +63,16 @@ export async function POST(req: Request) {
       first_touch_source: text(first.source, 120) ?? (body.first ? 'direct' : null),
       last_non_direct_source: text(last.source, 120),
     })
+    const capi = buildCapiEvent({
+      event,
+      eventId: text(body.eventId, 64) ?? crypto.randomUUID(),
+      url: req.headers.get('referer') ?? undefined,
+      cookieHeader: req.headers.get('cookie'),
+      ip,
+      userAgent: ua,
+      productId,
+    })
+    if (capi) await sendCapiEvents([capi])
     return new NextResponse(null, { status: 204 })
   } catch {
     // never tell the browser anything useful, and never fail the page

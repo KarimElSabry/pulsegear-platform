@@ -9,6 +9,7 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import MarketingTracker from '@/components/MarketingTracker'
+import MetaPixel from '@/components/MetaPixel'
 import { SITE_URL, SITE_NAME } from '@/lib/site'
 
 import './globals.css'
@@ -66,6 +67,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col bg-surface-0 font-sans text-white">
         <GoogleAnalytics />
+        <MetaPixel />
         <MarketingTracker />
         <Header />
         <main className="flex-1">{children}</main>

@@ -14,10 +14,15 @@ const NAV_LINKS = [
   { href: '/admin/analytics',           label: '📊 Analytics'       },
   { href: '/admin/analytics/sales-performance', label: '💹 Sales Performance' },
   { href: '/admin/analytics/reports',  label: '📑 Reports'         },
+  { href: '/admin/milestones',          label: '🏆 Milestones'      },
+  { href: '/admin/inventory',           label: '📦 Stock'           },
+  { href: '/admin/health',              label: '🩺 Health'          },
   { href: '/admin/analytics/traffic',   label: '🌐 Traffic'         },
   { href: '/admin/audience',         label: '👥 Audience'        },
   { href: '/admin/requests',         label: '📝 Requests'        },
   { href: '/admin/deals', label: '🤝 Deals' },
+  { href: '/admin/orders', label: '🚚 Orders' },
+  { href: '/admin/follow-ups', label: '📣 Follow-ups' },
 ]
 
 export default function AdminNav() {

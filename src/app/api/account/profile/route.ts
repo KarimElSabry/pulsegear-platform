@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { addContactToBrevo, removeContactFromBrevo } from '@/lib/brevo'
 
 export async function POST(request: Request) {
   try {
@@ -46,10 +47,28 @@ export async function POST(request: Request) {
           : null,
     }
 
+    const { data: previous } = await adminSupabase
+      .from('profiles')
+      .select('newsletter_subscribed')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
     const { error } = await adminSupabase.from('profiles').upsert(payload)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Keep the Brevo list in step with the checkbox. Best effort: a Brevo problem must never fail the profile save.
+    const was = !!previous?.newsletter_subscribed
+    const now = !!payload.newsletter_subscribed
+    if (user.email && was !== now) {
+      try {
+        if (now) await addContactToBrevo(user.email, payload.first_name || undefined, { source: 'account_settings' })
+        else await removeContactFromBrevo(user.email)
+      } catch (err) {
+        console.error('[profile] Brevo sync failed:', err instanceof Error ? err.message : err)
+      }
     }
 
     return NextResponse.json({ success: true })

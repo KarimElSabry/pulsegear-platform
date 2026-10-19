@@ -4,6 +4,7 @@
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { ATTR_COOKIE, VISITOR_COOKIE, parseAttributionCookie, readCookie, type Touch } from './touch'
 import type { TrackEvent } from '@/lib/finance/types'
+import { buildCapiEvent, sendCapiEvents } from '@/lib/meta/capi'
 
 export interface ServerEventInput {
   event: TrackEvent
@@ -15,6 +16,8 @@ export interface ServerEventInput {
   refId?: string | number
   saleId?: string
   detail?: string
+  /** Customer contact details; used only to build hashed Meta match keys, never stored in touchpoints. */
+  contact?: { email?: string | null; phone?: string | null }
 }
 
 export function touchpointRow(input: ServerEventInput) {
@@ -44,6 +47,20 @@ export function touchpointRow(input: ServerEventInput) {
 }
 
 export async function recordServerEvent(input: ServerEventInput): Promise<void> {
+  if (input.request) {
+    const capi = buildCapiEvent({
+      event: input.event,
+      eventId: `${input.event}_${input.refId ?? crypto.randomUUID()}`,
+      url: input.request.headers.get('origin') && input.path ? `${input.request.headers.get('origin')}${input.path}` : undefined,
+      cookieHeader: input.request.headers.get('cookie'),
+      ip: (input.request.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || null,
+      userAgent: input.request.headers.get('user-agent'),
+      email: input.contact?.email,
+      phone: input.contact?.phone,
+      productId: input.productId,
+    })
+    if (capi) await sendCapiEvents([capi])
+  }
   try {
     const { error } = await createAdminSupabaseClient().from('marketing_touchpoints').insert(touchpointRow(input))
     if (error && error.code !== 'PGRST205' && error.code !== '42P01') {

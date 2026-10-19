@@ -1,14 +1,15 @@
 // src/app/api/reservations/release-expired/route.ts
-// Cron (hourly): products whose 24h hold has passed go back to "available"
+// Cron (daily, 03:17 UTC; the free Hobby plan allows at most one run per day): products whose 24h hold has passed go back to "available"
 // and their pending reservation rows are marked "cancelled".
 
+import { withJobLog } from '@/lib/jobs'
 import { NextResponse } from 'next/server'
 import { isCronAuthorized } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: Request) {
+async function run(req: Request) {
   if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -51,3 +52,5 @@ export async function GET(req: Request) {
 
   return NextResponse.json({ released: ids.length, ids })
 }
+
+export const GET = withJobLog('release-expired', run)

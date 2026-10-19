@@ -15,6 +15,11 @@ const supabase = createClient(
 // Shared by add/update: profit and margin are always computed here, never taken from the browser.
 // Margin keeps the historical definition (profit / cost) so old and new rows stay comparable;
 // the financial reports recompute true margins from revenue and do not read this column.
+const cleanText = (v: FormDataEntryValue | null, max: number): string | null => {
+  const t = typeof v === 'string' ? v.trim().slice(0, max) : ''
+  return t || null
+}
+
 function computeFigures(formData: FormData) {
   const originalEur     = parseFloat(formData.get('original_eur')      as string) || 0
   const shippingEur     = parseFloat(formData.get('shipping_eur')      as string) || 0
@@ -63,6 +68,8 @@ export async function addSale(formData: FormData) {
     source_url:        formData.get('source_url') || null,
     notes:             formData.get('notes')       || null,
     discount_code:     discountCode,
+    customer_name:     cleanText(formData.get('customer_name'), 120),
+    customer_phone:    cleanText(formData.get('customer_phone'), 30),
   }).select('id').single()
 
   if (error) throw new Error(error.message)
@@ -117,6 +124,9 @@ export async function updateSale(id: string, formData: FormData) {
       ...(formData.has('source_url') ? { source_url: formData.get('source_url') || null } : {}),
       notes:             formData.get('notes') || null,
       discount_code:     discountCode,
+      // only touch the buyer when the form sends it (the analytics edit form does not)
+      ...(formData.has('customer_name') ? { customer_name: cleanText(formData.get('customer_name'), 120) } : {}),
+      ...(formData.has('customer_phone') ? { customer_phone: cleanText(formData.get('customer_phone'), 30) } : {}),
       // ✅ NOTE — we never overwrite deal_id on update
       // deal_id stays whatever it was set to originally
     })

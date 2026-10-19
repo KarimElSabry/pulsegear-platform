@@ -150,6 +150,10 @@ function DealFormFields({
       ? Math.round(parseFloat(shippingEur) * parseFloat(exchangeRate))
       : null
 
+  // euro equivalents use the exchange rate in the form (EGP per 1 EUR)
+  const rateNum = parseFloat(exchangeRate)
+  const inEur = (egpAmount: number) => (rateNum > 0 ? '€' + (egpAmount / rateNum).toLocaleString('en-US', { maximumFractionDigits: 2 }) : null)
+
   const expectedProfit =
     calculatedEgp !== null && parseFloat(sellingPrice) > 0
       ? Math.round(parseFloat(sellingPrice) - calculatedEgp - (parseFloat(commissionEgp) || 0))
@@ -370,14 +374,21 @@ function DealFormFields({
             {egyptShippingNum > 0 && (
               <span>
                 Shipping in Egypt: <span className="text-cyan-400">{egyptShippingNum.toLocaleString()} EGP</span>
+                {inEur(egyptShippingNum) && <> ≈ <span className="text-cyan-400">{inEur(egyptShippingNum)}</span></>}
+              </span>
+            )}
+            {(parseFloat(commissionEgp) || 0) > 0 && (
+              <span>
+                Commission: <span className="text-white">{(parseFloat(commissionEgp) || 0).toLocaleString()} EGP</span>
+                {inEur(parseFloat(commissionEgp) || 0) && <> ≈ {inEur(parseFloat(commissionEgp) || 0)}</>}
               </span>
             )}
             <span className="font-bold text-indigo-300">
-              Total: {calculatedEgp.toLocaleString()} EGP
+              Total cost: {calculatedEgp.toLocaleString()} EGP{inEur(calculatedEgp) ? ` · ${inEur(calculatedEgp)}` : ''}
             </span>
             {expectedProfit !== null && (
               <span className={`font-bold ${expectedProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                Expected profit: {expectedProfit.toLocaleString()} EGP
+                Expected profit: {expectedProfit.toLocaleString()} EGP{inEur(expectedProfit) ? ` · ${inEur(expectedProfit)}` : ''}
               </span>
             )}
           </div>
@@ -395,6 +406,7 @@ function DealFormFields({
           className={inputClass}
           placeholder="0.00"
         />
+        {parseFloat(sellingPrice) > 0 && inEur(parseFloat(sellingPrice)) && <p className="text-xs text-cyan-400 mt-1">≈ {inEur(parseFloat(sellingPrice))}</p>}
         <p className="text-xs text-yellow-500 mt-1">⚠️ Enter the FULL selling price — not the deposit amount</p>
       </Field>
 
@@ -518,7 +530,7 @@ function DealCard({
         {deal.selling_price_egp != null && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Selling </span>
-            <span className="font-semibold text-white">{deal.selling_price_egp.toLocaleString('en-EG')} EGP</span>
+            <span className="font-semibold text-white">{deal.selling_price_egp.toLocaleString('en-EG')} EGP{deal.exchange_rate ? ` · €${(deal.selling_price_egp / deal.exchange_rate).toLocaleString('en-US', { maximumFractionDigits: 0 })}` : ''}</span>
           </div>
         )}
         {deal.deposit_amount_egp != null && (
@@ -542,13 +554,13 @@ function DealCard({
         {deal.shipping_eur != null && deal.shipping_eur > 0 && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Shipping (Germany) </span>
-            <span className="font-semibold text-cyan-400">€{deal.shipping_eur}</span>
+            <span className="font-semibold text-cyan-400">€{deal.shipping_eur}{deal.exchange_rate ? ` · ${Math.round(deal.shipping_eur * deal.exchange_rate).toLocaleString('en-EG')} EGP` : ''}</span>
           </div>
         )}
         {deal.egypt_shipping_egp != null && deal.egypt_shipping_egp > 0 && (
           <div className="bg-gray-800 rounded-lg px-2 py-1.5">
             <span className="text-gray-500">Shipping (Egypt) </span>
-            <span className="font-semibold text-cyan-400">{deal.egypt_shipping_egp.toLocaleString('en-EG')} EGP</span>
+            <span className="font-semibold text-cyan-400">{deal.egypt_shipping_egp.toLocaleString('en-EG')} EGP{deal.exchange_rate ? ` · €${(deal.egypt_shipping_egp / deal.exchange_rate).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : ''}</span>
           </div>
         )}
         {deal.source_platform && (

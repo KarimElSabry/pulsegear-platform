@@ -1,3 +1,4 @@
+import { withJobLog } from '@/lib/jobs'
 import { NextResponse } from 'next/server'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { ProductService } from '@/services/productService'
@@ -44,7 +45,7 @@ async function delay(ms: number) {
 
 // ─── Main Handler ─────────────────────────────────────────────────────────────
 
-export async function GET(req: Request) {
+async function run(req: Request) {
   // ✅ 1. Auth Check
   const authHeader = req.headers.get('authorization')
   const cronSecret = process.env.CRON_SECRET
@@ -196,3 +197,5 @@ export async function GET(req: Request) {
     results,
   })
 }
+
+export const GET = withJobLog('vinted-check', run)

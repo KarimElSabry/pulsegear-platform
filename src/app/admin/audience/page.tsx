@@ -2,7 +2,8 @@
 
 import StatCard from '@/app/admin/analytics/StatCard'
 import { getAccountStats, getNewsletterStats } from '@/lib/audience'
-import { filterCustomers, loadCustomers } from '@/lib/customers'
+import { filterCustomers, loadCustomers, loadRepeatBuyers } from '@/lib/customers'
+import { getEgpPerEur, toEur } from '@/lib/finance/fx'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,8 @@ const MAX_ROWS = 100
 
 export default async function AudiencePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const q = ((await searchParams).q ?? '').slice(0, 80)
-  const [accounts, newsletter, customers] = await Promise.allSettled([getAccountStats(), getNewsletterStats(), loadCustomers()])
+  const [accounts, newsletter, customers, buyers] = await Promise.allSettled([getAccountStats(), getNewsletterStats(), loadCustomers(), loadRepeatBuyers()])
+  const fx = await getEgpPerEur()
 
   return (
     <div className="max-w-5xl mx-auto p-8 space-y-10">
@@ -63,6 +65,7 @@ export default async function AudiencePage({ searchParams }: { searchParams: Pro
       <section>
         <h2 className="text-white text-xl font-bold mb-4">📬 Newsletter</h2>
         {newsletter.status === 'fulfilled' ? (
+          <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <StatCard
               title="Subscribers"
@@ -79,8 +82,38 @@ export default async function AudiencePage({ searchParams }: { searchParams: Pro
               color="green"
             />
           </div>
+          <p className="text-gray-400 text-sm mt-3">
+            {newsletter.value.lastCampaigns.length > 0
+              ? `Last newsletter sent: ${newsletter.value.lastCampaigns[0].sentAt ? new Date(newsletter.value.lastCampaigns[0].sentAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'unknown date'} (${newsletter.value.lastCampaigns[0].name}). The weekly send runs Mondays and is skipped when nothing is new or sold.`
+              : 'No newsletter has been sent yet.'}
+          </p>
+          </>
         ) : (
           <p className="text-red-400 text-sm">Could not load newsletter stats: {errorMessage(newsletter.reason)}</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-white text-xl font-bold mb-4">🔁 Repeat buyers</h2>
+        {buyers.status === 'fulfilled' ? (
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+            <p className="text-gray-400 text-sm mb-3">
+              {buyers.value.repeat.length} repeat buyer(s) among {buyers.value.identified} identified buyers.
+              {buyers.value.unidentified > 0 && ` ${buyers.value.unidentified} completed sale(s) have no buyer phone, so they cannot be matched. Add the phone when you record a sale.`}
+            </p>
+            {buyers.value.repeat.length > 0 && (
+              <ul className="divide-y divide-gray-800 text-sm">
+                {buyers.value.repeat.slice(0, 20).map((b) => (
+                  <li key={b.key} className="flex justify-between gap-3 py-2 text-gray-300">
+                    <span className="text-white">{b.name || b.phone} <span className="text-zinc-500">{b.name ? b.phone : ''}</span></span>
+                    <span>{b.orders} orders · {b.totalEgp.toLocaleString('en-US')} EGP{toEur(b.totalEgp, fx.rate) !== null ? ` · ≈ €${toEur(b.totalEgp, fx.rate)!.toLocaleString('en-US', { maximumFractionDigits: 0 })}` : ''}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
+          <p className="text-zinc-500 text-sm">Repeat buyers appear after you run the sales-customer migration. ({errorMessage(buyers.reason)})</p>
         )}
       </section>
 

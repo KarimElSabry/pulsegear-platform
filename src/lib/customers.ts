@@ -96,3 +96,40 @@ export async function loadCustomers(): Promise<Customer[]> {
   for (const r of [profiles, requests, reservations]) if (r.error) throw new Error(r.error.message)
   return buildCustomers(users, (profiles.data ?? []) as ProfileLite[], (requests.data ?? []) as RequestLite[], (reservations.data ?? []) as ReservationLite[])
 }
+
+// ─── Repeat buyers ─────────────────────────────────────────────────────────────────────────────────────
+
+export interface SaleBuyerLite { customer_name?: string | null; customer_phone?: string | null; selling_price_egp?: number | string | null; sale_date?: string | null }
+export interface RepeatBuyer { key: string; name: string; phone: string; orders: number; totalEgp: number; lastSale: string | null }
+
+/** Same person = same last 10 digits of the phone (01012345678 and +201012345678 match). */
+export function phoneKey(phone?: string | null): string | null {
+  const d = (phone ?? '').replace(/\D/g, '')
+  return d.length >= 8 ? d.slice(-10) : null
+}
+
+/** Buyers with two or more orders, best spenders first. Sales without a phone cannot be matched and are ignored. */
+export function repeatBuyers(sales: SaleBuyerLite[]): { repeat: RepeatBuyer[]; identified: number; unidentified: number } {
+  const by = new Map<string, RepeatBuyer>()
+  let unidentified = 0
+  for (const s of sales) {
+    const key = phoneKey(s.customer_phone)
+    if (!key) { unidentified++; continue }
+    const cur = by.get(key) ?? { key, name: '', phone: clean(s.customer_phone), orders: 0, totalEgp: 0, lastSale: null }
+    cur.orders += 1
+    cur.totalEgp = Math.round((cur.totalEgp + (Number(s.selling_price_egp) || 0)) * 100) / 100
+    if (!cur.name) cur.name = clean(s.customer_name)
+    if (s.sale_date && (!cur.lastSale || s.sale_date > cur.lastSale)) cur.lastSale = s.sale_date
+    by.set(key, cur)
+  }
+  const all = [...by.values()]
+  return { repeat: all.filter((b) => b.orders >= 2).sort((a, b) => b.totalEgp - a.totalEgp), identified: all.length, unidentified }
+}
+
+export async function loadRepeatBuyers() {
+  const { createAdminSupabaseClient } = await import('@/lib/supabase')
+  const { data, error } = await createAdminSupabaseClient()
+    .from('sales').select('customer_name, customer_phone, selling_price_egp, sale_date').eq('status', 'completed')
+  if (error) throw new Error(error.message)
+  return repeatBuyers((data ?? []) as SaleBuyerLite[])
+}

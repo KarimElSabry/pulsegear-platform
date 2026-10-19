@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
     if (error) throw error
 
-    await recordServerEvent({ event: 'product_request_submitted', request: req, path: '/request-product', refType: 'product_request', refId: created?.id })
+    await recordServerEvent({ event: 'product_request_submitted', request: req, path: '/request-product', refType: 'product_request', refId: created?.id, contact: { email, phone } })
 
     // Awaited so the serverless function doesn't exit before Telegram is called; failures are swallowed.
     await sendTelegramMessage(

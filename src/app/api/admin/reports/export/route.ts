@@ -6,6 +6,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { loadDataset } from '@/lib/finance/load'
 import { parseParams } from '@/lib/finance/params'
+import { getEgpPerEur } from '@/lib/finance/fx'
 import { buildReport, REPORT_IDS, type ReportId } from '@/lib/finance/reports'
 import { toCsv, toHtml, toXlsx } from '@/lib/finance/export'
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   try {
     const { filters, compare } = parseParams(sp)
     const ds = await loadDataset(createAdminSupabaseClient(), filters)
-    const report = buildReport(id, ds, filters, { comparePrevious: compare })
+    const report = buildReport(id, ds, filters, { comparePrevious: compare, egpPerEur: (await getEgpPerEur()).rate })
     const base = `pulsegear-${id}-${filters.from}_to_${filters.to}`
     console.info(`[report-export] ${id}.${format} ${filters.from}..${filters.to}`)
 

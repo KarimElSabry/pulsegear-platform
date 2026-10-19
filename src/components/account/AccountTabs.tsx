@@ -9,6 +9,7 @@ const tabs = [
   { label: 'Profile', href: '/account/settings', icon: '👤' },
   { label: 'Wishlist', href: '/account/wishlist', icon: '❤️' },
   { label: 'Reservations', href: '/account/reservations', icon: '📦' },
+  { label: 'My Orders', href: '/account/orders', icon: '🚚' },
   { label: 'Product Requests', href: '/account/requests', icon: '📝' },
 ]
 

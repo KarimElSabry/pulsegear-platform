@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import ProductCard from '@/components/product/ProductCard'
 import type { Product } from '@/types/product'
+import { sortUnsoldFirst } from '@/lib/product-sort'
 
 export const revalidate = 60
 
@@ -17,7 +18,7 @@ export default async function DealsPage() {
     // ✅ Removed status filter — shows all deals including sold ones
     .order('created_at', { ascending: false })
 
-  const deals: Product[] = data ?? []
+  const deals: Product[] = sortUnsoldFirst((data ?? []) as Product[])
 
   // ✅ Count only available deals for the label
   const availableCount = deals.filter((p) => p.status === 'available').length

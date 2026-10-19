@@ -1,0 +1,23 @@
+# Runs on every push and pull request: type check, tests, production build.
+name: CI
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx tsc --noEmit -p .
+      - run: npm run test
+      - name: Lint (informational: older files still have warnings)
+        run: npx eslint src || true
+      - name: Build
+        run: npm run build
+        env:
+          # placeholders so the build can start; real keys live in Vercel
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          SUPABASE_SERVICE_ROLE_KEY: placeholder
+          ADMIN_SECRET: placeholder

@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 import { sendWeeklyNewsletter } from '@/lib/brevo'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { isCronAuthorized } from '@/lib/admin-auth'
+import { withJobLog } from '@/lib/jobs'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -63,10 +64,6 @@ async function handle(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
-  return handle(req)
-}
+export const GET = withJobLog('newsletter-weekly', (req: Request) => handle(req))
 
-export async function POST(req: Request) {
-  return handle(req)
-}
+export const POST = withJobLog('newsletter-weekly', (req: Request) => handle(req))

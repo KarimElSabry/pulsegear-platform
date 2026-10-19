@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "tsc --noEmit -p . && vitest run",
+    "check:schema": "node scripts/check-columns.mjs",
+    "schema:snapshot": "node scripts/schema-snapshot.mjs"
   },
   "dependencies": {
     "@google-analytics/data": "^7.0.0",

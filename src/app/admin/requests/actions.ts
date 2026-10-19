@@ -2,6 +2,7 @@
 
 'use server'
 
+import { assertAdmin } from '@/lib/admin-auth'
 import { revalidatePath } from 'next/cache'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { REQUEST_STATUSES } from './statuses'
@@ -9,6 +10,7 @@ import { REQUEST_STATUSES } from './statuses'
 const allowedStatuses: string[] = REQUEST_STATUSES.map((s) => s.value)
 
 export async function updateProductRequestStatus(formData: FormData) {
+  await assertAdmin()
   const supabase = createAdminSupabaseClient()
 
   const requestId = Number(formData.get('request_id'))

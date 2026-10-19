@@ -90,6 +90,7 @@ export async function POST(
       productId,
       refType: 'reservation',
       refId: (result.reservation as { id?: number } | null)?.id,
+      contact: { phone },
     })
 
     await sendTelegramMessage(

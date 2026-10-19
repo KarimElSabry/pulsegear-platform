@@ -2,6 +2,7 @@
 
 'use server'
 
+import { assertAdmin } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { DealStatus } from '@/types/deals'
@@ -62,6 +63,7 @@ function revalidateDealPathsSafely() {
 }
 
 export async function getDeals() {
+  await assertAdmin()
   const { data: deals, error } = await supabase
     .from('deals')
     .select('*')
@@ -106,6 +108,7 @@ export async function getDeals() {
 }
 
 export async function getOpenProductRequests() {
+  await assertAdmin()
   const { data, error } = await supabase
     .from('product_requests')
     .select(`
@@ -133,6 +136,7 @@ export async function getOpenProductRequests() {
 }
 
 export async function createDeal(formData: FormData) {
+  await assertAdmin()
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
@@ -157,7 +161,7 @@ export async function createDeal(formData: FormData) {
   }
 
   assertNotNegative(payload)
-  const { error } = await supabase.from('deals').insert(payload).select('id').single()
+  const { data: created, error } = await supabase.from('deals').insert(payload).select('id').single()
 
   if (error) {
     console.error('createDeal error:', error)
@@ -165,6 +169,14 @@ export async function createDeal(formData: FormData) {
   }
 
   if (productRequestId) {
+    // best effort: a request made while logged in gives the customer their order under My Orders right away
+    // (does nothing before migration 20261020_01 is applied)
+    const { data: req } = await supabase.from('product_requests').select('user_id').eq('id', productRequestId).maybeSingle()
+    if (req?.user_id && created?.id) {
+      const { error: linkError } = await supabase.from('deals').update({ user_id: req.user_id }).eq('id', created.id)
+      if (linkError) console.warn('Could not link the deal to the account:', linkError.message)
+    }
+
     const { error: requestError } = await supabase
       .from('product_requests')
       .update({
@@ -182,6 +194,7 @@ export async function createDeal(formData: FormData) {
 }
 
 export async function updateDeal(id: string, formData: FormData) {
+  await assertAdmin()
   const productRequestId = getInt(formData, 'product_request_id')
 
   const payload = {
@@ -234,6 +247,7 @@ export async function updateDealStatus(
   status: DealStatus,
   cancellationReason?: string
 ) {
+  await assertAdmin()
   const extra: Record<string, string | null> = {}
 
   if (status === 'deposit_paid') extra.deposit_paid_at = new Date().toISOString()
@@ -387,6 +401,8 @@ async function syncDealToSales(dealId: string) {
     source_url: deal.source_link ?? null,
     notes: deal.notes ?? null,
     discount_code: null,
+    customer_name: deal.customer_name ?? null,
+    customer_phone: deal.phone ?? null,
   }
 
   if (existingSale) {
@@ -446,6 +462,7 @@ async function syncExistingSaleFromDeal(dealId: string) {
 }
 
 export async function deleteDeal(id: string) {
+  await assertAdmin()
   const { data: deal } = await supabase
     .from('deals')
     .select('id, product_request_id')

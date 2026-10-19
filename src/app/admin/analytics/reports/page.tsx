@@ -5,6 +5,7 @@ import { assertAdmin } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { loadDataset } from '@/lib/finance/load'
 import { filtersToQuery, parseParams, PRESETS, type SearchParams } from '@/lib/finance/params'
+import { getEgpPerEur } from '@/lib/finance/fx'
 import { buildReport, REPORT_IDS, REPORT_TITLES, type Cell, type Column, type ReportId } from '@/lib/finance/reports'
 import { COST_CATEGORIES } from '@/lib/finance/types'
 
@@ -31,7 +32,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const id: ReportId = REPORT_IDS.includes(requested as ReportId) ? (requested as ReportId) : 'executive'
 
   const ds = await loadDataset(createAdminSupabaseClient(), filters)
-  const report = buildReport(id, ds, filters, { comparePrevious: compare })
+  const report = buildReport(id, ds, filters, { comparePrevious: compare, egpPerEur: (await getEgpPerEur()).rate })
   const q = (format: string) => `/api/admin/reports/export?${filtersToQuery(filters, { report: id, format, compare: compare ? '1' : '0' })}`
   const channels = [...new Set(ds.sales.map((s) => s.channel))].sort()
   const shown = report.rows.slice(0, PREVIEW_ROWS)

@@ -4,6 +4,7 @@
 
 import type { MouseEvent } from 'react'
 import { INSTAGRAM_URL, whatsappOrderUrl } from '@/lib/contact'
+import { trackEvent } from '@/lib/tracking/client'
 
 export default function OrderButtons({
   productId,
@@ -22,6 +23,7 @@ export default function OrderButtons({
   // The page link is only known in the browser, so it is added to the message at click time.
   const openWhatsApp = (e: MouseEvent<HTMLAnchorElement>) => {
     e.currentTarget.href = whatsappOrderUrl(message(window.location.href))
+    trackEvent('whatsapp_click', { productId })
   }
 
   return (
@@ -37,6 +39,7 @@ export default function OrderButtons({
       </a>
       <a
         href={INSTAGRAM_URL}
+        onClick={() => trackEvent('contact_click', { productId, detail: 'instagram' })}
         target="_blank"
         rel="noopener noreferrer"
         className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 py-3 font-bold text-white transition hover:opacity-90"

@@ -2,6 +2,7 @@
 
 'use server'
 
+import { assertAdmin } from '@/lib/admin-auth'
 import { revalidatePath } from 'next/cache'
 import { ProductService } from '@/services/productService'
 import { createClient } from '@supabase/supabase-js'
@@ -27,11 +28,13 @@ interface SyncResult {
 }
 
 export async function deleteProduct(id: number): Promise<void> {
+  await assertAdmin()
   await ProductService.deleteProduct(id)
   revalidatePath('/admin/products')
 }
 
 export async function updateProductStatus(id: number, status: ProductStatus): Promise<void> {
+  await assertAdmin()
   await ProductService.updateStatus(id, status)
   revalidatePath('/admin/products')
   revalidatePath('/admin/reservations')
@@ -42,6 +45,7 @@ export async function updateProductStatus(id: number, status: ProductStatus): Pr
 }
 
 export async function triggerVintedSync(): Promise<SyncResult> {
+  await assertAdmin()
   const appUrl = process.env.NEXT_PUBLIC_APP_URL
   if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not defined')
 
@@ -63,6 +67,7 @@ export async function triggerVintedSync(): Promise<SyncResult> {
 // Next free Product ID: highest small numeric ID in use + 1. Real Vinted IDs (10 digits) are ignored
 // so manually typed or old Vinted IDs don't push the counter into the billions.
 export async function getNextProductId(): Promise<string> {
+  await assertAdmin()
   const { data, error } = await supabase.from('products').select('vinted_id').not('vinted_id', 'is', null)
   if (error) throw new Error(error.message)
 
@@ -76,6 +81,7 @@ export async function getNextProductId(): Promise<string> {
 }
 
 export async function addProduct(formData: FormData): Promise<void> {
+  await assertAdmin()
   const imagesRaw = formData.get('images') as string
   const imageUrls = imagesRaw
     ? imagesRaw.split('\n').map((url) => url.trim()).filter(Boolean)
@@ -136,6 +142,7 @@ export async function addProduct(formData: FormData): Promise<void> {
 }
 
 export async function addSale(formData: FormData): Promise<void> {
+  await assertAdmin()
   const originalEur = parseFloat(formData.get('original_eur') as string)
   const shippingEur = parseFloat(formData.get('shipping_eur') as string) || 0
   const exchangeRate = parseFloat(formData.get('exchange_rate') as string)

@@ -48,7 +48,7 @@ function withTotals(columns: Column[], rows: Row[], label: string, firstKey: str
   return totals
 }
 
-function executive(a: Analysis): Report {
+function executive(a: Analysis, egpPerEur?: number | null): Report {
   const t = a.totals
   const p = a.previous?.totals
   const def: [string, keyof typeof t | null, ColumnType, string][] = [
@@ -79,17 +79,22 @@ function executive(a: Analysis): Report {
     ['Collected Cash', 'collectedCash', 'money', 'Money actually received (separate from revenue)'],
     ['Outstanding Receivables', 'outstandingReceivables', 'money', 'Billed but not yet collected'],
   ]
-  const rows: Row[] = def.map(([metric, key, , definition]) => {
+  const eur = (v: number | null, type: ColumnType): number | null =>
+    egpPerEur && type === 'money' && typeof v === 'number' ? round2(v / egpPerEur) : null
+  const rows: Row[] = def.map(([metric, key, type, definition]) => {
     const cur = key ? (t[key] as number | null) : null
     const prev = key && p ? (p[key] as number | null) : null
     const change = typeof cur === 'number' && typeof prev === 'number' && prev !== 0 ? (cur - prev) / Math.abs(prev) : null
-    return { metric, current: cur, previous: prev ?? null, change, definition }
+    const row: Row = { metric, current: cur, previous: prev ?? null, change, definition }
+    if (egpPerEur) { row.current_eur = eur(cur, type); row.previous_eur = eur(prev ?? null, type) }
+    return row
   })
+  const columns = [col('metric', 'Metric'), col('current', 'Current Period (EGP)', 'money'), col('previous', 'Previous Period (EGP)', 'money')]
+  if (egpPerEur) columns.push(col('current_eur', 'Current Period (EUR)', 'money'), col('previous_eur', 'Previous Period (EUR)', 'money'))
+  columns.push(col('change', 'Change', 'percent'), col('definition', 'Definition'))
   return {
-    id: 'executive', title: REPORT_TITLES.executive, filters: a.filters, totals: null,
-    columns: [col('metric', 'Metric'), col('current', 'Current Period', 'money'), col('previous', 'Previous Period', 'money'), col('change', 'Change', 'percent'), col('definition', 'Definition')],
-    rows,
-    note: 'Money in EGP. ROAS is a ratio. Percent rows hold fractions (0.25 = 25%). Blank = not available.',
+    id: 'executive', title: REPORT_TITLES.executive, filters: a.filters, totals: null, columns, rows,
+    note: `Money in EGP${egpPerEur ? ` and EUR (1 EUR = ${egpPerEur.toFixed(2)} EGP)` : ''}. ROAS is a ratio. Percent rows hold fractions (0.25 = 25%). Blank = not available.`,
   }
 }
 
@@ -232,14 +237,37 @@ function qualityReport(a: Analysis): Report {
   return { id: 'quality', title: REPORT_TITLES.quality, filters: a.filters, columns, rows, totals: null, note: 'Every reconciliation check must read "ok". Alerts list up to 10 record ids each.' }
 }
 
-export function buildReport(id: ReportId, ds: Dataset, filters: Filters, opts: { comparePrevious?: boolean; analysis?: Analysis } = {}): Report {
+/** Adds a "(EUR)" column after every money column, converting each row and the totals at one rate. */
+export function withEurColumns(report: Report, egpPerEur: number): Report {
+  const columns: Column[] = []
+  for (const c of report.columns) {
+    columns.push(c)
+    if (c.type === 'money') columns.push({ key: `${c.key}_eur`, label: `${c.label} (EUR)`, type: 'money' })
+  }
+  const convert = (r: Row): Row => {
+    const out: Row = { ...r }
+    for (const c of report.columns) {
+      if (c.type === 'money') out[`${c.key}_eur`] = typeof r[c.key] === 'number' ? round2((r[c.key] as number) / egpPerEur) : null
+    }
+    return out
+  }
+  return {
+    ...report, columns, rows: report.rows.map(convert), totals: report.totals ? convert(report.totals) : null,
+    note: `${report.note} EUR columns use 1 EUR = ${egpPerEur.toFixed(2)} EGP.`,
+  }
+}
+
+export function buildReport(id: ReportId, ds: Dataset, filters: Filters, opts: { comparePrevious?: boolean; analysis?: Analysis; egpPerEur?: number | null } = {}): Report {
   const a = opts.analysis ?? analyze(ds, filters, { comparePrevious: id === 'executive' ? opts.comparePrevious ?? true : false })
+  const rate = opts.egpPerEur && opts.egpPerEur > 0 ? opts.egpPerEur : null
+  let report: Report
   switch (id) {
-    case 'executive': return executive(a)
-    case 'sales': return salesReport(a, ds)
-    case 'campaigns': return campaignsReport(a)
-    case 'products': return productsReport(a)
-    case 'costs': return costsReport(a, ds)
+    case 'executive': return executive(a, rate)
+    case 'sales': report = salesReport(a, ds); break
+    case 'campaigns': report = campaignsReport(a); break
+    case 'products': report = productsReport(a); break
+    case 'costs': report = costsReport(a, ds); break
     case 'quality': return qualityReport(a)
   }
+  return rate ? withEurColumns(report, rate) : report
 }

@@ -24,6 +24,8 @@ type Sale = {
   commission_egp: number
   sale_channel: string
   notes: string | null
+  customer_name?: string | null
+  customer_phone?: string | null
   discount_code: string | null
 }
 
@@ -426,6 +428,16 @@ function SaleFormFields({
           }
           className="mt-1 w-full border rounded-lg px-3 py-2 text-sm"
         />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Buyer name <span className="text-gray-400 font-normal">(optional)</span></label>
+        <input name="customer_name" defaultValue={sale?.customer_name ?? ''} maxLength={120} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium">Buyer phone <span className="text-gray-400 font-normal">(optional, finds repeat buyers)</span></label>
+        <input name="customer_phone" defaultValue={sale?.customer_phone ?? ''} maxLength={30} className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" />
       </div>
 
       <div className="col-span-2">
