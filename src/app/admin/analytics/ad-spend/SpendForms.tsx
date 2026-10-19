@@ -9,8 +9,8 @@ export default function SpendForms() {
   const today = new Date().toISOString().slice(0, 10)
   return (
     <div className="space-y-6">
-      <ActionForm action={syncMetaNow} title="Sync Meta spend now" description="Runs automatically every day. Use this to pull spend immediately, or set a longer window to backfill." submitLabel="Sync now">
-        <Field label="Days to pull (1-90)"><input name="days" type="number" min="1" max="90" defaultValue="7" className={inputClass} /></Field>
+      <ActionForm action={syncMetaNow} title="Sync Meta spend now" description="Runs automatically every day. Use this to pull spend immediately, or set a longer window to backfill (e.g. 200 days goes back to early April)." submitLabel="Sync now">
+        <Field label="Days to pull (1-730)"><input name="days" type="number" min="1" max="730" defaultValue="7" className={inputClass} /></Field>
       </ActionForm>
 
       <ActionForm action={addSpend} title="Add spend manually" description="One row per platform, campaign and day. Entering the same row twice is rejected." submitLabel="Add spend">

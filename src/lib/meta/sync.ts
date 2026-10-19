@@ -16,7 +16,8 @@ export interface SyncSummary {
 }
 
 export const DEFAULT_SYNC_DAYS = 7
-export const MAX_SYNC_DAYS = 90
+/** Meta keeps daily insights for 37 months; 730 days (about 2 years) lets you backfill a whole history in one go. */
+export const MAX_SYNC_DAYS = 730
 
 /**
  * Pulls the last `days` days of campaign spend and upserts it. Spend for recent days still changes

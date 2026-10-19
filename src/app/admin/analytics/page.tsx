@@ -295,6 +295,7 @@ async function getAnalyticsData() {
       commission_egp: Number(s.commission_egp) || 0,
       original_eur: Number(s.original_eur) || 0,
       shipping_eur: Number(s.shipping_eur) || 0,
+      egypt_shipping_egp: Number(s.egypt_shipping_egp) || 0,
       exchange_rate: exchangeRate,
       notes: s.notes ?? undefined,
       discount_code: s.discount_code ?? null,

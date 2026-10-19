@@ -90,6 +90,11 @@ export async function addSale(formData: FormData) {
 // ─── Update Sale ─────────────────────────────────────────────────────────────
 export async function updateSale(id: string, formData: FormData) {
   await assertAdmin()
+  // a form that does not send the Egypt shipping must keep the stored value, never reset it to 0
+  if (!formData.has('egypt_shipping_egp')) {
+    const { data: stored } = await supabase.from('sales').select('egypt_shipping_egp').eq('id', id).maybeSingle()
+    formData.set('egypt_shipping_egp', String(stored?.egypt_shipping_egp ?? 0))
+  }
   const { originalEur, shippingEur, egyptShippingEgp, exchangeRate, sellingPriceEgp, commissionEgp, costEgp, profitEgp, marginPct } = computeFigures(formData)
 
   const rawCode      = formData.get('discount_code') as string | null

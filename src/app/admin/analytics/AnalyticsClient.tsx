@@ -89,6 +89,7 @@ interface AnalyticsData {
     commission_egp: number
     original_eur: number
     shipping_eur: number
+    egypt_shipping_egp?: number
     exchange_rate: number
     notes?: string
     discount_code?: string | null
@@ -107,6 +108,7 @@ interface EditSale {
   commission_egp: number
   original_eur: number
   shipping_eur: number
+  egypt_shipping_egp?: number
   exchange_rate: number
   notes?: string
   discount_code?: string | null
@@ -152,6 +154,7 @@ function ManualSaleForm({
   const [shippingEur, setShippingEur] = useState(
     editSale ? String(editSale.shipping_eur) : String(DEFAULT_SHIPPING_EUR)
   )
+  const [egyptShipping, setEgyptShipping] = useState(editSale?.egypt_shipping_egp ? String(editSale.egypt_shipping_egp) : '0')
   const [sellingEgp, setSellingEgp] = useState(
     editSale ? String(editSale.selling_price_egp) : ''
   )
@@ -167,9 +170,11 @@ function ManualSaleForm({
 
   const effectiveRate = manualRate ? parseFloat(manualRate) : eurRate ?? null
 
+  // item + shipping from Germany (EUR, converted) plus shipping inside Egypt (EGP, as entered)
+  const egyptShippingNum = Math.max(0, parseFloat(egyptShipping || '0') || 0)
   const costEgp =
     effectiveRate && originalEur
-      ? (parseFloat(originalEur) + parseFloat(shippingEur || '0')) * effectiveRate
+      ? (parseFloat(originalEur) + parseFloat(shippingEur || '0')) * effectiveRate + egyptShippingNum
       : null
 
   const commissionAmt =
@@ -243,6 +248,7 @@ function ManualSaleForm({
       formData.set('profit_margin_pct', String(profitMarginPct.toFixed(2)))
     }
     formData.set('commission_egp', String(Math.round(commissionAmt)))
+    formData.set('egypt_shipping_egp', String(egyptShippingNum))
     formData.set('discount_code', discountCode ?? '')
 
     startTransition(async () => {
@@ -254,6 +260,7 @@ function ManualSaleForm({
         formRef.current?.reset()
         setOriginalEur('')
         setShippingEur(String(DEFAULT_SHIPPING_EUR))
+        setEgyptShipping('0')
         setSellingEgp('')
         setCommissionPct('0')
         setDiscountCode('')
@@ -400,6 +407,23 @@ function ManualSaleForm({
 
           <div className="space-y-1">
             <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              Shipping inside Egypt (EGP)
+            </label>
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={egyptShipping}
+              onChange={(e) => setEgyptShipping(e.target.value)}
+              disabled={isPending}
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition disabled:opacity-50"
+              placeholder="0"
+            />
+            <p className="text-[11px] text-gray-500">Courier cost to the customer in Egypt. It is added to the cost and lowers the profit.</p>
+          </div>
+
+          <div className="space-y-1">
+            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest">
               Step 3 — Actual Selling Price (EGP)
             </label>
             <input
@@ -454,6 +478,7 @@ function ManualSaleForm({
         <input type="hidden" name="commission_egp" value={Math.round(commissionAmt)} />
         <input type="hidden" name="original_eur" value={originalEur || '0'} />
         <input type="hidden" name="shipping_eur" value={shippingEur || '0'} />
+        <input type="hidden" name="egypt_shipping_egp" value={egyptShippingNum} />
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
