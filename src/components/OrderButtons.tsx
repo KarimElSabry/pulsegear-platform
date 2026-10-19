@@ -42,7 +42,7 @@ export default function OrderButtons({
         onClick={() => trackEvent('contact_click', { productId, detail: 'instagram' })}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 py-3 font-bold text-white transition hover:opacity-90"
+        className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-purple-600 via-pink-600 to-orange-500 py-3 font-bold text-white transition hover:opacity-90"
       >
         اطلب عبر انستجرام · Order on Instagram
       </a>

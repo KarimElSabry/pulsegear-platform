@@ -1,13 +1,15 @@
-  // src/app/admin/deals/page.tsx
+// src/app/admin/deals/page.tsx
 
-  import { getDeals, getOpenProductRequests } from './actions'
-  import DealsClient from './DealsClient'
+import { getDeals, getOpenProductRequests } from './actions'
+import { getDiscountCodes } from '../sales/actions'
+import DealsClient from './DealsClient'
 
-  export default async function DealsPage() {
-    const [deals, productRequests] = await Promise.all([
-      getDeals(),
-      getOpenProductRequests(),
-    ])
+export default async function DealsPage() {
+  const [deals, productRequests, discountCodes] = await Promise.all([
+    getDeals(),
+    getOpenProductRequests(),
+    getDiscountCodes().catch(() => []),
+  ])
 
-    return <DealsClient deals={deals} productRequests={productRequests} />
-  }
+  return <DealsClient deals={deals} productRequests={productRequests} discountCodes={discountCodes} />
+}

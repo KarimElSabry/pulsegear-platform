@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Deal, DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, DealStatus, SaleChannel } from '@/types/deals'
 import { createDeal, updateDeal, updateDealStatus, deleteDeal } from './actions'
+import { commissionForCode } from '@/lib/deal-codes'
+
+type DiscountCodeOption = { code: string; discount_percent: number }
 
 type DealStatusValue = DealStatus
 type FilterType = DealStatus | 'all' | 'active'
@@ -98,9 +101,9 @@ function useEurToEgp() {
 
 // ── Deal Form Fields ──────────────────────────────────────────────────────────
 function DealFormFields({
-  deal, productRequests,
+  deal, productRequests, discountCodes,
 }: {
-  deal?: Deal; productRequests: ProductRequest[]
+  deal?: Deal; productRequests: ProductRequest[]; discountCodes: DiscountCodeOption[]
 }) {
   const { rate: liveRate, loading: rateLoading, error: rateError, refetch } = useEurToEgp()
 
@@ -112,6 +115,7 @@ function DealFormFields({
   const [depositAmount,     setDepositAmount]     = useState(deal?.deposit_amount_egp?.toString() ?? '')
   const [remainingAmount,   setRemainingAmount]   = useState(deal?.remaining_amount_egp?.toString() ?? '')
   const [commissionEgp,     setCommissionEgp]     = useState(deal?.commission_egp?.toString() ?? '0')
+  const [discountCode,       setDiscountCode]       = useState(deal?.discount_code ?? '')
   const [notes,             setNotes]             = useState(deal?.notes ?? '')
   const [sourcePriceEur,    setSourcePriceEur]    = useState(deal?.source_price_eur?.toString() ?? '')
   const [shippingEur,       setShippingEur]       = useState(deal?.shipping_eur?.toString() ?? '0')
@@ -180,10 +184,20 @@ function DealFormFields({
     if (selling > 0) setRemainingAmount(String(Math.max(0, selling - deposit)))
   }
 
+  const codePercent = (code: string) => Number(discountCodes.find((d) => d.code === code)?.discount_percent) || 0
+
+  // choosing a code sets the commission to its percentage of the selling price; picking "none" resets it to 0
+  function handleCodeChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const code = e.target.value
+    setDiscountCode(code)
+    setCommissionEgp(code ? String(commissionForCode(parseFloat(sellingPrice) || 0, codePercent(code))) : '0')
+  }
+
   function handleSellingChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selling = parseFloat(e.target.value) || 0
     const deposit = parseFloat(depositAmount)  || 0
     setSellingPrice(e.target.value)
+    if (codePercent(discountCode) > 0) setCommissionEgp(String(commissionForCode(selling, codePercent(discountCode))))
     if (deposit > 0) setRemainingAmount(String(Math.max(0, selling - deposit)))
   }
 
@@ -418,6 +432,15 @@ function DealFormFields({
         <input name="remaining_amount_egp" type="number" step="0.01" value={remainingAmount} onChange={(e) => setRemainingAmount(e.target.value)} className={`${inputClass} ${remainingAmount ? 'border-green-700' : ''}`} placeholder="0.00" />
       </Field>
 
+      <Field label="Discount / partner code" optional>
+        <select name="discount_code" value={discountCode} onChange={handleCodeChange} className={inputClass}>
+          <option value="">No code</option>
+          {discountCode && !discountCodes.some((d) => d.code === discountCode) && <option value={discountCode}>{discountCode} (inactive)</option>}
+          {discountCodes.map((d) => <option key={d.code} value={d.code}>{d.code} — {d.discount_percent}%</option>)}
+        </select>
+        {codePercent(discountCode) > 0 && <p className="text-xs text-cyan-400 mt-1">Commission is set to {codePercent(discountCode)}% of the selling price. You can still edit it below.</p>}
+      </Field>
+
       <Field label="Commission (EGP)">
         <input name="commission_egp" type="number" step="0.01" value={commissionEgp} onChange={(e) => setCommissionEgp(e.target.value)} className={inputClass} placeholder="0.00" />
       </Field>
@@ -633,9 +656,11 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
 export default function DealsClient({
   deals: initialDeals,
   productRequests,
+  discountCodes,
 }: {
   deals: Deal[]
   productRequests: ProductRequest[]
+  discountCodes: DiscountCodeOption[]
 }) {
   const [deals,          setDeals]          = useState<Deal[]>(initialDeals)
   const [showForm,       setShowForm]       = useState(false)
@@ -794,7 +819,7 @@ export default function DealsClient({
       {showForm && (
         <Modal title="New Deal" onClose={() => setShowForm(false)}>
           <form action={handleCreate} className="grid grid-cols-2 gap-4">
-            <DealFormFields productRequests={productRequests} />
+            <DealFormFields productRequests={productRequests} discountCodes={discountCodes} />
             <div className="col-span-2">
               <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">
                 {loading ? 'Saving...' : 'Create Deal'}
@@ -807,7 +832,7 @@ export default function DealsClient({
       {editingDeal && (
         <Modal title="Edit Deal" onClose={() => setEditingDeal(null)}>
           <form action={handleUpdate} className="grid grid-cols-2 gap-4">
-            <DealFormFields deal={editingDeal} productRequests={productRequests} />
+            <DealFormFields deal={editingDeal} productRequests={productRequests} discountCodes={discountCodes} />
             <div className="col-span-2 flex gap-3">
               <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">
                 {loading ? 'Saving...' : 'Update Deal'}

@@ -147,7 +147,7 @@ export default function SalesClient({
                       href={sale.source_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-gray-400 hover:text-blue-500 underline truncate block max-w-[120px]"
+                      className="text-xs text-gray-400 hover:text-blue-500 underline truncate block max-w-\[120px\]"
                     >
                       link 🔗
                     </a>

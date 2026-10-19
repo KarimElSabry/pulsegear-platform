@@ -78,6 +78,8 @@ export interface Deal {
   deposit_amount_egp: number | null
   remaining_amount_egp: number | null
   commission_egp: number | null
+  /** Discount / partner code used; its percentage sets the commission. */
+  discount_code?: string | null
   sale_channel: SaleChannel
 
   // Status timestamps

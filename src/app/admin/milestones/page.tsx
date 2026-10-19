@@ -80,7 +80,7 @@ export default async function MilestonesPage() {
       {error && !missingTable && <p className="text-red-400 text-sm">Could not load milestones: {error.message}</p>}
 
       {active && progress && (
-        <section className={`relative overflow-hidden rounded-3xl border p-8 ${reached ? 'border-yellow-400/40 bg-gradient-to-br from-yellow-500/10 via-gray-900 to-purple-500/10' : 'border-gray-800 bg-gray-900'}`}>
+        <section className={`relative overflow-hidden rounded-3xl border p-8 ${reached ? 'border-yellow-400/40 bg-linear-to-br from-yellow-500/10 via-gray-900 to-purple-500/10' : 'border-gray-800 bg-gray-900'}`}>
           {reached && <Confetti />}
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-zinc-500">{METRIC_LABEL[active.metric]}{active.start_date ? ` since ${day(active.start_date)}` : ' since the first sale'}</p>
@@ -98,7 +98,7 @@ export default async function MilestonesPage() {
             <div className="mt-4">
               <div className="h-6 w-full rounded-full bg-gray-800 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${reached ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500' : 'bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400'}`}
+                  className={`h-full rounded-full transition-all duration-700 ${reached ? 'bg-linear-to-r from-yellow-400 via-orange-400 to-pink-500' : 'bg-linear-to-r from-purple-600 via-pink-500 to-orange-400'}`}
                   style={{ width: `${Math.min(100, progress.pct)}%` }}
                   role="progressbar" aria-valuenow={Math.min(100, progress.pct)} aria-valuemin={0} aria-valuemax={100}
                 />

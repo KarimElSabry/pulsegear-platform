@@ -158,10 +158,17 @@ export async function createDeal(formData: FormData) {
     deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
+    discount_code: getStr(formData, 'discount_code'),
   }
 
   assertNotNegative(payload)
-  const { data: created, error } = await supabase.from('deals').insert(payload).select('id').single()
+  let { data: created, error } = await supabase.from('deals').insert(payload).select('id').single()
+  if (error?.message.includes('discount_code')) {
+    // migration 20261020_02 not applied yet: save the deal without the code
+    const { discount_code: _omit, ...withoutCode } = payload
+    void _omit
+    ;({ data: created, error } = await supabase.from('deals').insert(withoutCode).select('id').single())
+  }
 
   if (error) {
     console.error('createDeal error:', error)
@@ -217,10 +224,16 @@ export async function updateDeal(id: string, formData: FormData) {
     deposit_amount_egp: getFloat(formData, 'deposit_amount_egp'),
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
+    discount_code: getStr(formData, 'discount_code'),
   }
 
   assertNotNegative(payload)
-  const { error } = await supabase.from('deals').update(payload).eq('id', id)
+  let { error } = await supabase.from('deals').update(payload).eq('id', id)
+  if (error?.message.includes('discount_code')) {
+    const { discount_code: _omit, ...withoutCode } = payload
+    void _omit
+    ;({ error } = await supabase.from('deals').update(withoutCode).eq('id', id))
+  }
 
   if (error) {
     console.error('updateDeal error:', error)
@@ -400,7 +413,7 @@ async function syncDealToSales(dealId: string) {
     source_platform: deal.source_platform ?? 'Other',
     source_url: deal.source_link ?? null,
     notes: deal.notes ?? null,
-    discount_code: null,
+    discount_code: deal.discount_code ?? null,
     customer_name: deal.customer_name ?? null,
     customer_phone: deal.phone ?? null,
   }
@@ -437,6 +450,11 @@ async function syncDealToSales(dealId: string) {
       insertError,
     })
     throw new Error(insertError.message)
+  }
+
+  if (salePayload.discount_code) {
+    const { error: usageError } = await supabase.rpc('increment_discount_usage', { code_value: salePayload.discount_code })
+    if (usageError) console.warn('syncDealToSales: could not count the code use:', usageError.message)
   }
 
   console.log('syncDealToSales: sale created', {

@@ -27,7 +27,7 @@ export default async function DealsPage() {
     <main className="w-full min-h-screen bg-zinc-950 text-white">
 
       {/* ── Hero Banner ── */}
-      <section className="w-full bg-gradient-to-br from-orange-600/20 via-zinc-950 to-zinc-950 border-b border-orange-500/20 py-16 px-6">
+      <section className="w-full bg-linear-to-br from-orange-600/20 via-zinc-950 to-zinc-950 border-b border-orange-500/20 py-16 px-6">
         <div className="max-w-6xl mx-auto flex flex-col gap-4">
           <span className="text-orange-400 font-bold uppercase tracking-widest text-sm">
             Limited Time

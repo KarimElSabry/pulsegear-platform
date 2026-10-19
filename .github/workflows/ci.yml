@@ -11,7 +11,7 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit -p .
       - run: npm run test
-      - name: Lint (informational: older files still have warnings)
+      - name: "Lint (informational, older files still have warnings)"
         run: npx eslint src || true
       - name: Build
         run: npm run build
