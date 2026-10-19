@@ -5,6 +5,7 @@
 import { analyze, type Analysis } from './engine'
 import { inRange } from './range'
 import { round2 } from './money'
+import { netSoFar } from './summary'
 import { BELOW_OPERATING_LINE, type Dataset, type Filters } from './types'
 
 export type ReportId = 'executive' | 'sales' | 'campaigns' | 'products' | 'costs' | 'quality'
@@ -51,7 +52,7 @@ function withTotals(columns: Column[], rows: Row[], label: string, firstKey: str
 function executive(a: Analysis, egpPerEur?: number | null): Report {
   const t = a.totals
   const p = a.previous?.totals
-  const def: [string, keyof typeof t | null, ColumnType, string][] = [
+  const def: [string, keyof typeof t | 'netResultSoFar' | null, ColumnType, string][] = [
     ['Completed Orders', 'completedOrders', 'int', 'Orders that are completed and recognised as revenue (COD only once delivered)'],
     ['Gross Product Sales', 'grossProductSales', 'money', 'Unit price x quantity of recognised items, before discounts'],
     ['Discounts', 'discounts', 'money', 'List price minus price charged'],
@@ -69,6 +70,7 @@ function executive(a: Analysis, egpPerEur?: number | null): Report {
     ['Operating Expenses', 'operatingExpenses', 'money', 'Period costs (excluding tax and interest)'],
     ['Operating Profit', 'operatingProfit', 'money', 'Contribution after ads - operating expenses'],
     ['Net Profit', 'netProfit', 'money', 'Operating profit - tax and interest; blank unless all required data exists'],
+    ['Net Result So Far', 'netResultSoFar', 'money', 'Always a number: contribution after ads - the expenses and tax entered so far. Equals Net Profit once every cost is entered'],
     ['Average Order Value', 'averageOrderValue', 'money', 'Net sales revenue / completed orders'],
     ['Cost per Completed Order', 'costPerCompletedOrder', 'money', 'Ad spend / completed orders'],
     ['ROAS', 'roas', 'int', 'Attributed revenue / ad spend. A revenue ratio, NOT profit'],
@@ -82,8 +84,9 @@ function executive(a: Analysis, egpPerEur?: number | null): Report {
   const eur = (v: number | null, type: ColumnType): number | null =>
     egpPerEur && type === 'money' && typeof v === 'number' ? round2(v / egpPerEur) : null
   const rows: Row[] = def.map(([metric, key, type, definition]) => {
-    const cur = key ? (t[key] as number | null) : null
-    const prev = key && p ? (p[key] as number | null) : null
+    const pick = (tt: typeof t): number | null => key === 'netResultSoFar' ? netSoFar(tt).value : key ? (tt[key] as number | null) : null
+    const cur = pick(t)
+    const prev = p ? pick(p) : null
     const change = typeof cur === 'number' && typeof prev === 'number' && prev !== 0 ? (cur - prev) / Math.abs(prev) : null
     const row: Row = { metric, current: cur, previous: prev ?? null, change, definition }
     if (egpPerEur) { row.current_eur = eur(cur, type); row.previous_eur = eur(prev ?? null, type) }
@@ -94,7 +97,8 @@ function executive(a: Analysis, egpPerEur?: number | null): Report {
   columns.push(col('change', 'Change', 'percent'), col('definition', 'Definition'))
   return {
     id: 'executive', title: REPORT_TITLES.executive, filters: a.filters, totals: null, columns, rows,
-    note: `Money in EGP${egpPerEur ? ` and EUR (1 EUR = ${egpPerEur.toFixed(2)} EGP)` : ''}. ROAS is a ratio. Percent rows hold fractions (0.25 = 25%). Blank = not available.`,
+    note: `Money in EGP${egpPerEur ? ` and EUR (1 EUR = ${egpPerEur.toFixed(2)} EGP)` : ''}. ROAS is a ratio. Percent rows hold fractions (0.25 = 25%). Blank = not available.` +
+      (() => { const n = netSoFar(t); return n.missing.length ? ` Net Result So Far is not final: ${n.missing.join('; ')}.` : ' Net Result So Far includes every known cost.' })(),
   }
 }
 

@@ -9,7 +9,8 @@ import { getEgpPerEur, toEur } from '@/lib/finance/fx'
 import { METRIC_LABEL, etaDays, metricValueEgp, progressPct, stageMessage, type Milestone } from '@/lib/milestones'
 import ActionForm, { Field, inputClass } from '../analytics/ActionForm'
 import Confetti from './Confetti'
-import { archiveMilestone, createMilestone } from './actions'
+import ConfirmDeleteButton from './ConfirmDeleteButton'
+import { archiveMilestone, createMilestone, deleteMilestone, updateMilestone } from './actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,10 +127,37 @@ export default async function MilestonesPage() {
               {active.metric === 'net_result' && ' Net result counts only the costs you have entered, so enter your costs for an accurate figure.'}
             </p>
 
-            <form action={archiveMilestone} className="mt-4">
-              <input type="hidden" name="id" value={active.id} />
-              <button className="text-xs text-zinc-500 hover:text-white underline">{reached ? 'Done celebrating? Archive it and set the next milestone' : 'Archive this milestone'}</button>
-            </form>
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+              <form action={archiveMilestone}>
+                <input type="hidden" name="id" value={active.id} />
+                <button className="text-xs text-zinc-500 hover:text-white underline">{reached ? 'Done celebrating? Archive it and set the next milestone' : 'Archive this milestone'}</button>
+              </form>
+              <form action={deleteMilestone}>
+                <input type="hidden" name="id" value={active.id} />
+                <ConfirmDeleteButton message={`Delete "${active.title}" permanently?`} />
+              </form>
+            </div>
+
+            <details className="mt-4 group">
+              <summary className="cursor-pointer text-xs text-purple-400 hover:text-purple-300">✏️ Edit this milestone</summary>
+              <div className="mt-3">
+                <ActionForm action={updateMilestone} title="Edit milestone" description="If you change the target, what counts or the start date, the progress is recalculated at once." submitLabel="Save changes">
+                  <input type="hidden" name="id" value={active.id} />
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <Field label="Name"><input name="title" required maxLength={80} defaultValue={active.title} className={inputClass} /></Field>
+                    <Field label="Target (EUR)"><input name="target_eur" type="number" step="0.01" min="1" required defaultValue={Number(active.target_eur)} className={inputClass} /></Field>
+                    <Field label="What counts?">
+                      <select name="metric" defaultValue={active.metric} className={inputClass}>
+                        <option value="net_revenue">Net sales revenue (what customers paid)</option>
+                        <option value="net_result">Net result (after the costs I entered)</option>
+                      </select>
+                    </Field>
+                    <Field label="Count sales from (optional)" hint="Empty = since your first sale."><input name="start_date" type="date" defaultValue={active.start_date ?? ''} className={inputClass} /></Field>
+                    <Field label="EUR rate (optional)" hint="EGP per 1 EUR. Empty = live rate."><input name="eur_rate_override" type="number" step="0.01" min="0.01" defaultValue={active.eur_rate_override ?? ''} className={inputClass} /></Field>
+                  </div>
+                </ActionForm>
+              </div>
+            </details>
           </div>
         </section>
       )}
@@ -167,7 +195,13 @@ export default async function MilestonesPage() {
             {past.map((m) => (
               <li key={m.id} className="flex justify-between gap-3 px-4 py-3 text-gray-300">
                 <span>{m.achieved_at ? '🏆' : '·'} {m.title} <span className="text-zinc-500">({eur(Number(m.target_eur))})</span></span>
-                <span className="text-zinc-500">{m.achieved_at ? `reached ${day(m.achieved_at)}` : 'archived, not reached'}</span>
+                <span className="flex items-center gap-4">
+                  <span className="text-zinc-500">{m.achieved_at ? `reached ${day(m.achieved_at)}` : 'archived, not reached'}</span>
+                  <form action={deleteMilestone}>
+                    <input type="hidden" name="id" value={m.id} />
+                    <ConfirmDeleteButton message={`Delete "${m.title}" permanently?`} />
+                  </form>
+                </span>
               </li>
             ))}
           </ul>
