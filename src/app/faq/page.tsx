@@ -266,6 +266,17 @@ You can reserve multiple products or request products that are not currently lis
 تقدر تحجز أكتر من منتج، أو تطلب منتجات مش موجودة حاليًا على الموقع.`,
       },
       {
+        q: "How can I track my order?",
+        arQ: "إزاي أتابع طلبي؟",
+        type: "text",
+        a: `Open the Track Order page and enter the order ID we sent you (it looks like PG-3FA9C21B) together with the last 4 digits of your phone number.
+
+You will see the current status, every update with its date and time, and the expected delivery date. If you have an account, all your orders are also under Account > My Orders.`,
+        arA: `افتح صفحة Track Order واكتب رقم الطلب اللي بعتناهولك (شكله PG-3FA9C21B) مع آخر 4 أرقام من رقم تليفونك.
+
+هتشوف حالة الطلب الحالية، وكل تحديث بتاريخه ووقته، وميعاد التسليم المتوقع. ولو عندك حساب، كل طلباتك كمان موجودة في Account > My Orders.`,
+      },
+      {
         q: "Can I cancel my reservation?",
         arQ: "ممكن ألغي الحجز؟",
         type: "text",

@@ -14,6 +14,7 @@ const navLinks = [
   { label: 'HOT DEALS 🔥', href: '/deals', highlight: true },
   { label: 'Blog', href: '/blog' },
   { label: 'Request', href: '/request-product' },
+  { label: 'Track Order', href: '/track-order' },
   { label: 'Wishlist', href: '/wishlist' },
 ]
 

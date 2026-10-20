@@ -13,6 +13,7 @@ const navLinks = [
   { label: 'Brands', href: '/brands' },
   { label: 'Sold Archive', href: '/sold' },
   { label: 'Request Product', href: '/request-product' },
+  { label: 'Track Order', href: '/track-order' },
   { label: 'Wishlist', href: '/wishlist' },
   { label: 'Blog', href: '/blog' },
   { label: 'FAQ', href: '/faq' },
