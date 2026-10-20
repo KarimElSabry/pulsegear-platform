@@ -46,7 +46,7 @@ export default function ProductCard({ product }: Props) {
       <div className="group bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-red-500 transition-all duration-300 cursor-pointer">
 
         {/* Image */}
-        <div className="relative aspect-square bg-zinc-800 overflow-hidden">
+        <div className="relative aspect-square bg-white overflow-hidden">
           {primaryImage && !imageFailed ? (
             <Image
               src={primaryImage}

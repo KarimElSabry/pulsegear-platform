@@ -35,7 +35,7 @@ export default function SoldProductCard({ product }: SoldProductCardProps) {
       </div>
 
       {/* Image */}
-      <div className="relative h-56 w-full overflow-hidden">
+      <div className="relative h-56 w-full overflow-hidden bg-white">
         {primaryImage ? (
           <Image
             src={primaryImage.image_url}

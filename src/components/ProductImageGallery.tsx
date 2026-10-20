@@ -1,3 +1,5 @@
+// src/components/ProductImageGallery.tsx
+
 'use client'
 
 import Image from 'next/image'
@@ -21,7 +23,7 @@ export default function ProductImageGallery({ images, title }: Props) {
     <div className="flex flex-col gap-4">
 
       {/* Main Image */}
-      <div className="bg-zinc-900 rounded-2xl overflow-hidden aspect-square relative">
+      <div className="bg-white rounded-2xl overflow-hidden aspect-square relative">
         <Image
           src={selected}
           alt={title}
@@ -38,7 +40,7 @@ export default function ProductImageGallery({ images, title }: Props) {
             <button
               key={index}
               onClick={() => setSelected(img.image_url)}
-              className={`bg-zinc-900 rounded-xl overflow-hidden aspect-square relative border-2 transition-all duration-200
+              className={`bg-white rounded-xl overflow-hidden aspect-square relative border-2 transition-all duration-200
                 ${selected === img.image_url
                   ? 'border-purple-500 scale-105'
                   : 'border-zinc-700 hover:border-purple-400 opacity-60 hover:opacity-100'
