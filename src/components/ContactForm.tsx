@@ -4,12 +4,12 @@
 
 import { useState } from "react";
 
-export default function ContactForm() {
+export default function ContactForm({ orderCode }: { orderCode?: string }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    subject: "",
+    subject: orderCode ? `Question about order ${orderCode}` : "",
     message: "",
   });
 
@@ -27,7 +27,7 @@ export default function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formType: "contact", ...formData }), // ✅ التعديل هنا
+        body: JSON.stringify({ formType: "contact", orderCode, ...formData }),
       });
 
       const data = await res.json();
@@ -38,7 +38,7 @@ export default function ContactForm() {
           name: "",
           email: "",
           phone: "",
-          subject: "",
+          subject: orderCode ? `Question about order ${orderCode}` : "",
           message: "",
         });
       } else {
@@ -54,7 +54,7 @@ export default function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <h2 className="text-2xl font-black text-white uppercase">Contact Us</h2>
+      <h2 className="text-2xl font-black text-white uppercase">{orderCode ? "Your question" : "Contact Us"}</h2>
 
       <input
         required

@@ -1093,7 +1093,7 @@ export default function AnalyticsClient({ data }: { data: AnalyticsData }) {
                     key={s.id}
                     className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition"
                   >
-                    <td className="py-3 pr-4 text-white font-medium max-w-[180px] truncate">
+                    <td className="py-3 pr-4 text-white font-medium max-w-[45] truncate">
                       {s.product_name}
                     </td>
                     <td className="py-3 pr-4 text-zinc-400">

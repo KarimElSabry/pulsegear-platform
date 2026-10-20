@@ -160,13 +160,13 @@ export default async function SalesPerformancePage({ searchParams }: { searchPar
       )}
 
       <section className="grid md:grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-purple-600/20 to-gray-900 border border-purple-500/30 rounded-2xl p-6">
+        <div className="bg-linear-to-br from-purple-600/20 to-gray-900 border border-purple-500/30 rounded-2xl p-6">
           <p className="text-xs uppercase tracking-widest text-zinc-400">Net sales revenue</p>
           <p className="text-4xl font-black text-white mt-1">{egp(t.netSalesRevenue)} <span className="text-lg text-zinc-400">EGP</span></p>
           {eurOf(t.netSalesRevenue) && <p className="text-2xl font-bold text-purple-300 mt-1">{eurOf(t.netSalesRevenue)}</p>}
           <p className="text-[11px] text-zinc-500 mt-2">What customers paid in this period, after discounts and refunds. Always shown, whatever costs you have entered.</p>
         </div>
-        <div className="bg-gradient-to-br from-green-600/20 to-gray-900 border border-green-500/30 rounded-2xl p-6">
+        <div className="bg-linear-to-br from-green-600/20 to-gray-900 border border-green-500/30 rounded-2xl p-6">
           <p className="text-xs uppercase tracking-widest text-zinc-400">Net result so far</p>
           <p className={`text-4xl font-black mt-1 ${net.value < 0 ? 'text-red-400' : 'text-white'}`}>{egp(net.value)} <span className="text-lg text-zinc-400">EGP</span></p>
           {eurOf(net.value) && <p className="text-2xl font-bold text-green-300 mt-1">{eurOf(net.value)}</p>}

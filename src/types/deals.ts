@@ -9,6 +9,7 @@ export type DealStatus =
   | 'purchased'
   | 'shipping'
   | 'arrived_egypt'
+  | 'egypt_handling'
   | 'out_for_delivery'
   | 'delivered'
   | 'remaining_pending'
@@ -137,6 +138,11 @@ export const DEAL_STATUSES: {
     value: 'arrived_egypt',
     label: '🇪🇬 Arrived Egypt',
     color: 'bg-teal-100 text-teal-800',
+  },
+  {
+    value: 'egypt_handling',
+    label: '📦 Egypt Handling',
+    color: 'bg-cyan-100 text-cyan-800',
   },
   {
     value: 'out_for_delivery',

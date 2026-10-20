@@ -1,8 +1,12 @@
 // src/app/contact/page.tsx
 
 import ContactForm from "@/components/ContactForm";
+import { normalizeOrderCode } from "@/lib/orders";
 
-export default function ContactPage() {
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
+  const { order } = await searchParams;
+  const orderCode = normalizeOrderCode(order);
+
   return (
     <main className="w-full min-h-screen bg-zinc-950 py-20 px-6">
       <div className="max-w-xl mx-auto">
@@ -13,16 +17,16 @@ export default function ContactPage() {
             Get In Touch
           </span>
           <h1 className="text-4xl font-black text-white uppercase">
-            Contact Us
+            {orderCode ? "Ask about your order" : "Contact Us"}
           </h1>
           <p className="text-zinc-400 text-lg">
-            Have a question? We'd love to hear from you.
+            {orderCode ? `Order ${orderCode}. Tell us what is unclear and we will reply.` : "Have a question? We'd love to hear from you."}
           </p>
         </div>
 
         {/* Form Card */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-          <ContactForm />
+          <ContactForm orderCode={orderCode ?? undefined} />
         </div>
 
       </div>

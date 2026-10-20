@@ -6,6 +6,7 @@ import { assertAdmin } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { DealStatus } from '@/types/deals'
+import { logOrderEvent } from '@/lib/order-events'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -175,6 +176,8 @@ export async function createDeal(formData: FormData) {
     throw new Error(error.message)
   }
 
+  if (created?.id) await logOrderEvent(supabase, { dealId: created.id, status: payload.status })
+
   if (productRequestId) {
     // best effort: a request made while logged in gives the customer their order under My Orders right away
     // (does nothing before migration 20261020_01 is applied)
@@ -258,7 +261,8 @@ export async function updateDeal(id: string, formData: FormData) {
 export async function updateDealStatus(
   id: string,
   status: DealStatus,
-  cancellationReason?: string
+  cancellationReason?: string,
+  comment?: string
 ) {
   await assertAdmin()
   const extra: Record<string, string | null> = {}
@@ -292,6 +296,9 @@ export async function updateDealStatus(
     console.error('updateDealStatus error:', updateError)
     throw new Error(updateError.message)
   }
+
+  // every status change is written to the order update log the customer sees (with the optional comment)
+  await logOrderEvent(supabase, { dealId: id, status, comment })
 
   if (deal.product_request_id) {
     let requestStatus: string | null = null
