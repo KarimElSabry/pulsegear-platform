@@ -53,7 +53,7 @@ export default function ProductCard({ product }: Props) {
               alt={product.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
-              unoptimized
+              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
               onError={() => setImageFailed(true)}
             />
           ) : (

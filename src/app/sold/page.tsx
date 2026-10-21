@@ -81,7 +81,7 @@ export default async function SoldArchivePage() {
                       alt={product.title}
                       fill
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
-                      unoptimized
+                      sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                     />
                   </div>
 

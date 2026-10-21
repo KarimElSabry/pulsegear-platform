@@ -4,6 +4,16 @@ import { useState, useEffect, useRef } from 'react'
 import { Deal, DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, DealStatus, SaleChannel } from '@/types/deals'
 import { createDeal, updateDeal, updateDealStatus, deleteDeal } from './actions'
 import { commissionForCode } from '@/lib/deal-codes'
+import { normalizeDigits } from '@/lib/digits'
+
+/** Runs before each field's own onChange, so Arabic digits typed in number/phone fields become 0-9 first. */
+function digitsCapture(e: React.ChangeEvent<HTMLFormElement>) {
+  const el = e.target as unknown as HTMLInputElement
+  if (el.dataset?.digits) {
+    const fixed = normalizeDigits(el.value)
+    if (fixed !== el.value) el.value = fixed
+  }
+}
 
 type DiscountCodeOption = { code: string; discount_percent: number }
 
@@ -229,19 +239,19 @@ function DealFormFields({
       </div>
 
       <Field label="Customer Name">
-        <input name="customer_name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} placeholder="e.g. Ahmed Mohamed" />
+        <input name="customer_name" autoComplete="off" value={customerName} onChange={(e) => setCustomerName(e.target.value)} className={inputClass} placeholder="e.g. Ahmed Mohamed" />
       </Field>
 
       <Field label="Customer Phone">
-        <input name="phone" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className={inputClass} placeholder="e.g. 01012345678" />
+        <input name="phone" data-digits="1" autoComplete="off" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className={inputClass} placeholder="e.g. 01012345678" />
       </Field>
 
       <Field label="Customer Instagram">
-        <input name="customer_instagram" value={customerInstagram} onChange={(e) => setCustomerInstagram(e.target.value)} className={inputClass} placeholder="e.g. @username" />
+        <input name="customer_instagram" autoComplete="off" value={customerInstagram} onChange={(e) => setCustomerInstagram(e.target.value)} className={inputClass} placeholder="e.g. @username" />
       </Field>
 
  <Field label="Customer Address">
-        <textarea name="customer_address" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} rows={2} className={inputClass} placeholder="Street, city, governorate" />
+        <textarea name="customer_address" autoComplete="off" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} rows={2} className={inputClass} placeholder="Street, city, governorate" />
       </Field>
 
       <Field label="Sale Channel">
@@ -296,7 +306,7 @@ function DealFormFields({
       <Field label="Source Price (EUR)">
         <input
           name="source_price_eur"
-          type="number"
+          type="text" inputMode="decimal" data-digits="1"
           step="0.01"
           value={sourcePriceEur}
           onChange={(e) => setSourcePriceEur(e.target.value)}
@@ -309,7 +319,7 @@ function DealFormFields({
       <Field label="Shipping from Germany (EUR)" optional>
         <input
           name="shipping_eur"
-          type="number"
+          type="text" inputMode="decimal" data-digits="1"
           step="0.01"
           value={shippingEur}
           onChange={(e) => setShippingEur(e.target.value)}
@@ -327,7 +337,7 @@ function DealFormFields({
       <Field label="Shipping in Egypt (EGP)" optional>
         <input
           name="egypt_shipping_egp"
-          type="number"
+          type="text" inputMode="decimal" data-digits="1"
           step="0.01"
           min="0"
           value={egyptShipping}
@@ -345,7 +355,7 @@ function DealFormFields({
         <div className="flex gap-2">
           <input
             name="exchange_rate"
-            type="number"
+            type="text" inputMode="decimal" data-digits="1"
             step="0.01"
             value={exchangeRate}
             onChange={(e) => setExchangeRate(e.target.value)}
@@ -413,7 +423,7 @@ function DealFormFields({
       <Field label="Selling Price (EGP)">
         <input
           name="selling_price_egp"
-          type="number"
+          type="text" inputMode="decimal" data-digits="1"
           step="0.01"
           value={sellingPrice}
           onChange={handleSellingChange}
@@ -425,11 +435,11 @@ function DealFormFields({
       </Field>
 
       <Field label="Deposit Amount (EGP)">
-        <input name="deposit_amount_egp" type="number" step="0.01" value={depositAmount} onChange={handleDepositChange} className={inputClass} placeholder="0.00" />
+        <input name="deposit_amount_egp" type="text" inputMode="decimal" data-digits="1" step="0.01" value={depositAmount} onChange={handleDepositChange} className={inputClass} placeholder="0.00" />
       </Field>
 
       <Field label="Remaining Amount (EGP)" hint="يُحسب تلقائياً">
-        <input name="remaining_amount_egp" type="number" step="0.01" value={remainingAmount} onChange={(e) => setRemainingAmount(e.target.value)} className={`${inputClass} ${remainingAmount ? 'border-green-700' : ''}`} placeholder="0.00" />
+        <input name="remaining_amount_egp" type="text" inputMode="decimal" data-digits="1" step="0.01" value={remainingAmount} onChange={(e) => setRemainingAmount(e.target.value)} className={`${inputClass} ${remainingAmount ? 'border-green-700' : ''}`} placeholder="0.00" />
       </Field>
 
       <Field label="Discount / partner code" optional>
@@ -442,7 +452,7 @@ function DealFormFields({
       </Field>
 
       <Field label="Commission (EGP)">
-        <input name="commission_egp" type="number" step="0.01" value={commissionEgp} onChange={(e) => setCommissionEgp(e.target.value)} className={inputClass} placeholder="0.00" />
+        <input name="commission_egp" type="text" inputMode="decimal" data-digits="1" step="0.01" value={commissionEgp} onChange={(e) => setCommissionEgp(e.target.value)} className={inputClass} placeholder="0.00" />
       </Field>
 
       <div className="col-span-2">
@@ -818,7 +828,7 @@ export default function DealsClient({
 
       {showForm && (
         <Modal title="New Deal" onClose={() => setShowForm(false)}>
-          <form action={handleCreate} className="grid grid-cols-2 gap-4">
+          <form action={handleCreate} autoComplete="off" onChangeCapture={digitsCapture} className="grid grid-cols-2 gap-4">
             <DealFormFields productRequests={productRequests} discountCodes={discountCodes} />
             <div className="col-span-2">
               <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">
@@ -831,7 +841,7 @@ export default function DealsClient({
 
       {editingDeal && (
         <Modal title="Edit Deal" onClose={() => setEditingDeal(null)}>
-          <form action={handleUpdate} className="grid grid-cols-2 gap-4">
+          <form action={handleUpdate} autoComplete="off" onChangeCapture={digitsCapture} className="grid grid-cols-2 gap-4">
             <DealFormFields deal={editingDeal} productRequests={productRequests} discountCodes={discountCodes} />
             <div className="col-span-2 flex gap-3">
               <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">

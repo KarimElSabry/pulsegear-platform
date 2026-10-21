@@ -2,6 +2,7 @@
 
 'use server'
 
+import { normalizeDigits } from '@/lib/digits'
 import { assertAdmin } from '@/lib/admin-auth'
 import { createClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
@@ -18,17 +19,21 @@ function getStr(formData: FormData, key: string): string | null {
   return value && value.trim() !== '' ? value.trim() : null
 }
 
+function normalizePhone(value: string | null): string | null {
+  return value === null ? null : normalizeDigits(value)
+}
+
 function getFloat(formData: FormData, key: string): number | null {
   const value = formData.get(key) as string | null
   if (!value || value.trim() === '') return null
-  const number = parseFloat(value)
+  const number = parseFloat(normalizeDigits(value))
   return Number.isNaN(number) ? null : number
 }
 
 function getInt(formData: FormData, key: string): number | null {
   const value = formData.get(key) as string | null
   if (!value || value.trim() === '') return null
-  const number = parseInt(value, 10)
+  const number = parseInt(normalizeDigits(value), 10)
   return Number.isNaN(number) ? null : number
 }
 
@@ -143,7 +148,7 @@ export async function createDeal(formData: FormData) {
   const payload = {
     product_request_id: productRequestId,
     customer_name: getStr(formData, 'customer_name'),
-    phone: getStr(formData, 'phone'),
+    phone: normalizePhone(getStr(formData, 'phone')),
     customer_instagram: getStr(formData, 'customer_instagram'),
     customer_address: getStr(formData, 'customer_address'),
     status: getStr(formData, 'status') ?? 'deposit_pending',
@@ -210,7 +215,7 @@ export async function updateDeal(id: string, formData: FormData) {
   const payload = {
     product_request_id: productRequestId,
     customer_name: getStr(formData, 'customer_name'),
-    phone: getStr(formData, 'phone'),
+    phone: normalizePhone(getStr(formData, 'phone')),
     customer_instagram: getStr(formData, 'customer_instagram'),
 
     customer_address: getStr(formData, 'customer_address'),

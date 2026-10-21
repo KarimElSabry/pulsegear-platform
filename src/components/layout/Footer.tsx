@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import NewsletterSignup from '@/components/newsletter/NewsletterSignup'
+import { TOUR_START_EVENT } from '@/lib/tour'
 
 const navLinks = [
   { label: 'Products', href: '/products' },
@@ -91,6 +92,13 @@ export default function Footer() {
                 {link.label}
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(TOUR_START_EVENT))}
+              className="text-left text-sm text-gray-400 transition-colors duration-200 hover:text-white"
+            >
+              Take a tour
+            </button>
           </div>
 
           <div className="flex flex-col gap-3">

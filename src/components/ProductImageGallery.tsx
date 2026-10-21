@@ -1,5 +1,3 @@
-// src/components/ProductImageGallery.tsx
-
 'use client'
 
 import Image from 'next/image'
@@ -29,7 +27,7 @@ export default function ProductImageGallery({ images, title }: Props) {
           alt={title}
           fill
           className="object-cover transition-all duration-300"
-          unoptimized
+          sizes="(min-width: 1024px) 50vw, 100vw"
         />
       </div>
 
@@ -51,7 +49,7 @@ export default function ProductImageGallery({ images, title }: Props) {
                 alt={`${title} - image ${index + 1}`}
                 fill
                 className="object-cover"
-                unoptimized
+                sizes="120px"
               />
             </button>
           ))}

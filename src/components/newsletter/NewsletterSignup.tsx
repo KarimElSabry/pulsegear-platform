@@ -46,7 +46,7 @@ export default function NewsletterSignup({
 
   if (compact) {
     return (
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+      <div data-tour="newsletter" className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
         <div className="mb-4">
           <h3 className="text-lg font-black uppercase text-white">Stay in the loop</h3>
           <p className="mt-2 text-sm leading-relaxed text-zinc-400">
@@ -89,7 +89,7 @@ export default function NewsletterSignup({
   }
 
   return (
-    <section className="w-full border-t border-zinc-800 bg-zinc-950 px-6 py-20">
+    <section data-tour="newsletter" className="w-full border-t border-zinc-800 bg-zinc-950 px-6 py-20">
       <div className="mx-auto max-w-4xl rounded-3xl border border-zinc-800 bg-zinc-900 px-8 py-10 text-center">
         <div className="mx-auto max-w-2xl">
           <span className="text-sm font-bold uppercase tracking-widest text-red-500">
