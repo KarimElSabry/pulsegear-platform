@@ -2,6 +2,7 @@
 
 import { ProductService } from '@/services/productService'
 import Image from 'next/image'
+import { isOptimizable } from '@/lib/image-hosts'
 
 export default async function SoldArchivePage() {
   const soldProducts = await ProductService.getProducts({ status: 'sold' })
@@ -82,6 +83,7 @@ export default async function SoldArchivePage() {
                       fill
                       className="object-cover grayscale group-hover:grayscale-0 transition-all duration-300"
                       sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                      unoptimized={!isOptimizable(mainImage)}
                     />
                   </div>
 

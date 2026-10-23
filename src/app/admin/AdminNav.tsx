@@ -21,7 +21,9 @@ const NAV_LINKS = [
   { href: '/admin/audience',         label: '👥 Audience'        },
   { href: '/admin/requests',         label: '📝 Requests'        },
   { href: '/admin/deals', label: '🤝 Deals' },
+  { href: '/admin/checkouts', label: '💳 Online orders' },
   { href: '/admin/orders', label: '🚚 Orders' },
+  { href: '/admin/pricing', label: '💶 Pricing' },
   { href: '/admin/follow-ups', label: '📣 Follow-ups' },
 ]
 

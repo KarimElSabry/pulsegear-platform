@@ -379,6 +379,7 @@ async function syncDealToSales(dealId: string) {
 
   const productName =
     request?.requested_product?.trim() ||
+    (deal.item_title as string | null | undefined)?.trim() ||
     request?.customer_name?.trim() ||
     deal.customer_name?.trim() ||
     deal.notes?.trim() ||

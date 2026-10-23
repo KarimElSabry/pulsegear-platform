@@ -6,7 +6,7 @@ const deal = (o: Partial<DealLite> = {}): DealLite => ({ id: 'd1', status: 'depo
 describe('buildTimeline', () => {
   it('marks earlier steps done, the current one current, later ones upcoming', () => {
     const t = buildTimeline(deal({ status: 'shipping', shipped_at: '2026-10-05T00:00:00Z' }))
-    expect(t.map(s => s.state)).toEqual(['done', 'done', 'done', 'done', 'current', 'upcoming', 'upcoming', 'upcoming'])
+    expect(t.map(s => s.state)).toEqual(['done', 'done', 'done', 'current', 'upcoming', 'upcoming', 'upcoming', 'upcoming'])
     expect(t.find(s => s.key === 'shipping')?.at).toBe('2026-10-05T00:00:00Z')
   })
   it('shows every step done once delivered', () => {
@@ -29,12 +29,11 @@ describe('toCustomerOrder', () => {
     const out = JSON.stringify(toCustomerOrder(leaky, 'Garmin 265'))
     for (const bad of ['source_price', 'commission', 'secret', 'https://x', 'exchange_rate', '"notes"']) expect(out).not.toContain(bad)
   })
-  it('uses a friendly title, trims tracking, and only counts the deposit once paid', () => {
-    const o = toCustomerOrder(deal({ status: 'deposit_pending', deposit_amount_egp: '1000', tracking_number: '  ' }), '')
+  it('uses a friendly title and only counts the deposit once paid', () => {
+    const o = toCustomerOrder(deal({ status: 'deposit_pending', deposit_amount_egp: '1000' }), '')
     expect(o.title).toBe('Your order')
-    expect(o.trackingNumber).toBeNull()
     expect(o.paidEgp).toBeNull()
-    expect(toCustomerOrder(deal({ status: 'shipping', deposit_amount_egp: '1000', tracking_number: ' 123 ' })).paidEgp).toBe(1000)
+    expect(toCustomerOrder(deal({ status: 'shipping', deposit_amount_egp: '1000' })).paidEgp).toBe(1000)
   })
   it('flags cancelled orders', () => expect(toCustomerOrder(deal({ status: 'cancelled' })).cancelled).toBe(true))
 })
@@ -82,7 +81,7 @@ describe('follow-ups', () => {
   })
 })
 
-import { expectedDelivery, normalizeOrderCode, phoneLast4Matches, statusHeadline, statusMessage, toPublicOrder } from '../orders'
+import { expectedDelivery, normalizeOrderCode, phoneLast4Matches, statusHeadline, toPublicOrder } from '../orders'
 
 describe('expected delivery', () => {
   const now = new Date('2026-10-20T12:00:00Z')
@@ -102,7 +101,10 @@ describe('expected delivery', () => {
     expect(expectedDelivery(deal({ status: 'shipping', deposit_paid_at: '2026-08-01T00:00:00Z' }), now)).toBeNull()
   })
   it('has a plain headline for every status and a safe default', () => {
-    expect(statusHeadline('shipping')).toBe('On its way from Germany')
+    expect(statusHeadline('shipping')).toBe('On its way from Europe')
+    expect(statusHeadline('egypt_handling')).toBe('Shipping handling in Egypt')
+    expect(statusHeadline('deposit_pending')).toBe('Order received')
+    expect(statusHeadline('deposit_paid')).toBe('Order received')
     expect(statusHeadline('whatever')).toBe('In progress')
   })
 })
@@ -128,13 +130,64 @@ describe('public tracking helpers', () => {
     for (const bad of ['9000', '4500', 'Omar', '01001112222', 'sellingPrice', 'paidEgp', 'remainingEgp']) expect(out).not.toContain(bad)
     expect(out).toContain('PG-3FA9C21B')
   })
-  it('builds the WhatsApp status message with the link and the date, in Arabic and English', () => {
-    const o = toCustomerOrder(deal({ status: 'shipping', order_code: 'PG-3FA9C21B', expected_delivery_date: '2026-10-28' }), 'Watch', new Date('2026-10-20T00:00:00Z'))
-    const msg = statusMessage(o, 'https://x.com/track-order?code=PG-3FA9C21B', 'Omar Hassan')
-    expect(msg).toContain('أهلاً Omar')
-    expect(msg).toContain('Hi Omar')
-    expect(msg).toContain('On its way from Germany')
-    expect(msg).toContain('2026-10-28')
-    expect(msg).toContain('https://x.com/track-order?code=PG-3FA9C21B')
+})
+
+import { ADMIN_STATUS_OPTIONS, adminStatusValue } from '../orders'
+import { isDuplicateEvent } from '../order-events'
+
+describe('update log', () => {
+  const ev = (status: string | null, title: string, at: string, comment: string | null = null) => ({ status, title, comment, created_at: at })
+
+  it('has the new steps in order, with Shipping handling in Egypt before Out for delivery', () => {
+    expect(buildTimeline(deal({ status: 'sourcing' })).map(s => s.label)).toEqual([
+      'Order received', 'We are sourcing your item', 'Item purchased', 'On its way from Europe',
+      'Arrived in Egypt', 'Shipping handling in Egypt', 'Out for delivery', 'Delivered'])
+    const t = buildTimeline(deal({ status: 'egypt_handling' }))
+    expect(t.map(s => s.state)).toEqual(['done', 'done', 'done', 'done', 'done', 'current', 'upcoming', 'upcoming'])
+  })
+  it('deposit pending and deposit paid are both just "Order received" for the customer', () => {
+    expect(buildTimeline(deal({ status: 'deposit_pending' }))[0].state).toBe('current')
+    expect(buildTimeline(deal({ status: 'deposit_paid' }))[0].state).toBe('current')
+  })
+  it('dates each step from the latest update for it, falling back to the date saved on the order', () => {
+    const t = buildTimeline(deal({ status: 'purchased', created_at: '2026-10-01T10:00:00Z' }), [
+      ev('sourcing', 'We are sourcing your item', '2026-10-03T09:00:00Z'),
+      ev('purchased', 'Item purchased', '2026-10-05T12:30:00Z'),
+      ev('purchased', 'Item purchased', '2026-10-06T08:00:00Z', 'Seller packed it'),
+    ])
+    expect(t.find(s => s.key === 'sourcing')?.at).toBe('2026-10-03T09:00:00Z')
+    expect(t.find(s => s.key === 'purchased')?.at).toBe('2026-10-06T08:00:00Z')
+    expect(t.find(s => s.key === 'received')?.at).toBe('2026-10-01T10:00:00Z')
+    expect(t.find(s => s.key === 'shipping')?.at).toBeNull()
+  })
+  it('the customer order lists the updates newest first, with comments, and last update is the newest', () => {
+    const o = toCustomerOrder(deal({ status: 'shipping' }), 'Watch', new Date('2026-10-20T00:00:00Z'), [
+      ev('purchased', 'Item purchased', '2026-10-05T12:00:00Z'),
+      ev('shipping', 'On its way from Europe', '2026-10-08T09:00:00Z', 'Tracking: DHL123'),
+    ])
+    expect(o.events.map(e => e.title)).toEqual(['On its way from Europe', 'Item purchased'])
+    expect(o.events[0].comment).toBe('Tracking: DHL123')
+    expect(o.lastUpdateAt).toBe('2026-10-08T09:00:00Z')
+  })
+  it('the public order carries the updates', () => {
+    const o = toCustomerOrder(deal({ status: 'shipping', order_code: 'PG-3FA9C21B' }), 'Watch', new Date('2026-10-20T00:00:00Z'), [ev('shipping', 'On its way from Europe', '2026-10-08T09:00:00Z', 'Leaves Friday')])
+    expect(toPublicOrder(o).events).toEqual([{ title: 'On its way from Europe', comment: 'Leaves Friday', at: '2026-10-08T09:00:00Z' }])
+  })
+  it('offers the statuses you asked for and no "deposit pending"', () => {
+    const labels = ADMIN_STATUS_OPTIONS.map(o => o.label)
+    expect(labels).toContain('Order received')
+    expect(labels).toContain('On its way from Europe')
+    expect(labels).toContain('Shipping handling in Egypt')
+    // every status the Deals page has must be selectable here, or the dropdown would show the wrong one for that order
+    for (const st of ['sourcing', 'purchased', 'shipping', 'arrived_egypt', 'egypt_handling', 'out_for_delivery', 'delivered', 'remaining_pending', 'completed', 'cancelled']) expect(ADMIN_STATUS_OPTIONS.some(o => o.value === adminStatusValue(st))).toBe(true)
+    expect(labels.some(l => /deposit/i.test(l))).toBe(false)
+    expect(adminStatusValue('deposit_pending')).toBe('deposit_paid')
+    expect(adminStatusValue('shipping')).toBe('shipping')
+  })
+  it('a repeated title without a new comment is not logged twice', () => {
+    expect(isDuplicateEvent({ title: 'Order received' }, 'Order received', null)).toBe(true)
+    expect(isDuplicateEvent({ title: 'Order received' }, 'Order received', 'Deposit arrived')).toBe(false)
+    expect(isDuplicateEvent({ title: 'Item purchased' }, 'Order received', null)).toBe(false)
+    expect(isDuplicateEvent(null, 'Order received', null)).toBe(false)
   })
 })

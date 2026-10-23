@@ -3,19 +3,29 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { ProductImage } from '@/types/product'
+import { useVariant } from '@/components/product/VariantContext'
+import { imagesForVariant } from '@/lib/variant-images'
+import { isOptimizable } from '@/lib/image-hosts'
 
 type Props = {
   images: ProductImage[]
   title: string
 }
 
-export default function ProductImageGallery({ images, title }: Props) {
+export default function ProductImageGallery({ images: allImages, title }: Props) {
+  // With colors, show the photos of the chosen color (plus photos shared by every color).
+  const variant = useVariant()
+  const images = imagesForVariant(allImages, variant?.variants.length ? variant.selected?.id ?? null : null, (variant?.variants.length ?? 0) > 0)
+
   const mainImage =
     images.find((img) => img.is_primary)?.image_url ??
     images[0]?.image_url ??
     '/placeholder.jpg'
 
-  const [selected, setSelected] = useState(mainImage)
+  const [chosen, setChosen] = useState<string | null>(null)
+  // A photo picked earlier only counts while it still belongs to the visible color.
+  const selected = chosen && images.some((img) => img.image_url === chosen) ? chosen : mainImage
+  const setSelected = setChosen
 
   return (
     <div className="flex flex-col gap-4">
@@ -28,6 +38,7 @@ export default function ProductImageGallery({ images, title }: Props) {
           fill
           className="object-cover transition-all duration-300"
           sizes="(min-width: 1024px) 50vw, 100vw"
+          unoptimized={!isOptimizable(selected)}
         />
       </div>
 
@@ -50,6 +61,7 @@ export default function ProductImageGallery({ images, title }: Props) {
                 fill
                 className="object-cover"
                 sizes="120px"
+                unoptimized={!isOptimizable(img.image_url)}
               />
             </button>
           ))}

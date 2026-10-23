@@ -19,11 +19,10 @@ export interface DealLite {
   selling_price_egp?: number | string | null
   deposit_amount_egp?: number | string | null
   remaining_amount_egp?: number | string | null
-  tracking_number?: string | null
-  carrier?: string | null
-  customer_message?: string | null
   order_code?: string | null
   expected_delivery_date?: string | null
+  /** name of the item for orders placed through the cart checkout (no product request behind them) */
+  item_title?: string | null
 }
 
 export interface TimelineStep { key: string; label: string; state: 'done' | 'current' | 'upcoming'; at: string | null }
@@ -99,6 +98,7 @@ export const ADMIN_STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: 'egypt_handling', label: 'Shipping handling in Egypt' },
   { value: 'out_for_delivery', label: 'Out for delivery' },
   { value: 'delivered', label: 'Delivered' },
+  { value: 'remaining_pending', label: 'Delivered, waiting for the remaining payment' },
   { value: 'completed', label: 'Completed' },
   { value: 'cancelled', label: 'Cancelled' },
 ]
@@ -162,9 +162,6 @@ export interface CustomerOrder {
   cancelled: boolean
   placedAt: string | null
   timeline: TimelineStep[]
-  trackingNumber: string | null
-  carrier: string | null
-  message: string | null
   sellingPriceEgp: number | null
   paidEgp: number | null
   remainingEgp: number | null
@@ -194,14 +191,11 @@ export function toCustomerOrder(deal: DealLite, title?: string | null, now = new
     expected: expectedDelivery(deal, now),
     events: sorted.map((e) => ({ title: e.title, comment: e.comment?.trim() || null, at: e.created_at })),
     lastUpdateAt: stamps.sort().at(-1) ?? null,
-    title: title?.trim() || 'Your order',
+    title: title?.trim() || deal.item_title?.trim() || 'Your order',
     status: deal.status,
     cancelled: isCancelled(deal.status),
     placedAt: deal.created_at ?? null,
     timeline: buildTimeline(deal, events),
-    trackingNumber: deal.tracking_number?.trim() || null,
-    carrier: deal.carrier?.trim() || null,
-    message: deal.customer_message?.trim() || null,
     sellingPriceEgp: price,
     paidEgp: depositPaid ? deposit : null,
     remainingEgp: remaining,
@@ -317,29 +311,9 @@ export function phoneLast4Matches(orderPhone: string | null | undefined, typed: 
 }
 
 /** What a visitor without an account may see: status, dates and tracking, never prices, name, phone or notes. */
-export type PublicOrder = Pick<CustomerOrder, 'orderCode' | 'headline' | 'expected' | 'events' | 'lastUpdateAt' | 'title' | 'status' | 'cancelled' | 'timeline' | 'trackingNumber' | 'carrier' | 'message'>
+export type PublicOrder = Pick<CustomerOrder, 'orderCode' | 'headline' | 'expected' | 'events' | 'lastUpdateAt' | 'title' | 'status' | 'cancelled' | 'timeline'>
 
 export function toPublicOrder(order: CustomerOrder): PublicOrder {
-  const { orderCode, headline, expected, events, lastUpdateAt, title, status, cancelled, timeline, trackingNumber, carrier, message } = order
-  return { orderCode, headline, expected, events, lastUpdateAt, title, status, cancelled, timeline, trackingNumber, carrier, message }
-}
-
-/** A ready WhatsApp message for the admin to send in one tap (Arabic first, English below). */
-export function statusMessage(order: CustomerOrder, trackUrl: string, name?: string | null): string {
-  const hi = name?.trim() ? name.trim().split(/\s+/)[0] : ''
-  const note = order.events[0]?.comment ?? null
-  const eta = order.expected ? (order.expected.to ? `${order.expected.from} - ${order.expected.to}` : order.expected.from) : null
-  return [
-    `أهلاً ${hi}`.trim() + ' 👋',
-    `طلبك ${order.orderCode ?? ''}: ${order.headline}`.trim(),
-    note ? `ملاحظة: ${note}` : '',
-    eta ? `التسليم المتوقع: ${eta}` : '',
-    `تابع طلبك من هنا: ${trackUrl}`,
-    '',
-    `Hi ${hi}`.trim() + ' 👋',
-    `Your order ${order.orderCode ?? ''}: ${order.headline}`.trim(),
-    note ? `Note: ${note}` : '',
-    eta ? `Expected delivery: ${eta}` : '',
-    `Track it here: ${trackUrl}`,
-  ].filter((l, i, a) => l !== '' || (a[i - 1] !== '' && i !== a.length - 1)).join('\n')
+  const { orderCode, headline, expected, events, lastUpdateAt, title, status, cancelled, timeline } = order
+  return { orderCode, headline, expected, events, lastUpdateAt, title, status, cancelled, timeline }
 }

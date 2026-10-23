@@ -7,6 +7,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import AccountTabs from '@/components/account/AccountTabs'
 import OrderUpdates from '@/components/orders/OrderUpdates'
+import { CHECKOUT_STATUS_LABEL, type CheckoutStatus } from '@/lib/checkout-core'
 import { loadEvents } from '@/lib/order-events'
 import { toCustomerOrder, type DealLite } from '@/lib/orders'
 
@@ -23,16 +24,16 @@ export default async function AccountOrdersPage() {
 
   const db = createAdminSupabaseClient()
   // filtered by the session's user id on the server; the browser never queries deals
-  const BASE = 'id, status, product_request_id, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at, selling_price_egp, deposit_amount_egp, remaining_amount_egp, tracking_number, carrier, customer_message'
+  const BASE = 'id, status, product_request_id, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at, selling_price_egp, deposit_amount_egp, remaining_amount_egp'
   let data: unknown[] | null = null
   let error: { message: string } | null = null
-  ;({ data, error } = await db.from('deals').select(`${BASE}, order_code, expected_delivery_date`).eq('user_id', user.id).order('created_at', { ascending: false }))
-  if (error && (error.message.includes('order_code') || error.message.includes('expected_delivery'))) {
+  ;({ data, error } = await db.from('deals').select(`${BASE}, order_code, expected_delivery_date, item_title`).eq('user_id', user.id).order('created_at', { ascending: false }))
+  if (error && (error.message.includes('order_code') || error.message.includes('expected_delivery') || error.message.includes('item_title'))) {
     // migration 20261021_01 not applied yet: show the orders without the ID and the date
     ;({ data, error } = await db.from('deals').select(BASE).eq('user_id', user.id).order('created_at', { ascending: false }))
   }
 
-  const notReady = !!error && (error.message.includes('user_id') || error.message.includes('tracking_number'))
+  const notReady = !!error && (error.message.includes('user_id'))
   if (error && !notReady) throw new Error(error.message)
 
   const deals = (data ?? []) as DealLite[]
@@ -43,6 +44,16 @@ export default async function AccountOrdersPage() {
     for (const r of reqs ?? []) titles.set(r.id as number, (r.requested_product as string) ?? '')
   }
   const events = await loadEvents(db, deals.map(d => d.id))
+
+  // orders placed from the cart that are not confirmed yet (waiting for the receipt, being checked, or closed). Best effort:
+  // before migration 20261025_01 there is no such table and nothing is shown.
+  const { data: pendingRows } = await db.from('checkout_orders')
+    .select('id, code, view_token, status, total_egp, created_at, review_note')
+    .eq('user_id', user.id).neq('status', 'approved').order('created_at', { ascending: false }).limit(10)
+  const pending = (pendingRows ?? []) as { id: string; code: string; view_token: string; status: CheckoutStatus; total_egp: number; created_at: string; review_note: string | null }[]
+  const { data: pendingItems } = pending.length
+    ? await db.from('checkout_items').select('checkout_id, title, color_name, quantity').in('checkout_id', pending.map(p => p.id))
+    : { data: [] }
   const orders = deals.map(d => toCustomerOrder(d, d.product_request_id ? titles.get(d.product_request_id) : null, new Date(), events.get(d.id) ?? []))
 
   return (
@@ -54,6 +65,29 @@ export default async function AccountOrdersPage() {
           <p className="text-zinc-400 mt-3 text-sm">Follow your orders from deposit to delivery.</p>
         </div>
         <AccountTabs />
+
+        {pending.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <h2 className="text-lg font-bold text-white">Orders waiting for our confirmation</h2>
+            {pending.map(p => (
+              <div key={p.id} className="bg-zinc-900 border border-amber-900/60 rounded-2xl p-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-sm text-zinc-300">{p.code}</span>
+                  <span className="text-xs text-zinc-500">Placed {fmtDate(p.created_at)}</span>
+                </div>
+                <p className="mt-1 text-lg font-bold text-white">{CHECKOUT_STATUS_LABEL[p.status]}</p>
+                <ul className="mt-2 space-y-0.5 text-sm text-zinc-300">
+                  {((pendingItems ?? []) as { checkout_id: string; title: string; color_name: string | null; quantity: number }[]).filter(i => i.checkout_id === p.id).map((i, idx) => (
+                    <li key={idx}>• {i.title}{i.color_name ? ` (${i.color_name})` : ''} × {i.quantity}</li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-xs text-zinc-500">Total {Math.round(p.total_egp).toLocaleString('en-US')} EGP</p>
+                {p.review_note && (p.status === 'rejected' || p.status === 'cancelled') && <p className="mt-2 text-sm text-red-300">{p.review_note}</p>}
+                <Link href={`/checkout/${p.code}?t=${p.view_token}`} className="mt-3 inline-block rounded-full border border-zinc-600 px-5 py-2 text-sm font-bold text-white hover:bg-zinc-800">View order</Link>
+              </div>
+            ))}
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 text-center">
@@ -79,11 +113,7 @@ export default async function AccountOrdersPage() {
 
                 <OrderUpdates timeline={o.timeline} events={o.events} cancelled={o.cancelled} />
 
-                {o.message && <p className="mt-5 rounded-xl bg-zinc-800 px-4 py-3 text-sm text-zinc-200">💬 {o.message}</p>}
                 {o.orderCode && <Link href={`/contact?order=${o.orderCode}`} className="mt-4 mr-4 inline-block text-sm font-semibold text-red-400 hover:text-red-300">Ask about this order</Link>}
-                {o.trackingNumber && (
-                  <p className="mt-4 text-sm text-zinc-300">Tracking: <span className="font-mono text-white">{o.trackingNumber}</span>{o.carrier ? ` (${o.carrier})` : ''}</p>
-                )}
                 {(o.sellingPriceEgp !== null || o.remainingEgp !== null) && !o.cancelled && (
                   <p className="mt-3 text-xs text-zinc-500">
                     {egp(o.sellingPriceEgp) && <>Total {egp(o.sellingPriceEgp)}</>}

@@ -34,7 +34,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'request', title: 'Can’t find it? Request it', titleAr: 'لم تجد ما تريد؟ اطلبه',
     body: 'Tell us the product you want and we will find it and send you a price.',
-    bodyAr: 'أخبرنا بالمنتج الذي تريده وسنبحث عنه ونرسل لك السعر.',
+    bodyAr: 'أخبرنا بالمنتج الذي تريده وسنبحث عنه ونرسل لك مجموعة عروض بأسعار مميزة!.',
     desktop: ['header nav a[href="/request-product"]'], mobile: [MENU_BUTTON],
   },
   {

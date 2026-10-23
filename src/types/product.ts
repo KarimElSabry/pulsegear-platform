@@ -21,6 +21,7 @@ export interface ProductImage {
   image_url:      string
   is_primary:     boolean
   display_order:  number
+  variant_id?:    number | null
 }
 
 // ─── Core Product ─────────────────────────────────────────────────────────────
@@ -70,6 +71,9 @@ export interface Product {
 
   // 🏷️ Discount
   discount_enabled?: boolean
+
+  // 📦 Stock: empty = one-off item (status rules), a number = normal stock
+  stock_quantity?:   number | null
 }
 
 // ─── Vinted Parser ────────────────────────────────────────────────────────────

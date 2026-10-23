@@ -96,7 +96,7 @@ export default function WelcomeTour() {
       : { top: Math.max(12, box.top - 232), left: Math.min(Math.max(12, box.left), window.innerWidth - 372), width: 360 }
 
   return (
-    <div className="fixed inset-0 z-[100]" role="dialog" aria-modal="true" aria-label="Website tour">
+    <div className="fixed inset-0 z-100" role="dialog" aria-modal="true" aria-label="Website tour">
       {box ? (
         <div
           className="pointer-events-none fixed rounded-xl ring-2 ring-red-500"

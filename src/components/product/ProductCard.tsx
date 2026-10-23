@@ -5,6 +5,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { isOptimizable } from '@/lib/image-hosts'
 import { Product } from '@/types/product'
 import { useWishlist } from '@/hooks/useWishlist'
 import { useLikes } from '@/hooks/useLikes'
@@ -54,6 +55,7 @@ export default function ProductCard({ product }: Props) {
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              unoptimized={!isOptimizable(primaryImage)}
               onError={() => setImageFailed(true)}
             />
           ) : (

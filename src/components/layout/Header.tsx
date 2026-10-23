@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
+import CartLink from '@/components/cart/CartLink'
 
 const navLinks = [
   { label: 'Products', href: '/products' },
@@ -159,6 +160,8 @@ export default function Header() {
             </>
           )}
         </div>
+
+        <CartLink />
 
         <button
           className="flex shrink-0 flex-col gap-1.5 rounded-md p-2 text-white lg:hidden"

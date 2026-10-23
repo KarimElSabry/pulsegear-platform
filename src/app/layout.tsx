@@ -7,6 +7,8 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import WelcomeTour from '@/components/tour/WelcomeTour'
+import CartProvider from '@/components/cart/CartProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import MarketingTracker from '@/components/MarketingTracker'
 import MetaPixel from '@/components/MetaPixel'
@@ -69,9 +71,12 @@ export default function RootLayout({
         <GoogleAnalytics />
         <MetaPixel />
         <MarketingTracker />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <CartProvider>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <WelcomeTour />
+        </CartProvider>
         <Analytics />
         <SpeedInsights />
       </body>

@@ -68,6 +68,18 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       updates.is_reservable = Boolean(body.is_reservable)
     }
     if (body.is_deal !== undefined) updates.is_deal = Boolean(body.is_deal)
+    // Empty = one-off item (status rules); a whole number = normal stock.
+    if (body.stock_quantity !== undefined) {
+      if (body.stock_quantity === null || body.stock_quantity === '') {
+        updates.stock_quantity = null
+      } else {
+        const n = Number(body.stock_quantity)
+        if (!Number.isInteger(n) || n < 0) {
+          return NextResponse.json({ error: 'Stock must be a whole number, 0 or more' }, { status: 400 })
+        }
+        updates.stock_quantity = n
+      }
+    }
     if (body.discount_enabled !== undefined) {
       updates.discount_enabled = Boolean(body.discount_enabled)
     }
@@ -89,6 +101,16 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 
     if (!data) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
+    // A price typed by hand becomes the new anchor of the automatic EUR pricing (re-anchored at the next daily run).
+    // Separate and best-effort: it must never stop a price edit if the pricing migration has not been run yet.
+    if (updates.price_egp !== undefined) {
+      const { error: anchorError } = await supabase
+        .from('products')
+        .update({ price_anchor_egp: updates.price_egp, price_anchor_rate: null })
+        .eq('id', productId)
+      if (anchorError && anchorError.code !== '42703' && anchorError.code !== 'PGRST204') console.error('[PATCH anchor]', anchorError.message)
     }
 
     revalidatePath('/products')

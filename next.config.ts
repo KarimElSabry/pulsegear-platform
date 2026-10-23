@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // Product photos come from Supabase Storage. They are resized once by Next and then cached for 30 days,
+    // so visitors download small WebP files and Supabase serves each original only rarely (cached egress).
+    minimumCacheTTL: 60 * 60 * 24 * 30,
     remotePatterns: [
       {
         protocol: 'https',

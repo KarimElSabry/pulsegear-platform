@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/meta-spend",
       "schedule": "37 4 * * *"
+    },
+    {
+      "path": "/api/cron/reprice",
+      "schedule": "47 5 * * 1"
     }
   ]
 }

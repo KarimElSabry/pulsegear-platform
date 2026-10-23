@@ -6,6 +6,12 @@ import { notFound } from 'next/navigation'
 import { ProductService } from '@/services/productService'
 import ProductImageGallery from '@/components/ProductImageGallery'
 import PriceSection from '@/components/PriceSection'
+import ColorPicker from '@/components/product/ColorPicker'
+import { VariantProvider } from '@/components/product/VariantContext'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { loadActiveVariants } from '@/lib/variants'
+import { anyVariantBuyable } from '@/lib/stock'
+import { releaseExpired } from '@/lib/checkout-service'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
 
 type Props = {
@@ -56,10 +62,15 @@ const CONDITION: Record<string, string> = {
 
 export default async function ProductDetailsPage({ params }: Props) {
   const { id } = await params
+  await releaseExpired(createAdminSupabaseClient()).catch(() => 0) // frees items whose one-hour checkout hold ran out
   const product = await ProductService.getProductBySlug(id)
   if (!product) return notFound()
 
   const images = product.images ?? []
+  const db = createAdminSupabaseClient()
+  const variants = await loadActiveVariants(db, product.id!)
+  const stockProduct = { status: product.status, stock_quantity: product.stock_quantity ?? null }
+  const buyable = anyVariantBuyable(stockProduct, variants)
   const url = `${SITE_URL}/products/${product.slug ?? product.id}`
 
   const jsonLd = {
@@ -76,7 +87,7 @@ export default async function ProductDetailsPage({ params }: Props) {
       url,
       priceCurrency: 'EGP',
       price: product.price_egp,
-      availability: AVAILABILITY[product.status ?? 'available'],
+      availability: buyable ? AVAILABILITY.available : AVAILABILITY[product.status === 'reserved' ? 'reserved' : product.status === 'sold' ? 'sold' : 'out_of_stock'],
       itemCondition: CONDITION[(product.condition ?? '').toLowerCase()],
       seller: { '@type': 'Organization', name: SITE_NAME },
     },
@@ -86,6 +97,7 @@ export default async function ProductDetailsPage({ params }: Props) {
     <div className="container-x py-12 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
+      <VariantProvider product={stockProduct} variants={variants}>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
         <ProductImageGallery images={images} title={product.title} />
 
@@ -113,6 +125,8 @@ export default async function ProductDetailsPage({ params }: Props) {
             </p>
           )}
 
+          <ColorPicker product={stockProduct} />
+
           {product.description && (
             <div className="flex flex-col gap-2">
               <h2 className="text-sm font-bold uppercase tracking-wide text-muted-strong">Seller description</h2>
@@ -132,6 +146,7 @@ export default async function ProductDetailsPage({ params }: Props) {
           />
         </div>
       </div>
+      </VariantProvider>
     </div>
   )
 }

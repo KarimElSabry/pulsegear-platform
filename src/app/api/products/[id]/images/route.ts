@@ -81,10 +81,15 @@ export async function PATCH(
   // images = [{ id, display_order, is_primary }]
   const supabase = createAdminSupabaseClient()
 
-  const updates = images.map((img: { id: number; display_order: number; is_primary: boolean }) =>
+  const updates = images.map((img: { id: number; display_order: number; is_primary: boolean; variant_id?: number | null }) =>
     supabase
       .from('product_images')
-      .update({ display_order: img.display_order, is_primary: img.is_primary })
+      // variant_id is only sent once colors exist; undefined leaves the column untouched
+      .update({
+        display_order: img.display_order,
+        is_primary: img.is_primary,
+        ...(img.variant_id !== undefined ? { variant_id: img.variant_id } : {}),
+      })
       .eq('id', img.id)
       .eq('product_id', Number(id))
   )

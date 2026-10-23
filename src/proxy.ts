@@ -21,6 +21,8 @@ const PUBLIC_API: PublicRule[] = [
   { pattern: /^\/api\/contact$/, methods: ['POST'] },
   { pattern: /^\/api\/track$/, methods: ['POST'] }, // write-only marketing events, validated in the route
   { pattern: /^\/api\/discount\/validate$/, methods: ['POST'] },
+  { pattern: /^\/api\/cart\/quote$/, methods: ['POST'] }, // public: prices of a cart, rate limited
+  { pattern: /^\/api\/checkout$/, methods: ['POST'] }, // public: confirms an order from the cart, validated and rate limited
   { pattern: /^\/api\/newsletter\/(subscribe|unsubscribe)$/, methods: ['POST'] },
   { pattern: /^\/api\/newsletter\/send-weekly$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/check-vinted-status$/ }, // checks CRON_SECRET itself

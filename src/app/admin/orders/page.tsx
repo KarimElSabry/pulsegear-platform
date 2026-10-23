@@ -1,14 +1,14 @@
 // src/app/admin/orders/page.tsx
-// Assign deals (orders) to registered accounts and add tracking. The customer sees them under /account/orders.
+// Assign deals (orders) to registered accounts and post status updates. The customer sees them under /account/orders.
 
 import { assertAdmin } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { loadCustomers } from '@/lib/customers'
-import { suggestAccounts, statusMessage, toCustomerOrder, whatsappLink, type AccountLite, type DealLite } from '@/lib/orders'
+import { suggestAccounts, type AccountLite, type DealLite } from '@/lib/orders'
 import { SITE_URL } from '@/lib/site'
 import { loadEvents } from '@/lib/order-events'
 import { deleteOrderEvent } from './actions'
-import { AssignForm, StatusForm, TrackingForm, WhatsAppButton, type AccountOption } from './OrderForms'
+import { AssignForm, CopyLinkButton, ExpectedDeliveryForm, StatusForm, type AccountOption } from './OrderForms'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,19 +16,19 @@ export default async function OrdersAdminPage() {
   await assertAdmin()
   const db = createAdminSupabaseClient()
 
-  const BASE = 'id, status, customer_name, phone, user_id, product_request_id, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at, tracking_number, carrier, customer_message'
+  const BASE = 'id, status, customer_name, phone, user_id, product_request_id, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at'
   let data: unknown[] | null = null
   let error: { message: string } | null = null
-  ;({ data, error } = await db.from('deals').select(`${BASE}, order_code, expected_delivery_date`).neq('status', 'cancelled').order('created_at', { ascending: false }).limit(300))
+  ;({ data, error } = await db.from('deals').select(`${BASE}, order_code, expected_delivery_date, item_title`).neq('status', 'cancelled').order('created_at', { ascending: false }).limit(300))
   let withCodes = true
-  if (error && (error.message.includes('order_code') || error.message.includes('expected_delivery'))) {
+  if (error && (error.message.includes('order_code') || error.message.includes('expected_delivery') || error.message.includes('item_title'))) {
     // migration 20261021_01 not applied yet: the page still works, without IDs and dates
     withCodes = false
     ;({ data, error } = await db.from('deals').select(BASE).neq('status', 'cancelled').order('created_at', { ascending: false }).limit(300))
   }
 
   if (error) {
-    const needsMigration = error.message.includes('user_id') || error.message.includes('tracking_number')
+    const needsMigration = error.message.includes('user_id')
     return (
       <div className="max-w-3xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-white mb-3">Customer orders</h1>
@@ -39,7 +39,7 @@ export default async function OrdersAdminPage() {
     )
   }
 
-  const deals = (data ?? []) as (DealLite & { customer_message?: string | null })[]
+  const deals = (data ?? []) as DealLite[]
   const customers = await loadCustomers().catch(() => [])
   const accounts: AccountLite[] = customers.map(c => ({ user_id: c.id, email: c.email, name: c.name, phone: c.phone }))
   const options: AccountOption[] = accounts.map(a => ({ user_id: a.user_id, label: [a.name, a.email].filter(Boolean).join(' · ') || a.user_id }))
@@ -51,14 +51,14 @@ export default async function OrdersAdminPage() {
   const assigned = deals.filter(d => d.user_id)
 
   const trackUrl = (d: DealLite) => `${SITE_URL}/track-order${d.order_code ? `?code=${d.order_code}` : ''}`
-  const waHref = (d: DealLite) => whatsappLink(d.phone, statusMessage(toCustomerOrder(d, null, new Date(), eventsByDeal.get(d.id) ?? []), trackUrl(d), d.customer_name))
 
-  const Row = ({ d }: { d: DealLite & { customer_message?: string | null } }) => {
+  const Row = ({ d }: { d: DealLite }) => {
     const sug = d.user_id ? [] : suggestAccounts(d, accounts)
     return (
       <li className="px-4 py-4 space-y-3">
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-white font-semibold">{d.customer_name || 'No name'}</span>
+          {d.item_title && <span className="text-xs text-zinc-300">{d.item_title}</span>}
           {d.order_code && <span className="text-xs font-mono text-zinc-300">{d.order_code}</span>}
           <span className="text-zinc-500 text-xs">{d.phone || 'no phone'}</span>
           <span className="text-xs bg-zinc-800 text-zinc-300 rounded-full px-2 py-0.5">{d.status}</span>
@@ -67,7 +67,7 @@ export default async function OrdersAdminPage() {
         {sug.length > 0 && <p className="text-xs text-blue-300">Suggested: {sug.map(s => `${s.account.name || s.account.email} (same ${s.reason})`).join(', ')}</p>}
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <StatusForm dealId={d.id} status={d.status} />
-          <WhatsAppButton href={waHref(d)} trackUrl={trackUrl(d)} />
+          <CopyLinkButton trackUrl={trackUrl(d)} />
         </div>
         {(eventsByDeal.get(d.id) ?? []).length > 0 && (
           <details className="text-xs text-zinc-400">
@@ -88,7 +88,7 @@ export default async function OrdersAdminPage() {
           </details>
         )}
         <AssignForm dealId={d.id} current={d.user_id ?? null} accounts={options} suggestedId={sug[0]?.account.user_id} />
-        <TrackingForm dealId={d.id} tracking={d.tracking_number ?? ''} carrier={d.carrier ?? ''} message={d.customer_message ?? ''} expected={d.expected_delivery_date?.slice(0, 10) ?? ''} />
+        <ExpectedDeliveryForm dealId={d.id} expected={d.expected_delivery_date?.slice(0, 10) ?? ''} />
       </li>
     )
   }

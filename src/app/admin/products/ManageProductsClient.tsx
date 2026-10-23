@@ -2,9 +2,10 @@
 
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
+import type { VariantLite } from '@/lib/stock'
 import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
 interface Props {
@@ -15,9 +16,11 @@ interface Props {
 function ImageManager({
   productId,
   initialImages,
+  variants = [],
 }: {
   productId: number
   initialImages: ProductImage[]
+  variants?: VariantLite[]
 }) {
   const [images, setImages]     = useState<ProductImage[]>(
     [...initialImages].sort((a, b) => a.display_order - b.display_order)
@@ -107,6 +110,8 @@ function ImageManager({
             id:            img.id,
             display_order: i,
             is_primary:    img.is_primary,
+            // only sent once the product has colors, so the old behaviour is unchanged without them
+            ...(variants.length > 0 ? { variant_id: img.variant_id ?? null } : {}),
           })),
         }),
       })
@@ -156,8 +161,27 @@ function ImageManager({
               {/* Drag hint */}
               <span className="absolute top-1 right-1 text-white/60 text-xs">⠿</span>
 
+              {/* Color of this photo */}
+              {variants.length > 0 && (
+                <select
+                  value={img.variant_id ?? ''}
+                  onClick={(e) => e.stopPropagation()}
+                  onChange={(e) =>
+                    setImages((prev) =>
+                      prev.map((p) => (p.id === img.id ? { ...p, variant_id: e.target.value ? Number(e.target.value) : null } : p))
+                    )
+                  }
+                  className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 text-white text-xs px-1 py-1 border-0 focus:outline-none"
+                >
+                  <option value="">All colors</option>
+                  {variants.map((v) => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+              )}
+
               {/* Hover Actions */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
+              <div className="absolute inset-0 bottom-6 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center gap-2">
                 {!img.is_primary && (
                   <button
                     onClick={() => handleSetPrimary(img.id!)}
@@ -181,7 +205,7 @@ function ImageManager({
       {/* Drag hint */}
       {images.length > 1 && (
         <p className="text-zinc-600 text-xs text-center">
-          ⠿ Drag images to reorder — hover to set main or delete
+          ⠿ Drag images to reorder — hover to set main or delete{variants.length > 0 ? '. Pick a color under each photo, then save.' : ''}
         </p>
       )}
 
@@ -219,6 +243,117 @@ function ImageManager({
   )
 }
 
+// ─── Stock & Colors Manager ───────────────────────────────────────────────────
+type DraftColor = { id?: number; name: string; color_hex: string; stock: string; is_active: boolean }
+
+function OptionsManager({
+  product,
+  variants,
+  onVariantsChange,
+  onStockChange,
+}: {
+  product: Product
+  variants: VariantLite[]
+  onVariantsChange: (v: VariantLite[]) => void
+  onStockChange: (stock: number | null) => void
+}) {
+  const [stock, setStock] = useState(product.stock_quantity === null || product.stock_quantity === undefined ? '' : String(product.stock_quantity))
+  const [drafts, setDrafts] = useState<DraftColor[]>(
+    variants.map((v) => ({ id: v.id, name: v.name, color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active }))
+  )
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const update = (i: number, patch: Partial<DraftColor>) =>
+    setDrafts((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)))
+
+  const handleSave = async () => {
+    setSaving(true)
+    setMessage(null)
+    try {
+      const stockRes = await fetch(`/api/products/${product.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stock_quantity: stock.trim() === '' ? null : stock.trim() }),
+      })
+      if (!stockRes.ok) throw new Error((await stockRes.json().catch(() => null))?.error || 'Could not save the stock')
+
+      const res = await fetch(`/api/products/${product.id}/variants`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          variants: drafts.map((d) => ({ id: d.id, name: d.name, color_hex: d.color_hex.trim() || null, stock_quantity: d.stock.trim() === '' ? null : d.stock.trim(), is_active: d.is_active })),
+        }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'Could not save the colors')
+
+      onStockChange(stock.trim() === '' ? null : Number(stock))
+      onVariantsChange(data as VariantLite[])
+      setDrafts((data as VariantLite[]).map((v) => ({ id: v.id, name: v.name, color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active })))
+      setMessage({ ok: true, text: 'Saved' })
+    } catch (e) {
+      setMessage({ ok: false, text: e instanceof Error ? e.message : 'Something went wrong' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const input = 'bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-white text-sm focus:outline-none focus:border-blue-500 placeholder-zinc-600'
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <label className="block text-xs font-bold text-zinc-400 mb-1">Stock quantity</label>
+        <input value={stock} onChange={(e) => setStock(e.target.value)} inputMode="numeric" placeholder="empty = one-off item" className={`${input} w-full`} />
+        <p className="text-xs text-zinc-500 mt-1">
+          Leave empty for a one-off item (sold once, the status says if it is still available). Type a number for normal stock; 0 means out of stock.
+          With colors, each color can have its own number; an empty color number uses this one.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs font-bold text-zinc-400">Colors</p>
+        {drafts.length === 0 && <p className="text-zinc-500 text-sm">No colors. The product is sold as one option.</p>}
+        {drafts.map((d, i) => (
+          <div key={d.id ?? `new-${i}`} className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded-xl p-2">
+            <input
+              type="color"
+              aria-label="Color"
+              value={/^#[0-9a-fA-F]{6}$/.test(d.color_hex) ? d.color_hex : '#888888'}
+              onChange={(e) => update(i, { color_hex: e.target.value })}
+              className="h-8 w-8 shrink-0 cursor-pointer rounded bg-transparent"
+            />
+            <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Name, e.g. Black" className={`${input} flex-1 min-w-0`} />
+            <input value={d.stock} onChange={(e) => update(i, { stock: e.target.value })} inputMode="numeric" placeholder="stock" className={`${input} w-16`} />
+            <label className="flex items-center gap-1 text-xs text-zinc-400" title="Hide this color from the shop">
+              <input type="checkbox" checked={d.is_active} onChange={(e) => update(i, { is_active: e.target.checked })} /> shown
+            </label>
+            <button type="button" onClick={() => setDrafts((prev) => prev.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-300 text-lg leading-none px-1" aria-label="Remove color">×</button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() => setDrafts((prev) => [...prev, { name: '', color_hex: '', stock: '', is_active: true }])}
+          className="text-sm font-bold text-blue-400 hover:text-blue-300"
+        >
+          + Add color
+        </button>
+      </div>
+
+      {message && (
+        <p className={`text-sm rounded-xl px-4 py-2 border ${message.ok ? 'text-green-400 bg-green-900/20 border-green-800' : 'text-red-400 bg-red-900/20 border-red-800'}`}>
+          {message.text}
+        </p>
+      )}
+      <button onClick={handleSave} disabled={saving} className="w-full bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-sm transition">
+        {saving ? 'Saving...' : '💾 Save stock & colors'}
+      </button>
+      <p className="text-xs text-zinc-500">After saving colors, open the Images tab to pick which photos belong to which color.</p>
+    </div>
+  )
+}
+
 // ─── Edit Modal ───────────────────────────────────────────────────────────────
 function EditProductModal({
   product,
@@ -232,7 +367,20 @@ function EditProductModal({
   const [form, setForm]       = useState<Product>({ ...product })
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
-  const [tab, setTab]         = useState<'details' | 'images'>('details')
+  const [tab, setTab]         = useState<'details' | 'images' | 'options'>('details')
+  const [variants, setVariants] = useState<VariantLite[]>([])
+  const [variantsLoaded, setVariantsLoaded] = useState(false)
+
+  // Colors are loaded once. Before the step 14 migration this fails quietly and the product just has no colors.
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/products/${product.id}/variants`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => { if (!cancelled) setVariants(Array.isArray(list) ? list : []) })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setVariantsLoaded(true) })
+    return () => { cancelled = true }
+  }, [product.id])
 
   const conditions: ProductCondition[] = [
     'New with tags',
@@ -320,6 +468,16 @@ function EditProductModal({
             }`}
           >
             📝 Details
+          </button>
+          <button
+            onClick={() => setTab('options')}
+            className={`flex-1 py-2 rounded-xl text-sm font-bold transition ${
+              tab === 'options'
+                ? 'bg-blue-600 text-white'
+                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+            }`}
+          >
+            🎨 Stock &amp; Colors
           </button>
           <button
             onClick={() => setTab('images')}
@@ -429,10 +587,24 @@ function EditProductModal({
         )}
 
         {/* ── Images Tab ── */}
+        {tab === 'options' && (
+          variantsLoaded ? (
+            <OptionsManager
+              product={form}
+              variants={variants}
+              onVariantsChange={setVariants}
+              onStockChange={(stock) => setForm((prev) => ({ ...prev, stock_quantity: stock }))}
+            />
+          ) : (
+            <p className="text-zinc-500 text-sm">Loading…</p>
+          )
+        )}
+
         {tab === 'images' && (
           <ImageManager
             productId={product.id!}
             initialImages={product.images ?? []}
+            variants={variants}
           />
         )}
 

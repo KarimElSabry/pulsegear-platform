@@ -2,8 +2,8 @@
 
 'use client'
 
-import { useActionState } from 'react'
-import { assignDealToAccount, saveOrderTracking, setOrderStatus, type OrderActionResult } from './actions'
+import { useActionState, useState } from 'react'
+import { assignDealToAccount, saveExpectedDelivery, setOrderStatus, type OrderActionResult } from './actions'
 import { ADMIN_STATUS_OPTIONS, adminStatusValue } from '@/lib/orders'
 
 export interface AccountOption { user_id: string; label: string }
@@ -28,18 +28,14 @@ export function AssignForm({ dealId, current, accounts, suggestedId }: { dealId:
   )
 }
 
-export function TrackingForm({ dealId, tracking, carrier, message, expected }: { dealId: string; tracking: string; carrier: string; message: string; expected: string }) {
-  const [res, action, pending] = useActionState(saveOrderTracking, null)
-  const input = 'bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-white'
+export function ExpectedDeliveryForm({ dealId, expected }: { dealId: string; expected: string }) {
+  const [res, action, pending] = useActionState(saveExpectedDelivery, null)
   return (
     <form action={action} className="flex flex-wrap items-center gap-2">
       <input type="hidden" name="deal_id" value={dealId} />
-      <label className="flex items-center gap-1 text-xs text-zinc-400">Expected delivery
-        <input name="expected_delivery_date" type="date" defaultValue={expected} className={`${input} w-40`} />
+      <label className="flex items-center gap-1 text-xs text-zinc-400">Expected delivery (optional)
+        <input name="expected_delivery_date" type="date" defaultValue={expected} className="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-sm text-white w-40" />
       </label>
-      <input name="carrier" defaultValue={carrier} placeholder="Carrier (DHL…)" className={`${input} w-28`} />
-      <input name="tracking_number" defaultValue={tracking} placeholder="Tracking number" className={`${input} w-44`} />
-      <input name="customer_message" defaultValue={message} placeholder="Note the customer sees" className={`${input} w-64`} />
       <button disabled={pending} className="bg-zinc-700 hover:bg-zinc-600 disabled:opacity-50 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">{pending ? 'Saving…' : 'Save'}</button>
       <Msg r={res} />
     </form>
@@ -61,14 +57,16 @@ export function StatusForm({ dealId, status }: { dealId: string; status: string 
   )
 }
 
-/** One tap: opens WhatsApp with the status message already written (Arabic and English) and the tracking link. */
-export function WhatsAppButton({ href, trackUrl }: { href: string | null; trackUrl: string }) {
+/** Copies the tracking link (with the order ID filled in) so you can paste it wherever you answer the customer. */
+export function CopyLinkButton({ trackUrl }: { trackUrl: string }) {
+  const [done, setDone] = useState(false)
   return (
-    <span className="flex flex-wrap items-center gap-3 text-xs">
-      {href
-        ? <a href={href} target="_blank" rel="noopener noreferrer" className="bg-green-600 hover:bg-green-700 text-white font-semibold px-3 py-1.5 rounded-lg text-sm">Send update on WhatsApp</a>
-        : <span className="text-zinc-600">no phone on this order</span>}
-      <button type="button" onClick={() => navigator.clipboard?.writeText(trackUrl)} className="text-zinc-400 hover:text-white underline">Copy tracking link</button>
-    </span>
+    <button
+      type="button"
+      onClick={() => { navigator.clipboard?.writeText(trackUrl); setDone(true); setTimeout(() => setDone(false), 2000) }}
+      className="text-xs text-zinc-400 hover:text-white underline"
+    >
+      {done ? 'Copied ✓' : 'Copy tracking link'}
+    </button>
   )
 }

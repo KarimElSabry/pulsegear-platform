@@ -8,6 +8,7 @@ export const JOBS = {
   'newsletter-weekly': { label: 'Weekly newsletter', everyHours: 24 * 7, graceHours: 36 },
   'meta-spend': { label: 'Meta ad spend sync', everyHours: 24, graceHours: 12 },
   'release-expired': { label: 'Release expired reservations', everyHours: 24, graceHours: 12 },
+  'reprice': { label: 'EUR price check', everyHours: 24 * 7, graceHours: 36 },
   'vinted-check': { label: 'Vinted availability check', everyHours: 24, graceHours: 12 },
 } as const
 export type JobName = keyof typeof JOBS

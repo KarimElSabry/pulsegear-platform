@@ -37,23 +37,16 @@ export async function assignDealToAccount(_prev: OrderActionResult | null, formD
   return { ok: true, message: userId ? 'Order assigned. The customer can now see it under My Orders.' : 'Order unlinked.' }
 }
 
-/** Tracking number, carrier, the note the customer sees and the expected delivery date. */
-export async function saveOrderTracking(_prev: OrderActionResult | null, formData: FormData): Promise<OrderActionResult> {
+/** The expected delivery date the customer sees (optional). Empty clears it. */
+export async function saveExpectedDelivery(_prev: OrderActionResult | null, formData: FormData): Promise<OrderActionResult> {
   await assertAdmin()
   const dealId = clean(formData.get('deal_id'), 64)
   if (!dealId) return { ok: false, message: 'Missing order.' }
   const date = clean(formData.get('expected_delivery_date'), 10)
   if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, message: 'The delivery date is not valid.' }
 
-  const base = {
-    tracking_number: clean(formData.get('tracking_number'), 80),
-    carrier: clean(formData.get('carrier'), 40),
-    customer_message: clean(formData.get('customer_message'), 300),
-  }
-  const db = createAdminSupabaseClient()
-  let { error } = await db.from('deals').update(formData.has('expected_delivery_date') ? { ...base, expected_delivery_date: date } : base).eq('id', dealId)
-  if (error?.message.includes('expected_delivery_date')) ({ error } = await db.from('deals').update(base).eq('id', dealId)) // migration 20261021_01 not applied yet
-  if (error) return { ok: false, message: error.message.includes('tracking_number') ? 'Run migration 20261020_01_deals_account_link.sql first.' : error.message }
+  const { error } = await createAdminSupabaseClient().from('deals').update({ expected_delivery_date: date }).eq('id', dealId)
+  if (error) return { ok: false, message: error.message.includes('expected_delivery_date') ? 'Run migration 20261021_01_order_codes.sql first.' : error.message }
   revalidatePath('/admin/orders')
   revalidatePath('/account/orders')
   revalidatePath('/track-order')

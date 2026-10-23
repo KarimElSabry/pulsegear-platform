@@ -471,7 +471,7 @@ function CancellationModal({
   deal: Deal; onClose: () => void; onConfirm: (reason: string) => void
 }) {
   const [reason, setReason] = useState('')
-  const productName = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
+  const productName = deal.product_request?.requested_product ?? deal.item_title ?? deal.customer_name ?? 'Unknown Deal'
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -540,7 +540,7 @@ function DealCard({
   deal: Deal; onEdit: (deal: Deal) => void; onDelete: (id: string) => void
   onStatusChange: (id: string, status: DealStatus) => void; onCancel: (deal: Deal) => void
 }) {
-  const productName  = deal.product_request?.requested_product ?? deal.customer_name ?? 'Unknown Deal'
+  const productName  = deal.product_request?.requested_product ?? deal.item_title ?? deal.customer_name ?? 'Unknown Deal'
   const currentIndex = DEAL_STATUSES.findIndex((s) => s.value === deal.status)
   const nextStatus   = DEAL_STATUSES[currentIndex + 1]
 

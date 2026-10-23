@@ -4,14 +4,19 @@ let ip = '1.1.1.1'
 const row = {
   id: 'd1', status: 'shipping', phone: '+20 100 111 2222', product_request_id: 5, created_at: '2026-10-10T10:00:00Z',
   deposit_paid_at: '2026-10-11T10:00:00Z', shipped_at: '2026-10-15T10:00:00Z', arrived_egypt_at: null, delivered_at: null,
-  order_code: 'PG-3FA9C21B', expected_delivery_date: '2026-10-28', tracking_number: 'DHL123', carrier: 'DHL', customer_message: 'Packed',
+  order_code: 'PG-3FA9C21B', expected_delivery_date: '2026-10-28',
   selling_price_egp: 9000, customer_name: 'Omar',
 }
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-forwarded-for': ip }) }))
+const events = [
+  { id: 'e2', deal_id: 'd1', status: 'shipping', title: 'On its way from Europe', comment: 'Left Germany today', created_at: '2026-10-15T10:00:00Z' },
+  { id: 'e1', deal_id: 'd1', status: 'deposit_pending', title: 'Order received', comment: null, created_at: '2026-10-10T10:00:00Z' },
+]
 vi.mock('@/lib/supabase', () => ({
   createAdminSupabaseClient: () => ({
     from: (table: string) => ({
       select: () => ({
+        in: () => ({ order: async () => ({ data: table === 'order_events' ? events : [], error: null }) }),
         eq: (_c: string, v: unknown) => ({
           maybeSingle: async () => table === 'deals'
             ? { data: v === row.order_code ? row : null, error: null }
@@ -33,7 +38,9 @@ describe('trackOrder (public)', () => {
   it('shows the status for the right order ID and phone ending', async () => {
     const r = await trackOrder(null, form('pg-3fa9c21b', '2222'))
     expect(r.ok).toBe(true)
-    expect(r.order).toMatchObject({ orderCode: 'PG-3FA9C21B', headline: 'On its way from Germany', trackingNumber: 'DHL123', title: 'Garmin 265' })
+    expect(r.order).toMatchObject({ orderCode: 'PG-3FA9C21B', headline: 'On its way from Europe', title: 'Garmin 265' })
+    expect(r.order?.events.map((e) => e.title)).toEqual(['On its way from Europe', 'Order received'])
+    expect(r.order?.events[0].comment).toBe('Left Germany today')
     expect(r.order?.expected).toEqual({ from: '2026-10-28', to: null, estimate: false })
   })
 

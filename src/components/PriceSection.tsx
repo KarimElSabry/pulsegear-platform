@@ -4,7 +4,8 @@
 
 import { useMemo, useState } from 'react'
 import ReserveButton from '@/components/ReserveButton'
-import OrderButtons from '@/components/OrderButtons'
+import AddToCart from '@/components/cart/AddToCart'
+import { useVariant } from '@/components/product/VariantContext'
 
 type Props = {
   originalPrice: number
@@ -42,7 +43,14 @@ export default function PriceSection({
   }, [originalPrice, discountPercent, discountEnabled])
 
   const amountSaved = Math.max(0, originalPrice - finalPrice)
-  const isUnavailable = status !== 'available'
+  // Stock and the chosen color decide if it can be bought; without a provider, only the status.
+  const variant = useVariant()
+  const isUnavailable = variant ? !variant.availability.canBuy : status !== 'available'
+  const unavailableLabel = variant
+    ? variant.availability.reason === 'sold' ? 'تم البيع' : variant.availability.reason === 'reserved' ? 'محجوز' : 'غير متوفر'
+    : status === 'sold' ? 'تم البيع' : status === 'reserved' ? 'محجوز' : 'غير متوفر'
+  // A hold only makes sense for one-off items, not for normal stock.
+  const showReserve = isReservable && (variant ? variant.availability.oneOff : true)
 
   const handleApplyDiscount = async () => {
     if (!discountEnabled) {
@@ -190,10 +198,10 @@ export default function PriceSection({
 
       <div className="border-t border-zinc-800 pt-5 space-y-3">
         {!isUnavailable && (
-          <OrderButtons productId={productId} productTitle={productTitle} price={finalPrice} />
+          <AddToCart productId={productId} discountCode={discountPercent > 0 ? discountCode : undefined} />
         )}
 
-        {isReservable ? (
+        {showReserve ? (
           <ReserveButton
             productId={productId}
             productTitle={productTitle}
@@ -208,7 +216,7 @@ export default function PriceSection({
               disabled
               className="w-full font-bold py-3 rounded-xl bg-zinc-700 text-zinc-400 cursor-not-allowed"
             >
-              {status === 'sold' ? 'تم البيع' : status === 'reserved' ? 'محجوز' : 'غير متوفر'}
+              {unavailableLabel}
             </button>
           )
         )}
