@@ -66,3 +66,23 @@ describe('cleanVariant', () => {
   })
   it('cleanHex', () => { expect(cleanHex('#ABCDEF')).toBe('#abcdef'); expect(cleanHex('abc')).toBeNull() })
 })
+
+describe('on demand (bought after the customer orders)', () => {
+  it('is always available, up to the cart limit, and is not a one-off', () => {
+    expect(availability({ status: 'available', on_demand: true })).toMatchObject({ canBuy: true, onDemand: true, oneOff: false, maxQuantity: 10, unitsLeft: null })
+  })
+  it('an old reserved status does not block it, but sold or out of stock still switches it off', () => {
+    expect(availability({ status: 'reserved', on_demand: true }).canBuy).toBe(true)
+    expect(availability({ status: 'sold', on_demand: true })).toMatchObject({ canBuy: false, reason: 'sold' })
+    expect(availability({ status: 'out_of_stock', on_demand: true })).toMatchObject({ canBuy: false, reason: 'out_of_stock' })
+  })
+  it('a stock number wins over "on demand"; a color with its own number is respected', () => {
+    expect(availability({ status: 'available', on_demand: true, stock_quantity: 0 })).toMatchObject({ canBuy: false, onDemand: false })
+    expect(availability({ status: 'available', on_demand: true }, v(1, 0))).toMatchObject({ canBuy: false, onDemand: false })
+    expect(availability({ status: 'available', on_demand: true }, v(1, null))).toMatchObject({ canBuy: true, onDemand: true })
+  })
+  it('without the flag nothing changes', () => {
+    expect(availability({ status: 'available' }).onDemand).toBe(false)
+    expect(availability({ status: 'available', on_demand: false })).toMatchObject({ oneOff: true, maxQuantity: 1 })
+  })
+})

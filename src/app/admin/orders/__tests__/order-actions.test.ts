@@ -7,6 +7,7 @@ function fakeDb() {
   return {
     from: (table: string) => ({
       select: () => ({
+        in: async (_c: string, ids: string[]) => ({ data: table === 'deals' ? ids.map((id) => ({ id, status: state.dealStatus })) : null, error: null }),
         eq: () => ({
           maybeSingle: async () => ({ data: table === 'deals' ? { status: state.dealStatus } : null, error: null }),
           order: () => ({ limit: () => ({ maybeSingle: async () => ({ data: state.events.length ? { title: state.events[state.events.length - 1].title } : null, error: null }) }) }),

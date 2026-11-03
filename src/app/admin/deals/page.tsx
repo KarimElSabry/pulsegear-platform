@@ -1,15 +1,12 @@
 // src/app/admin/deals/page.tsx
+// Deals are managed on the Orders page now (create, costs, status, delivery, cancel).
 
-import { getDeals, getOpenProductRequests } from './actions'
-import { getDiscountCodes } from '../sales/actions'
-import DealsClient from './DealsClient'
+import { redirect } from 'next/navigation'
+import { assertAdmin } from '@/lib/admin-auth'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DealsPage() {
-  const [deals, productRequests, discountCodes] = await Promise.all([
-    getDeals(),
-    getOpenProductRequests(),
-    getDiscountCodes().catch(() => []),
-  ])
-
-  return <DealsClient deals={deals} productRequests={productRequests} discountCodes={discountCodes} />
+  await assertAdmin()
+  redirect('/admin/orders')
 }

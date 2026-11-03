@@ -74,6 +74,7 @@ export interface Product {
 
   // 📦 Stock: empty = one-off item (status rules), a number = normal stock
   stock_quantity?:   number | null
+  on_demand?:        boolean | null
 }
 
 // ─── Vinted Parser ────────────────────────────────────────────────────────────

@@ -7,12 +7,19 @@ import { statusHeadline, type OrderEventLite } from '@/lib/orders'
 
 const missing = (e: { code?: string; message?: string } | null) => !!e && (e.code === 'PGRST205' || e.code === '42P01' || /order_events/.test(e.message ?? ''))
 
-export async function loadEvents(db: SupabaseClient, dealIds: string[]): Promise<Map<string, OrderEventLite[]>> {
+/** The updates of some orders, newest first. Hidden updates are left out unless the admin page asks for them. */
+export async function loadEvents(db: SupabaseClient, dealIds: string[], opts: { includeHidden?: boolean } = {}): Promise<Map<string, OrderEventLite[]>> {
   const out = new Map<string, OrderEventLite[]>()
   if (dealIds.length === 0) return out
-  const { data, error } = await db.from('order_events').select('id, deal_id, status, title, comment, created_at').in('deal_id', dealIds).order('created_at', { ascending: false })
+  const query = (cols: string) => db.from('order_events').select(cols).in('deal_id', dealIds).order('created_at', { ascending: false })
+  let { data, error } = await query('id, deal_id, status, title, comment, created_at, hidden')
+  // migration 20261104_01 not applied yet: nothing can be hidden, so read without that column
+  if (error && /hidden/.test(error.message ?? '')) ({ data, error } = await query('id, deal_id, status, title, comment, created_at'))
   if (error) { if (!missing(error)) console.error('[order-events] load failed:', error.message); return out }
-  for (const r of data ?? []) out.set(r.deal_id as string, [...(out.get(r.deal_id as string) ?? []), r as OrderEventLite])
+  for (const r of (data ?? []) as unknown as (OrderEventLite & { deal_id: string })[]) {
+    if (r.hidden === true && !opts.includeHidden) continue
+    out.set(r.deal_id, [...(out.get(r.deal_id) ?? []), r])
+  }
   return out
 }
 

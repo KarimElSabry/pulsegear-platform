@@ -10,7 +10,10 @@ export function isOptimizable(src: string | null | undefined): boolean {
   if (!src) return true
   if (src.startsWith('/')) return true // files in /public
   try {
-    const host = new URL(src).hostname.toLowerCase()
+    const url = new URL(src)
+    // next.config only allows https for these hosts: an http:// address (some old photos) is shown as it is
+    if (url.protocol !== 'https:') return false
+    const host = url.hostname.toLowerCase()
     return OPTIMIZED_HOST_SUFFIXES.some((s) => host === s || host.endsWith(`.${s}`))
   } catch {
     return false

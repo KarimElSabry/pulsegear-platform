@@ -94,7 +94,7 @@ export default function AddToCart({ productId, discountCode }: Props) {
       )}
 
       <p className="text-xs text-zinc-500">
-        Add to your cart and press Confirm order. Nothing is paid on the website: we contact you on WhatsApp to arrange payment and delivery.
+        Add to your cart and press Confirm order. Nothing is charged yet: on the next page you pay the 50% deposit by transfer (upload the receipt) or arrange it with us on WhatsApp or Instagram. Card payment is coming soon.
         Questions? <Link href="/contact" className="text-red-400 hover:text-red-300">Contact us</Link>.
       </p>
     </div>

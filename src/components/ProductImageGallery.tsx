@@ -26,26 +26,34 @@ export default function ProductImageGallery({ images: allImages, title }: Props)
   // A photo picked earlier only counts while it still belongs to the visible color.
   const selected = chosen && images.some((img) => img.image_url === chosen) ? chosen : mainImage
   const setSelected = setChosen
+  // Photos whose link is dead (e.g. an expired Vinted link): hide them instead of showing a broken picture.
+  const [dead, setDead] = useState<Set<string>>(() => new Set())
+  const markDead = (url: string) => setDead((prev) => new Set(prev).add(url))
 
   return (
     <div className="flex flex-col gap-4">
 
       {/* Main Image */}
       <div className="bg-white rounded-2xl overflow-hidden aspect-square relative">
-        <Image
-          src={selected}
-          alt={title}
-          fill
-          className="object-cover transition-all duration-300"
-          sizes="(min-width: 1024px) 50vw, 100vw"
-          unoptimized={!isOptimizable(selected)}
-        />
+        {dead.has(selected) ? (
+          <div className="absolute inset-0 flex items-center justify-center text-zinc-400 text-sm">Photo unavailable</div>
+        ) : (
+          <Image
+            src={selected}
+            alt={title}
+            fill
+            className="object-cover transition-all duration-300"
+            sizes="(min-width: 1024px) 50vw, 100vw"
+            unoptimized={!isOptimizable(selected)}
+            onError={() => markDead(selected)}
+          />
+        )}
       </div>
 
       {/* Thumbnails */}
-      {images.length > 1 && (
+      {images.filter((img) => !dead.has(img.image_url)).length > 1 && (
         <div className="grid grid-cols-4 gap-2">
-          {images.map((img, index) => (
+          {images.filter((img) => !dead.has(img.image_url)).map((img, index) => (
             <button
               key={index}
               onClick={() => setSelected(img.image_url)}
@@ -62,6 +70,7 @@ export default function ProductImageGallery({ images: allImages, title }: Props)
                 className="object-cover"
                 sizes="120px"
                 unoptimized={!isOptimizable(img.image_url)}
+                onError={() => markDead(img.image_url)}
               />
             </button>
           ))}

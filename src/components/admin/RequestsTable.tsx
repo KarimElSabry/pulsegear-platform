@@ -157,7 +157,7 @@ export default function RequestsTable({ requests }: { requests: Request[] }) {
                       {r.deals.map(d => (
                         <a
                           key={d.id}
-                          href="/admin/deals"
+                          href="/admin/orders"
                           className={`text-xs font-bold px-2 py-1 rounded-full whitespace-nowrap
                             ${DEAL_STATUS_COLORS[d.status] ?? 'bg-zinc-700 text-zinc-300'}`}
                         >
@@ -167,7 +167,7 @@ export default function RequestsTable({ requests }: { requests: Request[] }) {
                     </div>
                   ) : (
                     <a
-                      href="/admin/deals"
+                      href="/admin/orders"
                       className="text-xs text-indigo-400 hover:text-indigo-300 underline whitespace-nowrap"
                     >
                       + Create Deal
@@ -284,7 +284,7 @@ export default function RequestsTable({ requests }: { requests: Request[] }) {
                 📱 WhatsApp Customer
               </a>
               <a
-                href="/admin/deals"
+                href="/admin/orders"
                 className="block w-full text-center bg-indigo-600 hover:bg-indigo-700
                            text-white py-2.5 rounded-full font-bold text-sm uppercase tracking-wide transition-colors"
               >

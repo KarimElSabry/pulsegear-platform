@@ -80,6 +80,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         updates.stock_quantity = n
       }
     }
+    if (body.on_demand !== undefined) updates.on_demand = Boolean(body.on_demand)
     if (body.discount_enabled !== undefined) {
       updates.discount_enabled = Boolean(body.discount_enabled)
     }

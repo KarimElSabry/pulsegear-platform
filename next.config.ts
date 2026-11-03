@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  // Bank statements (PDF) are uploaded to the tax page through a server action; the default limit is only 1 MB.
+  experimental: { serverActions: { bodySizeLimit: '4mb' } },
+
   // Files in public/ (images, hero videos) are served from Vercel's CDN and are never read by a
   // serverless function. Keeping them out of the function bundles keeps every function small
   // (the limit is 250 MB and the hero videos alone are about 300 MB).

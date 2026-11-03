@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Deal, DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, DealStatus, SaleChannel } from '@/types/deals'
-import { createDeal, updateDeal, updateDealStatus, deleteDeal } from './actions'
+import { DEAL_STATUSES, SALE_CHANNELS, SOURCE_PLATFORMS, type Deal, type DealStatus, type SaleChannel } from '@/types/deals'
 import { commissionForCode } from '@/lib/deal-codes'
 import { normalizeDigits } from '@/lib/digits'
 
 /** Runs before each field's own onChange, so Arabic digits typed in number/phone fields become 0-9 first. */
-function digitsCapture(e: React.ChangeEvent<HTMLFormElement>) {
+export function digitsCapture(e: React.ChangeEvent<HTMLFormElement>) {
   const el = e.target as unknown as HTMLInputElement
   if (el.dataset?.digits) {
     const fixed = normalizeDigits(el.value)
@@ -15,12 +14,11 @@ function digitsCapture(e: React.ChangeEvent<HTMLFormElement>) {
   }
 }
 
-type DiscountCodeOption = { code: string; discount_percent: number }
+export type DiscountCodeOption = { code: string; discount_percent: number }
 
 type DealStatusValue = DealStatus
-type FilterType = DealStatus | 'all' | 'active'
 
-type ProductRequest = {
+export type ProductRequest = {
   id:                  number
   requested_product:   string | null
   customer_name:       string | null
@@ -32,15 +30,6 @@ type ProductRequest = {
   budget:              number | null
   status:              string
   notes?:              string | null
-}
-
-function StatusBadge({ status }: { status: DealStatus }) {
-  const found = DEAL_STATUSES.find((s) => s.value === status)
-  return (
-    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${found?.color ?? 'bg-gray-700 text-gray-300'}`}>
-      {found?.label ?? status}
-    </span>
-  )
 }
 
 function Field({
@@ -110,7 +99,7 @@ function useEurToEgp() {
 }
 
 // ── Deal Form Fields ──────────────────────────────────────────────────────────
-function DealFormFields({
+export function DealFormFields({
   deal, productRequests, discountCodes,
 }: {
   deal?: Deal; productRequests: ProductRequest[]; discountCodes: DiscountCodeOption[]
@@ -464,191 +453,8 @@ function DealFormFields({
   )
 }
 
-// ── Cancellation Modal ────────────────────────────────────────────────────────
-function CancellationModal({
-  deal, onClose, onConfirm,
-}: {
-  deal: Deal; onClose: () => void; onConfirm: (reason: string) => void
-}) {
-  const [reason, setReason] = useState('')
-  const productName = deal.product_request?.requested_product ?? deal.item_title ?? deal.customer_name ?? 'Unknown Deal'
-
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-950 border border-red-800 rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-bold text-red-400">❌ Cancel Deal</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-white text-lg font-bold transition">✕</button>
-        </div>
-        <div className="p-6 flex flex-col gap-4">
-          <p className="text-sm text-gray-400">
-            You are cancelling: <span className="text-white font-bold">{productName}</span>
-          </p>
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Cancellation Reason <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              rows={4}
-              placeholder="e.g. Customer changed their mind, Item no longer available..."
-              className="w-full bg-gray-800 border border-gray-700 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none transition resize-none"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-gray-600 uppercase tracking-wide">Quick select:</p>
-            <div className="flex flex-wrap gap-2">
-              {['Customer changed mind', 'Item not available', 'Price too high', 'Found elsewhere', 'No response from customer', 'Out of budget'].map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setReason(r)}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                    reason === r ? 'border-red-500 bg-red-500/20 text-red-300' : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-500'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 rounded-lg transition text-sm">
-              Keep Deal
-            </button>
-            <button
-              onClick={() => {
-                if (!reason.trim()) { alert('Please enter a cancellation reason'); return }
-                onConfirm(reason.trim())
-              }}
-              className="flex-1 bg-red-600 hover:bg-red-500 text-white font-semibold py-2 rounded-lg transition text-sm"
-            >
-              Confirm Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Deal Card ─────────────────────────────────────────────────────────────────
-function DealCard({
-  deal, onEdit, onDelete, onStatusChange, onCancel,
-}: {
-  deal: Deal; onEdit: (deal: Deal) => void; onDelete: (id: string) => void
-  onStatusChange: (id: string, status: DealStatus) => void; onCancel: (deal: Deal) => void
-}) {
-  const productName  = deal.product_request?.requested_product ?? deal.item_title ?? deal.customer_name ?? 'Unknown Deal'
-  const currentIndex = DEAL_STATUSES.findIndex((s) => s.value === deal.status)
-  const nextStatus   = DEAL_STATUSES[currentIndex + 1]
-
-  function channelIcon(channel: string) {
-    return SALE_CHANNELS.find((c) => c.value === channel)?.icon ?? '📦'
-  }
-
-  return (
-    <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 space-y-3 hover:border-indigo-700 transition">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-semibold text-white text-sm">{productName}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{deal.phone ?? deal.customer_instagram ?? 'No contact info'}</p>
-          {deal.customer_address && <p className="text-xs text-gray-500 mt-0.5">📍 {deal.customer_address}</p>}
-        </div>
-        <StatusBadge status={deal.status} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2 text-xs">
-        {deal.selling_price_egp != null && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Selling </span>
-            <span className="font-semibold text-white">{deal.selling_price_egp.toLocaleString('en-EG')} EGP{deal.exchange_rate ? ` · €${(deal.selling_price_egp / deal.exchange_rate).toLocaleString('en-US', { maximumFractionDigits: 0 })}` : ''}</span>
-          </div>
-        )}
-        {deal.deposit_amount_egp != null && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Deposit </span>
-            <span className="font-semibold text-white">{deal.deposit_amount_egp.toLocaleString('en-EG')} EGP</span>
-          </div>
-        )}
-        {deal.remaining_amount_egp != null && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Remaining </span>
-            <span className="font-semibold text-white">{deal.remaining_amount_egp.toLocaleString('en-EG')} EGP</span>
-          </div>
-        )}
-        {deal.source_price_eur != null && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Product </span>
-            <span className="font-semibold text-white">€{deal.source_price_eur}</span>
-          </div>
-        )}
-        {deal.shipping_eur != null && deal.shipping_eur > 0 && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Shipping (Germany) </span>
-            <span className="font-semibold text-cyan-400">€{deal.shipping_eur}{deal.exchange_rate ? ` · ${Math.round(deal.shipping_eur * deal.exchange_rate).toLocaleString('en-EG')} EGP` : ''}</span>
-          </div>
-        )}
-        {deal.egypt_shipping_egp != null && deal.egypt_shipping_egp > 0 && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Shipping (Egypt) </span>
-            <span className="font-semibold text-cyan-400">{deal.egypt_shipping_egp.toLocaleString('en-EG')} EGP{deal.exchange_rate ? ` · €${(deal.egypt_shipping_egp / deal.exchange_rate).toLocaleString('en-US', { maximumFractionDigits: 2 })}` : ''}</span>
-          </div>
-        )}
-        {deal.source_platform && (
-          <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-            <span className="text-gray-500">Source </span>
-            <span className="font-semibold text-white">{deal.source_platform}</span>
-          </div>
-        )}
-        <div className="bg-gray-800 rounded-lg px-2 py-1.5">
-          <span className="text-gray-500">Channel </span>
-          <span className="font-semibold text-white capitalize">{channelIcon(deal.sale_channel)} {deal.sale_channel}</span>
-        </div>
-      </div>
-
-      {deal.source_link && (
-        <a href={deal.source_link} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 hover:underline block truncate">
-          🔗 {deal.source_link}
-        </a>
-      )}
-
-      {deal.notes && <p className="text-xs text-gray-500 italic">📝 {deal.notes}</p>}
-
-      {deal.status === 'cancelled' && deal.cancellation_reason && (
-        <div className="bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
-          <p className="text-xs text-red-400 font-semibold mb-0.5">Cancellation Reason:</p>
-          <p className="text-xs text-gray-400">{deal.cancellation_reason}</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 pt-1 flex-wrap">
-        {nextStatus && deal.status !== 'cancelled' && deal.status !== 'completed' && (
-          <button onClick={() => onStatusChange(deal.id, nextStatus.value)} className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition">
-            Next: {nextStatus.label}
-          </button>
-        )}
-        <button onClick={() => onEdit(deal)} className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium px-3 py-1.5 rounded-lg transition">
-          Edit
-        </button>
-        {deal.status !== 'cancelled' && deal.status !== 'completed' && (
-          <button onClick={() => onCancel(deal)} className="text-xs bg-red-900/40 hover:bg-red-900/70 text-red-400 font-medium px-3 py-1.5 rounded-lg transition">
-            Cancel
-          </button>
-        )}
-        <button onClick={() => onDelete(deal.id)} className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-500 font-medium px-3 py-1.5 rounded-lg transition">
-          🗑️
-        </button>
-      </div>
-
-      <p className="text-xs text-gray-700">Created: {new Date(deal.created_at).toLocaleDateString('en-GB')}</p>
-    </div>
-  )
-}
-
 // ── Modal Wrapper ─────────────────────────────────────────────────────────────
-function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-gray-950 border border-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -658,211 +464,6 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
         </div>
         <div className="p-6">{children}</div>
       </div>
-    </div>
-  )
-}
-
-// ── Main Client Component ─────────────────────────────────────────────────────
-export default function DealsClient({
-  deals: initialDeals,
-  productRequests,
-  discountCodes,
-}: {
-  deals: Deal[]
-  productRequests: ProductRequest[]
-  discountCodes: DiscountCodeOption[]
-}) {
-  const [deals,          setDeals]          = useState<Deal[]>(initialDeals)
-  const [showForm,       setShowForm]       = useState(false)
-  const [editingDeal,    setEditingDeal]    = useState<Deal | null>(null)
-  const [cancellingDeal, setCancellingDeal] = useState<Deal | null>(null)
-  const [filterStatus,   setFilterStatus]   = useState<FilterType>('active')
-  const [loading,        setLoading]        = useState(false)
-
-  const activeDeals    = deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
-  const completedDeals = deals.filter((d) => d.status === 'completed')
-  const cancelledDeals = deals.filter((d) => d.status === 'cancelled')
-  const totalRevenue   = completedDeals.reduce((s, d) => s + (d.selling_price_egp ?? 0), 0)
-
-  const filteredDeals =
-    filterStatus === 'active'
-      ? deals.filter((d) => d.status !== 'cancelled' && d.status !== 'completed')
-      : filterStatus === 'all'
-      ? deals
-      : deals.filter((d) => d.status === filterStatus)
-
-  async function handleCreate(formData: FormData) {
-    setLoading(true)
-    try {
-      await createDeal(formData)
-      setShowForm(false)
-      window.location.reload()
-    } catch (err) {
-      console.error('handleCreate error:', err)
-      alert('Failed to create deal. Check console for details.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleUpdate(formData: FormData) {
-    if (!editingDeal) return
-    setLoading(true)
-    try {
-      await updateDeal(editingDeal.id, formData)
-      setEditingDeal(null)
-      window.location.reload()
-    } catch (err) {
-      console.error('handleUpdate error:', err)
-      alert('Failed to update deal. Check console for details.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleStatusChange(id: string, status: DealStatus) {
-    try {
-      await updateDealStatus(id, status)
-      window.location.reload()
-    } catch (err) {
-      console.error('handleStatusChange error:', err)
-      alert('Failed to update status. Check console for details.')
-    }
-  }
-
-  async function handleCancelWithReason(deal: Deal, reason: string) {
-    try {
-      await updateDealStatus(deal.id, 'cancelled', reason)
-      setCancellingDeal(null)
-      window.location.reload()
-    } catch (err) {
-      console.error('handleCancel error:', err)
-      alert('Failed to cancel deal.')
-    }
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm('Delete this deal? This cannot be undone.')) return
-    try {
-      await deleteDeal(id)
-      setDeals((prev) => prev.filter((d) => d.id !== id))
-    } catch (err) {
-      console.error('handleDelete error:', err)
-      alert('Failed to delete deal. Check console for details.')
-    }
-  }
-
-  return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto">
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Deals Pipeline</h1>
-          <p className="text-sm text-gray-500 mt-1">Track every deal from deposit to delivery</p>
-        </div>
-        <button onClick={() => setShowForm(true)} className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg transition text-sm">
-          + New Deal
-        </button>
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Active Deals',    value: activeDeals.length,                   suffix: '' },
-          { label: 'Completed Deals', value: completedDeals.length,                suffix: '' },
-          { label: 'Total Revenue',   value: totalRevenue.toLocaleString('en-EG'), suffix: ' EGP' },
-        ].map(({ label, value, suffix }) => (
-          <div key={label} className="bg-gray-900 rounded-xl border border-gray-800 p-4 text-center">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
-            <p className="text-xl font-bold text-indigo-400 mt-1">{value}{suffix}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex gap-2 flex-wrap">
-        <button onClick={() => setFilterStatus('active')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'active' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-          Active ({activeDeals.length})
-        </button>
-        {DEAL_STATUSES.filter((s) => s.value !== 'cancelled' && s.value !== 'completed').map((s) => {
-          const count = deals.filter((d) => d.status === s.value).length
-          if (count === 0) return null
-          return (
-            <button key={s.value} onClick={() => setFilterStatus(s.value)} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === s.value ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-              {s.label} ({count})
-            </button>
-          )
-        })}
-        {completedDeals.length > 0 && (
-          <button onClick={() => setFilterStatus('completed')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'completed' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-            ✅ Completed ({completedDeals.length})
-          </button>
-        )}
-        {cancelledDeals.length > 0 && (
-          <button onClick={() => setFilterStatus('cancelled')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'cancelled' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-            ❌ Cancelled ({cancelledDeals.length})
-          </button>
-        )}
-        <button onClick={() => setFilterStatus('all')} className={`text-xs px-3 py-1.5 rounded-full font-medium transition ${filterStatus === 'all' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
-          All ({deals.length})
-        </button>
-      </div>
-
-      {filteredDeals.length === 0 ? (
-        <div className="text-center py-16 text-gray-600">
-          <p className="text-4xl mb-3">🤝</p>
-          <p className="font-medium">{filterStatus === 'active' ? 'No active deals — create your first one!' : 'No deals found.'}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredDeals.map((deal) => (
-            <DealCard
-              key={deal.id}
-              deal={deal}
-              onEdit={setEditingDeal}
-              onDelete={handleDelete}
-              onStatusChange={handleStatusChange}
-              onCancel={setCancellingDeal}
-            />
-          ))}
-        </div>
-      )}
-
-      {showForm && (
-        <Modal title="New Deal" onClose={() => setShowForm(false)}>
-          <form action={handleCreate} autoComplete="off" onChangeCapture={digitsCapture} className="grid grid-cols-2 gap-4">
-            <DealFormFields productRequests={productRequests} discountCodes={discountCodes} />
-            <div className="col-span-2">
-              <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">
-                {loading ? 'Saving...' : 'Create Deal'}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {editingDeal && (
-        <Modal title="Edit Deal" onClose={() => setEditingDeal(null)}>
-          <form action={handleUpdate} autoComplete="off" onChangeCapture={digitsCapture} className="grid grid-cols-2 gap-4">
-            <DealFormFields deal={editingDeal} productRequests={productRequests} discountCodes={discountCodes} />
-            <div className="col-span-2 flex gap-3">
-              <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition">
-                {loading ? 'Saving...' : 'Update Deal'}
-              </button>
-              <button type="button" onClick={() => setEditingDeal(null)} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2.5 rounded-lg transition">
-                Cancel
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {cancellingDeal && (
-        <CancellationModal
-          deal={cancellingDeal}
-          onClose={() => setCancellingDeal(null)}
-          onConfirm={(reason) => handleCancelWithReason(cancellingDeal, reason)}
-        />
-      )}
-
     </div>
   )
 }

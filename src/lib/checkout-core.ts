@@ -9,7 +9,7 @@ export const HOLD_HOURS = 24
 export type CheckoutStatus = 'pending' | 'approved' | 'rejected' | 'expired' | 'cancelled'
 
 export const CHECKOUT_STATUS_LABEL: Record<CheckoutStatus, string> = {
-  pending: 'Order received, we will contact you on WhatsApp',
+  pending: 'Order received, waiting for your deposit',
   approved: 'Order confirmed',
   rejected: 'Order not confirmed',
   expired: 'Time ran out',

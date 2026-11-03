@@ -14,6 +14,10 @@ describe('isOptimizable', () => {
       expect(isOptimizable(u)).toBe(false)
     }
   })
+  it('shows an http:// photo as it is instead of crashing the page (next.config only allows https)', () => {
+    expect(isOptimizable('http://images1.vinted.net/t/04_02514_x/f800/1781368580.webp?s=94fa')).toBe(false)
+    expect(isOptimizable('http://abc.supabase.co/storage/a.jpg')).toBe(false)
+  })
   it('does not trust look-alike hosts or garbage', () => {
     expect(isOptimizable('https://evilvinted.net/a.jpg')).toBe(false)
     expect(isOptimizable('https://supabase.co.evil.com/a.jpg')).toBe(false)

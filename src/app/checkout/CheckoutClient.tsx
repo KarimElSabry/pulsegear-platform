@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useCart } from '@/components/cart/CartProvider'
 import { useQuote } from '@/components/cart/useQuote'
 import OrderSummary from '@/components/cart/OrderSummary'
+import AskUsFirst from '@/components/cart/AskUsFirst'
 import { DISCOUNT_KEY } from '@/lib/cart'
 import { normalizeDigits } from '@/lib/digits'
 import { egp } from '@/lib/checkout-core'
@@ -129,6 +130,7 @@ export default function CheckoutClient({ defaults, loggedIn }: Props) {
         >
           {sending ? 'Sending your order…' : 'Confirm order'}
         </button>
+        <AskUsFirst lines={quote?.lines ?? []} />
         {quote && !quote.buyable && <p className="text-sm text-amber-300">Some items are no longer available. <Link href="/cart" className="underline">Back to your cart</Link>.</p>}
       </aside>
     </form>

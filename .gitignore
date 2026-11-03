@@ -42,3 +42,6 @@ next-env.d.ts
 
 secrets/
 secrets/*.json
+.vscode.tar
+changed_files.zip
+changed_files/

@@ -57,7 +57,7 @@ function safeDateOnly(value: unknown): string {
 }
 
 function revalidateDealPathsSafely() {
-  const paths = ['/admin/deals', '/admin/requests', '/admin/sales', '/admin/analytics']
+  const paths = ['/admin/deals', '/admin/orders', '/admin/checkouts', '/admin/requests', '/admin/sales', '/admin/analytics', '/account/orders', '/track-order']
 
   for (const path of paths) {
     try {
@@ -219,7 +219,6 @@ export async function updateDeal(id: string, formData: FormData) {
     customer_instagram: getStr(formData, 'customer_instagram'),
 
     customer_address: getStr(formData, 'customer_address'),
-    status: getStr(formData, 'status') ?? 'deposit_pending',
     source_link: getStr(formData, 'source_link'),
     source_platform: getStr(formData, 'source_platform'),
     sale_channel: getStr(formData, 'sale_channel') ?? 'whatsapp',
@@ -234,6 +233,11 @@ export async function updateDeal(id: string, formData: FormData) {
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
     discount_code: getStr(formData, 'discount_code'),
   }
+
+  // The status is NOT saved with the other fields: a change goes through updateDealStatus, the same path the Orders page
+  // uses, so dates, the update the customer sees, the request status and the sale record are all kept in step.
+  const newStatus = getStr(formData, 'status')
+  const { data: before } = await supabase.from('deals').select('status').eq('id', id).maybeSingle()
 
   assertNotNegative(payload)
   let { error } = await supabase.from('deals').update(payload).eq('id', id)
@@ -259,7 +263,11 @@ export async function updateDeal(id: string, formData: FormData) {
     }
   }
 
-  await syncExistingSaleFromDeal(id)
+  if (newStatus && before?.status && newStatus !== before.status) {
+    await updateDealStatus(id, newStatus as DealStatus)
+  } else {
+    await syncExistingSaleFromDeal(id)
+  }
   revalidateDealPathsSafely()
 }
 

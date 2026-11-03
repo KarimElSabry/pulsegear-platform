@@ -4,12 +4,15 @@
 //  One-off item   stock_quantity is empty. Bought once, and product.status says if it is still available.
 //  Normal stock   stock_quantity is a number (0 = out of stock). A color (variant) can have its own number;
 //                 a color with an empty number follows the product's number.
+//  On demand      on_demand is ticked and there is no stock number: bought for the customer after they order. It is always
+//                 available (unless switched off with the status) and an order never holds, sells or hides it.
 
 export type ProductStatusLite = 'available' | 'sold' | 'reserved' | 'out_of_stock'
 
 export type StockProduct = {
   status?: ProductStatusLite | string | null
   stock_quantity?: number | null
+  on_demand?: boolean | null
 }
 
 export type VariantLite = {
@@ -28,6 +31,8 @@ export type Availability = {
   maxQuantity: number
   /** One-off item (no stock number): needs a hold while the customer pays. */
   oneOff: boolean
+  /** Bought on demand: always available, nothing is held or sold out by an order. */
+  onDemand: boolean
   /** Units left when stock is managed with a number, otherwise null. */
   unitsLeft: number | null
   reason: 'ok' | 'sold' | 'reserved' | 'out_of_stock'
@@ -53,19 +58,25 @@ export function availability(product: StockProduct, variant?: VariantLite | null
   const productUnits = whole(product.stock_quantity)
   const units = variant ? whole(variant.stock_quantity) ?? productUnits : productUnits
 
+  if (units === null && product.on_demand === true) {
+    // On demand: only the status can switch it off (sold or out of stock). An old "reserved" status does not block it.
+    if (status === 'sold' || status === 'out_of_stock') return { canBuy: false, maxQuantity: 0, oneOff: false, onDemand: true, unitsLeft: null, reason: status }
+    return { canBuy: true, maxQuantity: MAX_CART_QUANTITY, oneOff: false, onDemand: true, unitsLeft: null, reason: 'ok' }
+  }
+
   if (units === null) {
     // One-off item
-    if (status === 'sold') return { canBuy: false, maxQuantity: 0, oneOff: true, unitsLeft: null, reason: 'sold' }
-    if (status === 'reserved') return { canBuy: false, maxQuantity: 0, oneOff: true, unitsLeft: null, reason: 'reserved' }
-    if (status === 'out_of_stock') return { canBuy: false, maxQuantity: 0, oneOff: true, unitsLeft: null, reason: 'out_of_stock' }
-    return { canBuy: true, maxQuantity: 1, oneOff: true, unitsLeft: null, reason: 'ok' }
+    if (status === 'sold') return { canBuy: false, maxQuantity: 0, oneOff: true, onDemand: false, unitsLeft: null, reason: 'sold' }
+    if (status === 'reserved') return { canBuy: false, maxQuantity: 0, oneOff: true, onDemand: false, unitsLeft: null, reason: 'reserved' }
+    if (status === 'out_of_stock') return { canBuy: false, maxQuantity: 0, oneOff: true, onDemand: false, unitsLeft: null, reason: 'out_of_stock' }
+    return { canBuy: true, maxQuantity: 1, oneOff: true, onDemand: false, unitsLeft: null, reason: 'ok' }
   }
 
   // Normal stock: the number rules, a sold/out_of_stock status switches the product off.
   if (STATUS_BLOCK.has(status) || units <= 0) {
-    return { canBuy: false, maxQuantity: 0, oneOff: false, unitsLeft: 0, reason: status === 'sold' ? 'sold' : 'out_of_stock' }
+    return { canBuy: false, maxQuantity: 0, oneOff: false, onDemand: false, unitsLeft: 0, reason: status === 'sold' ? 'sold' : 'out_of_stock' }
   }
-  return { canBuy: true, maxQuantity: Math.min(units, MAX_CART_QUANTITY), oneOff: false, unitsLeft: units, reason: 'ok' }
+  return { canBuy: true, maxQuantity: Math.min(units, MAX_CART_QUANTITY), oneOff: false, onDemand: false, unitsLeft: units, reason: 'ok' }
 }
 
 /** For a product with colors: is any color buyable? */

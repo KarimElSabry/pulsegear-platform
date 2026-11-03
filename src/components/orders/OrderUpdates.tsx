@@ -32,7 +32,7 @@ export default function OrderUpdates({ timeline, events, cancelled }: { timeline
           <ol className="relative border-l-2 border-zinc-700 ml-2 space-y-5">
             {events.map((e, i) => (
               <li key={`${e.at}-${i}`} className="ml-5 relative">
-                <span className={`absolute -left-6.75 top-1 h-3.5 w-3.5 rounded-full border-2 ${i === 0 ? 'bg-red-500 border-red-500' : 'bg-zinc-950 border-zinc-500'}`} />
+                <span className={`absolute -left-[27px] top-1 h-3.5 w-3.5 rounded-full border-2 ${i === 0 ? 'bg-red-500 border-red-500' : 'bg-zinc-950 border-zinc-500'}`} />
                 <p className={i === 0 ? 'text-white font-bold' : 'text-zinc-200 font-semibold'}>{e.title}</p>
                 {e.comment && <p className="text-sm text-zinc-300 mt-0.5">{e.comment}</p>}
                 <p className="text-xs text-zinc-500 mt-0.5">{when(e.at)}</p>

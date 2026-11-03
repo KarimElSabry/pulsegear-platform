@@ -9,6 +9,10 @@ import { findByCodeAndToken, releaseExpired } from '@/lib/checkout-service'
 import { CHECKOUT_STATUS_LABEL, egp } from '@/lib/checkout-core'
 import { normalizeOrderCode } from '@/lib/orders'
 import TokenFinder from '@/components/cart/TokenFinder'
+import CancelMyOrder from '@/components/cart/CancelMyOrder'
+import PaymentOptions from '@/components/cart/PaymentOptions'
+import { customerReceiptStatus } from '@/lib/receipt-service'
+import { depositFor } from '@/lib/payment-details'
 
 export const metadata: Metadata = { title: 'Your order | Pulse Gear Egypt', robots: { index: false } }
 export const dynamic = 'force-dynamic'
@@ -28,6 +32,12 @@ export default async function CheckoutOrderPage({ params, searchParams }: { para
   const { data: items } = await db.from('checkout_items')
     .select('title, color_name, quantity, unit_price_egp, discount_egp, note').eq('checkout_id', order.id).order('id')
 
+  const receipts = await customerReceiptStatus(db, order.id)
+  const paid = receipts.some((r) => r.status === 'verified')
+  const waiting = receipts.some((r) => r.status === 'submitted')
+  const lastRejected = !paid && !waiting ? receipts.filter((r) => r.status === 'rejected').at(-1) : undefined
+  const deposit = depositFor(order.total_egp)
+
   return (
     <Shell>
       <p className="font-mono text-sm text-zinc-500">{order.code}</p>
@@ -35,8 +45,8 @@ export default async function CheckoutOrderPage({ params, searchParams }: { para
 
       {order.status === 'pending' && (
         <Box tone="green">
-          <b>Thank you, {order.customer_name.split(' ')[0]}! We received your order.</b> We are holding your items for you and will message you on WhatsApp on{' '}
-          <b dir="ltr">{order.phone}</b> to arrange payment and delivery. Nothing has been charged. Please keep your WhatsApp open.
+          <b>Thank you, {order.customer_name.split(' ')[0]}! We received your order.</b> We are holding your items for you. Choose how to pay the deposit below.
+          Nothing has been charged yet.
         </Box>
       )}
       {order.status === 'approved' && (
@@ -47,7 +57,7 @@ export default async function CheckoutOrderPage({ params, searchParams }: { para
       )}
       {(order.status === 'rejected' || order.status === 'cancelled') && (
         <Box tone="red">
-          {order.status === 'rejected' ? 'We could not confirm this order' : 'This order was cancelled'}{order.review_note ? `: ${order.review_note}` : '.'}{' '}
+          {order.status === 'rejected' ? `We could not confirm this order${order.review_note ? `: ${order.review_note}` : '.'}` : (order.review_note || 'This order was cancelled.')}{' '}
           The items were released. <Link href={`/contact?order=${order.code}`} className="font-bold underline">Contact us</Link> if you think this is a mistake.
         </Box>
       )}
@@ -57,6 +67,16 @@ export default async function CheckoutOrderPage({ params, searchParams }: { para
           {' '}or place a new order.
         </Box>
       )}
+
+      {paid && <Box tone="green"><b>Deposit received. Thank you!</b> We will reach out to you to arrange the delivery. Delivery takes about 1 to 2 weeks.</Box>}
+      {waiting && <Box tone="green"><b>We received your receipt</b> and are checking it. Once your payment is confirmed, we will reach out to you to arrange the delivery. Delivery takes about 1 to 2 weeks. You do not need to do anything else.</Box>}
+      {lastRejected && <Box tone="red">We could not match your receipt to a payment{lastRejected.note ? `: ${lastRejected.note}` : '.'} Please send a new receipt below or message us.</Box>}
+
+      {(order.status === 'pending' || order.status === 'approved') && !paid && !waiting && (
+        <PaymentOptions code={order.code} token={t} total={order.total_egp} deposit={deposit} phone={order.phone} />
+      )}
+
+      {order.status === 'pending' && <CancelMyOrder code={order.code} token={t} />}
 
       <section className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
         <h2 className="text-lg font-black text-white">Your items</h2>

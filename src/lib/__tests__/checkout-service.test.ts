@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { FakeDb } from './fakeDb'
-import { approveCheckout, findByCodeAndToken, placeCheckout, quoteCart, rejectCheckout, releaseExpired, trackCheckout } from '../checkout-service'
+import { approveCheckout, cancelByCustomer, cancelCheckout, describePending, findByCodeAndToken, pendingDigest, placeCheckout, quoteCart, rejectCheckout, releaseExpired, trackCheckout } from '../checkout-service'
 import type { CleanCustomer } from '../checkout-core'
 
 vi.mock('../order-events', async () => {
@@ -30,6 +30,7 @@ beforeEach(() => {
     product(4, { status: 'sold' }),
     product(5, { status: 'reserved' }),
     product(6, { discount_enabled: false, price_egp: 500 }),
+    product(7, { on_demand: true, price_egp: 63000 }), // bought on demand
   ])
   db.seed('product_variants', [
     { id: 31, product_id: 3, name: 'Black', color_hex: '#000000', stock_quantity: 2, is_active: true, display_order: 0 },
@@ -276,5 +277,157 @@ describe('trackCheckout (public tracking of a cart order)', () => {
     const o = await pendingOrder([line(1)])
     await rejectCheckout(client(), o.id, 'Customer did not answer', at(30))
     expect(await trackCheckout(client(), o.code, '5678', at(40))).toMatchObject({ kind: 'pending', checkout: { status: 'rejected', note: 'Customer did not answer' } })
+  })
+})
+
+describe('on-demand products stay on sale', () => {
+  it('an order holds nothing, and a second customer can order the same product at once', async () => {
+    const a = await placeCheckout(client(), { lines: [line(7)], customer, now: NOW })
+    const b = await placeCheckout(client(), { lines: [line(7, null, 2)], customer: { ...customer, phone: '01099999999' }, now: NOW })
+    expect(a.ok && b.ok).toBe(true)
+    expect(prod(7)).toMatchObject({ status: 'available', reserved_until: null })
+    expect(db.rows('checkout_items').every((i) => i.held === false && i.hold_kind === 'ondemand')).toBe(true)
+  })
+  it('confirming the order does not mark it sold or hide it', async () => {
+    const o = await pendingOrder([line(7), line(1)])
+    expect((await approveCheckout(client(), o.id, at(30))).ok).toBe(true)
+    expect(prod(7)).toMatchObject({ status: 'available' })
+    expect(prod(1).status).toBe('sold') // the one-off item beside it is sold as before
+    expect(db.rows('deals')).toHaveLength(2)
+  })
+  it('still works after the 24 hours: approving an expired order of an on-demand product', async () => {
+    const o = await pendingOrder([line(7)])
+    await releaseExpired(client(), at(25 * 60))
+    expect((await approveCheckout(client(), o.id, at(26 * 60))).ok).toBe(true)
+    expect(prod(7).status).toBe('available')
+  })
+})
+
+describe('cancelCheckout (you cancel)', () => {
+  it('a pending order: items go back on sale, the reason is kept, nothing else is touched', async () => {
+    const o = await pendingOrder()
+    const r = await cancelCheckout(client(), o.id, 'No reply from the customer', at(60))
+    expect(r).toMatchObject({ ok: true, kind: 'pending' })
+    expect(prod(1).status).toBe('available')
+    expect(stock('products', 2)).toBe(5)
+    expect(db.rows('checkout_orders')[0]).toMatchObject({ status: 'cancelled', review_note: 'No reply from the customer' })
+    expect((await cancelCheckout(client(), o.id, 'again')).ok).toBe(false)
+  })
+  it('a double click on a pending order gives the stock back only once', async () => {
+    const o = await pendingOrder([line(2, null, 2)])
+    const [a, b] = await Promise.all([cancelCheckout(client(), o.id, 'x', at(60)), cancelCheckout(client(), o.id, 'x', at(60))])
+    expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1)
+    expect(stock('products', 2)).toBe(5)
+  })
+  it('an expired order can be cancelled too and nothing is released twice', async () => {
+    const o = await pendingOrder([line(2, null, 2)])
+    await releaseExpired(client(), at(25 * 60))
+    expect(stock('products', 2)).toBe(5)
+    expect((await cancelCheckout(client(), o.id, '', at(26 * 60))).ok).toBe(true)
+    expect(stock('products', 2)).toBe(5)
+    expect(db.rows('checkout_orders')[0]).toMatchObject({ status: 'cancelled', review_note: 'This order was cancelled' })
+  })
+  it('an approved order: deals cancelled with the reason, one-off item and stock given back, code use undone', async () => {
+    const o = await pendingOrder([line(1), line(2, null, 2), line(7)], { discountCode: 'TRIEDGE' })
+    await approveCheckout(client(), o.id, at(30))
+    expect(prod(1).status).toBe('sold')
+    expect(stock('products', 2)).toBe(3)
+    expect(db.rows('discount_codes')[0].usage_count).toBe(1)
+
+    const r = await cancelCheckout(client(), o.id, 'Customer changed their mind', at(120))
+    expect(r).toMatchObject({ ok: true, kind: 'approved', dealsCancelled: 3, depositMayBePaid: false })
+    expect(db.rows('deals').every((d) => d.status === 'cancelled' && d.cancellation_reason === 'Customer changed their mind')).toBe(true)
+    expect(prod(1)).toMatchObject({ status: 'available', sold_at: null })
+    expect(prod(7).status).toBe('available')
+    expect(stock('products', 2)).toBe(5)
+    expect(db.rows('discount_codes')[0].usage_count).toBe(0)
+    expect(db.rows('checkout_orders')[0]).toMatchObject({ status: 'cancelled' })
+    expect(db.rows('order_events').filter((e) => e.status === 'cancelled')).toHaveLength(3)
+  })
+  it('warns that a deposit may need a refund when it was marked paid', async () => {
+    const o = await pendingOrder([line(1)])
+    await approveCheckout(client(), o.id, at(30))
+    db.rows('deals')[0].status = 'deposit_paid'
+    expect(await cancelCheckout(client(), o.id, 'x', at(60))).toMatchObject({ ok: true, depositMayBePaid: true })
+  })
+  it('refuses once an item is being bought or shipped, and changes nothing', async () => {
+    const o = await pendingOrder([line(1), line(2)])
+    await approveCheckout(client(), o.id, at(30))
+    db.rows('deals')[1].status = 'sourcing'
+    const r = await cancelCheckout(client(), o.id, 'x', at(60))
+    expect(r.ok).toBe(false)
+    expect(db.rows('checkout_orders')[0].status).toBe('approved')
+    expect(db.rows('deals')[0].status).toBe('deposit_pending')
+    expect(prod(1).status).toBe('sold')
+  })
+  it('cannot be cancelled twice, and a rejected or unknown order cannot be cancelled', async () => {
+    const o = await pendingOrder([line(1)])
+    await approveCheckout(client(), o.id, at(30))
+    expect((await cancelCheckout(client(), o.id, 'x', at(60))).ok).toBe(true)
+    expect((await cancelCheckout(client(), o.id, 'x', at(61))).ok).toBe(false)
+    expect(stock('products', 2)).toBe(5)
+    expect((await cancelCheckout(client(), '00000000-0000-4000-8000-999999999999', 'x')).ok).toBe(false)
+  })
+  it('a double click cancels once: stock and the code use are given back only once', async () => {
+    const o = await pendingOrder([line(2, null, 2)], { discountCode: 'TRIEDGE' })
+    await approveCheckout(client(), o.id, at(30))
+    const [a, b] = await Promise.all([cancelCheckout(client(), o.id, 'x', at(60)), cancelCheckout(client(), o.id, 'x', at(60))])
+    expect([a.ok, b.ok].filter(Boolean)).toHaveLength(1)
+    expect(stock('products', 2)).toBe(5)
+    expect(db.rows('discount_codes')[0].usage_count).toBe(0)
+  })
+  it('does not put a one-off item back on sale if it is not sold any more', async () => {
+    const o = await pendingOrder([line(1)])
+    await approveCheckout(client(), o.id, at(30))
+    prod(1).status = 'reserved' // someone changed it by hand in the meantime
+    await cancelCheckout(client(), o.id, 'x', at(60))
+    expect(prod(1).status).toBe('reserved')
+  })
+})
+
+describe('cancelByCustomer', () => {
+  it('cancels a pending order with the right token and releases the items', async () => {
+    const r = await placeCheckout(client(), { lines: [line(1), line(2)], customer, now: NOW })
+    if (!r.ok) throw new Error('setup')
+    expect(await cancelByCustomer(client(), r.code, r.token, at(10))).toMatchObject({ ok: true, kind: 'pending' })
+    expect(prod(1).status).toBe('available')
+    expect(stock('products', 2)).toBe(5)
+    expect(db.rows('checkout_orders')[0]).toMatchObject({ status: 'cancelled', review_note: 'You cancelled this order.' })
+  })
+  it('a wrong token cannot cancel anything', async () => {
+    const r = await placeCheckout(client(), { lines: [line(1)], customer, now: NOW })
+    if (!r.ok) throw new Error('setup')
+    expect((await cancelByCustomer(client(), r.code, 'x'.repeat(r.token.length))).ok).toBe(false)
+    expect(prod(1).status).toBe('reserved')
+    expect(db.rows('checkout_orders')[0].status).toBe('pending')
+  })
+  it('a confirmed order cannot be cancelled by the customer (they must message you)', async () => {
+    const r = await placeCheckout(client(), { lines: [line(1)], customer, now: NOW })
+    if (!r.ok) throw new Error('setup')
+    await approveCheckout(client(), r.id, at(30))
+    const c = await cancelByCustomer(client(), r.code, r.token)
+    expect(c.ok).toBe(false)
+    expect(prod(1).status).toBe('sold')
+    expect(db.rows('deals')[0].status).toBe('deposit_pending')
+  })
+})
+
+describe('daily reminder', () => {
+  it('lists waiting orders with their age and how long the items are held', async () => {
+    await placeCheckout(client(), { lines: [line(1)], customer, now: NOW })
+    db.rows('checkout_orders')[0].created_at = NOW.toISOString() // the fake database stamps the real clock
+    const text = await pendingDigest(client(), 0, at(5 * 60))
+    expect(text).toContain('1 order waiting for the customer')
+    expect(text).toContain('Ahmed Mohamed')
+    expect(text).toContain('placed 5h ago')
+    expect(text).toContain('held 19h more')
+  })
+  it('says nothing when nothing is waiting, and reports expired orders', async () => {
+    expect(await pendingDigest(client(), 0, NOW)).toBeNull()
+    expect(describePending([], 2, NOW)).toContain('2 orders just expired')
+  })
+  it('escapes names so Telegram HTML cannot break', () => {
+    const t = describePending([{ code: 'PG-1', customer_name: '<b>x</b>', phone: '1', created_at: NOW.toISOString(), hold_expires_at: null, total_egp: 5 }], 0, NOW)
+    expect(t).toContain('&lt;b&gt;')
   })
 })

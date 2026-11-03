@@ -23,11 +23,13 @@ const PUBLIC_API: PublicRule[] = [
   { pattern: /^\/api\/discount\/validate$/, methods: ['POST'] },
   { pattern: /^\/api\/cart\/quote$/, methods: ['POST'] }, // public: prices of a cart, rate limited
   { pattern: /^\/api\/checkout$/, methods: ['POST'] }, // public: confirms an order from the cart, validated and rate limited
+  { pattern: /^\/api\/checkout\/receipt$/, methods: ['POST'] }, // public: deposit receipt, needs the order's secret token, rate limited
   { pattern: /^\/api\/newsletter\/(subscribe|unsubscribe)$/, methods: ['POST'] },
   { pattern: /^\/api\/newsletter\/send-weekly$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/check-vinted-status$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/reservations\/release-expired$/ }, // checks CRON_SECRET itself
   { pattern: /^\/api\/cron\/meta-spend$/ }, // checks CRON_SECRET or the admin cookie itself
+  { pattern: /^\/api\/cron\/reprice$/ }, // checks CRON_SECRET or the admin cookie itself
   { pattern: /^\/api\/admin-(login|logout)$/ },
   { pattern: /^\/api\/account\/profile$/ }, // checks the Supabase session itself
 ]

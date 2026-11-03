@@ -209,6 +209,17 @@ You do not need to calculate any additional expenses yourself.`,
 مش محتاج تحسب التكاليف الإضافية بنفسك.`,
       },
       {
+        q: "Can prices change?",
+        arQ: "هل الأسعار ممكن تتغير؟",
+        type: "text",
+        a: `Yes. Our prices follow the euro and the cost of the official stores, so they can go up or down a little when the exchange rate moves.
+
+The price you see when you confirm your order is the price you pay for that order. If a price changes later, your confirmed order is not affected.`,
+        arA: `أيوه. أسعارنا بتتبع سعر اليورو وتكلفة المتاجر الرسمية، فممكن تزيد أو تقل شوية لما سعر الصرف يتغير.
+
+السعر اللي بتشوفه وقت ما تأكد الطلب هو السعر اللي هتدفعه لنفس الطلب. ولو السعر اتغير بعد كده، طلبك المؤكد مش بيتأثر.`,
+      },
+      {
         q: "Which price should I trust?",
         arQ: "أعتمد على أنهي سعر؟",
         type: "text",

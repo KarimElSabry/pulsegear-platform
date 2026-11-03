@@ -6,6 +6,8 @@ import { withJobLog } from '@/lib/jobs'
 import { NextResponse } from 'next/server'
 import { isCronAuthorized } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { pendingDigest, releaseExpired } from '@/lib/checkout-service'
+import { sendTelegramMessage } from '@/lib/telegram'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +17,14 @@ async function run(req: Request) {
   }
 
   const supabase = createAdminSupabaseClient()
+  // checkout orders whose 24-hour hold ran out: give their items back (stock numbers and one-off items)
+  let checkoutsExpired = 0
+  try { checkoutsExpired = await releaseExpired(supabase) } catch (e) { console.error('[release-expired] checkouts:', e) }
+  // a daily reminder of the orders still waiting for a customer reply (nothing is sent when there are none)
+  try {
+    const digest = await pendingDigest(supabase, checkoutsExpired)
+    if (digest) await sendTelegramMessage(digest)
+  } catch (e) { console.error('[release-expired] digest:', e) }
   const nowIso = new Date().toISOString()
 
   const { data: expired, error: findErr } = await supabase
@@ -29,7 +39,7 @@ async function run(req: Request) {
   }
 
   const ids = (expired ?? []).map((p) => p.id as number)
-  if (ids.length === 0) return NextResponse.json({ released: 0 })
+  if (ids.length === 0) return NextResponse.json({ released: 0, checkoutsExpired })
 
   const { error: relErr } = await supabase
     .from('products')
@@ -50,7 +60,7 @@ async function run(req: Request) {
 
   if (resErr) console.error('[release-expired] reservation update error:', resErr.message)
 
-  return NextResponse.json({ released: ids.length, ids })
+  return NextResponse.json({ released: ids.length, ids, checkoutsExpired })
 }
 
 export const GET = withJobLog('release-expired', run)

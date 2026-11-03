@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       c.note ? `<b>Order note:</b> ${esc(c.note)}` : '',
       '',
       wa ? `<a href="${wa}">Message the customer on WhatsApp</a>` : 'No valid phone number for WhatsApp.',
-      'The items are held for 24 hours. After they confirm, press Approve in Admin → Online orders.',
+      'The items are held for 24 hours. After they confirm, press Approve in Admin → Orders.',
     ].filter((l, i, a) => !(l === '' && a[i - 1] === '')).join('\n')
   )
 

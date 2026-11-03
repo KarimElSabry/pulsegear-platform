@@ -16,6 +16,7 @@ import { imagesForVariant } from '@/lib/variant-images'
 import { loadVariants } from '@/lib/variants'
 import { commissionForCode } from '@/lib/deal-codes'
 import { logOrderEvent } from '@/lib/order-events'
+import { escapeTelegramHtml } from '@/lib/telegram'
 import { phoneLast4Matches, toCustomerOrder, toPublicOrder, type DealLite, type PublicOrder } from '@/lib/orders'
 import { loadEvents } from '@/lib/order-events'
 import { problemText, type LineProblem, type QuoteLine, type QuoteResult } from '@/lib/quote'
@@ -25,11 +26,14 @@ export type { LineProblem, QuoteLine, QuoteResult }
 
 type Db = SupabaseClient
 
-type ProductRow = { id: number; slug: string | null; title: string; price_egp: number; status: string; stock_quantity?: number | null; discount_enabled: boolean | null }
+type ProductRow = { id: number; slug: string | null; title: string; price_egp: number; status: string; stock_quantity?: number | null; on_demand?: boolean | null; discount_enabled: boolean | null }
 type ImageRow = { product_id: number; image_url: string; is_primary: boolean; display_order: number; variant_id?: number | null }
 
 async function loadProducts(db: Db, ids: number[]): Promise<ProductRow[]> {
   if (ids.length === 0) return []
+  const withDemand = await db.from('products').select('id, slug, title, price_egp, status, stock_quantity, on_demand, discount_enabled').in('id', ids)
+  if (!withDemand.error) return (withDemand.data ?? []) as ProductRow[]
+  // on_demand does not exist before the step 16 migration: nothing is "on demand" then
   const full = await db.from('products').select('id, slug, title, price_egp, status, stock_quantity, discount_enabled').in('id', ids)
   if (!full.error) return (full.data ?? []) as ProductRow[]
   // stock_quantity does not exist before the step 14 migration: everything is a one-off item then
@@ -68,11 +72,11 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
     const p = byId.get(c.productId)
     const base = { productId: c.productId, variantId: c.variantId, note: c.note, quantity: Math.min(c.quantity, MAX_LINE_QUANTITY) }
     if (!p) {
-      return { ...base, slug: null, title: 'An item in your cart', colorName: null, imageUrl: null, unitPriceEgp: 0, maxQuantity: 0, discountEnabled: false, oneOff: true, unitsLeft: null, problem: 'gone' }
+      return { ...base, slug: null, title: 'An item in your cart', colorName: null, imageUrl: null, unitPriceEgp: 0, maxQuantity: 0, discountEnabled: false, oneOff: true, onDemand: false, unitsLeft: null, problem: 'gone' }
     }
     const colors = activeVariants(variantMap.get(Number(p.id)))
     const variant: VariantLite | null = c.variantId ? colors.find((v) => v.id === c.variantId) ?? null : null
-    const stockProduct = { status: p.status, stock_quantity: p.stock_quantity ?? null }
+    const stockProduct = { status: p.status, stock_quantity: p.stock_quantity ?? null, on_demand: p.on_demand === true }
 
     let problem: LineProblem = 'ok'
     if (colors.length > 0 && c.variantId === null) problem = 'choose_color'
@@ -94,6 +98,7 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
       maxQuantity: a.maxQuantity,
       discountEnabled: p.discount_enabled !== false,
       oneOff: a.oneOff,
+      onDemand: a.onDemand,
       unitsLeft: a.unitsLeft,
       problem,
     }
@@ -119,7 +124,7 @@ type ItemRow = {
   product_id: number
   variant_id: number | null
   quantity: number
-  hold_kind: 'oneoff' | 'variant' | 'product' | null
+  hold_kind: 'oneoff' | 'variant' | 'product' | 'ondemand' | null
   held: boolean
   hold_until: string | null
   title?: string
@@ -147,6 +152,11 @@ async function adjustStock(db: Db, table: 'products' | 'product_variants', id: n
 
 async function holdItem(db: Db, item: ItemRow, kind: NonNullable<ItemRow['hold_kind']>, until: Date): Promise<boolean> {
   let ok = false
+  // On demand: nothing is held. The order is only recorded; the product stays on sale for everybody.
+  if (kind === 'ondemand') {
+    await db.from('checkout_items').update({ held: false, hold_kind: 'ondemand', hold_until: null }).eq('id', item.id)
+    return true
+  }
   if (kind === 'oneoff') {
     const { data } = await db.from('products')
       .update({ status: 'reserved', reserved_until: until.toISOString() })
@@ -248,7 +258,7 @@ export async function placeCheckout(db: Db, input: { lines: CartLine[]; customer
   const rows = (items as ItemRow[]).sort((a, b) => a.id - b.id)
   for (const [i, row] of rows.entries()) {
     const l = quote.lines[i]
-    const kind = l.oneOff ? 'oneoff' : l.variantId && l.unitsLeft !== null && (await variantHasOwnStock(db, l.variantId)) ? 'variant' : 'product'
+    const kind = l.onDemand ? 'ondemand' : l.oneOff ? 'oneoff' : l.variantId && l.unitsLeft !== null && (await variantHasOwnStock(db, l.variantId)) ? 'variant' : 'product'
     if (!(await holdItem(db, row, kind, until))) {
       await releaseCheckout(db, order.id as string, 'cancelled', 'An item was taken by another customer while this order was being placed')
       return { ok: false, reason: 'UNAVAILABLE', message: `${l.title} was just taken by another customer. Please update your cart.` }
@@ -382,6 +392,110 @@ export async function rejectCheckout(db: Db, id: string, reason: string, now = n
   return { ok: true }
 }
 
+// ─── Cancelling ───────────────────────────────────────────────────────────────
+// Pending or expired order: the items are released. Approved order: the orders (deals) are cancelled too and one-off items,
+// stock numbers and the discount code use are given back. Nothing is touched once an order is past "Order received".
+
+const EARLY_DEAL_STATUSES = ['deposit_pending', 'deposit_paid']
+const cleanReason = (reason: string, fallback: string) => reason.trim().slice(0, 300) || fallback
+
+export type CancelResult =
+  | { ok: true; kind: 'pending' | 'approved'; dealsCancelled: number; depositMayBePaid: boolean }
+  | { ok: false; message: string }
+
+async function cancelPending(db: Db, order: OrderRow, note: string, now: Date): Promise<CancelResult> {
+  // claim first, so a double click or a simultaneous approval cannot both win
+  const { data: claimed } = await db.from('checkout_orders')
+    .update({ status: 'cancelled', review_note: note, reviewed_at: now.toISOString() }).eq('id', order.id).in('status', ['pending', 'expired']).select('id')
+  if (!claimed || claimed.length !== 1) return { ok: false, message: 'This order was just handled by someone else. Reload the page.' }
+  for (const item of await loadItems(db, order.id)) await releaseItem(db, item)
+  return { ok: true, kind: 'pending', dealsCancelled: 0, depositMayBePaid: false }
+}
+
+async function cancelApproved(db: Db, order: OrderRow, note: string, now: Date): Promise<CancelResult> {
+  const { data: dealRows } = await db.from('deals').select('id, status').eq('checkout_id', order.id)
+  const deals = (dealRows ?? []) as { id: string; status: string }[]
+  const live = deals.filter((d) => d.status !== 'cancelled')
+  const advanced = live.filter((d) => !EARLY_DEAL_STATUSES.includes(d.status))
+  if (advanced.length > 0) {
+    return { ok: false, message: 'An item of this order is already being bought or shipped. Cancel it item by item on the Deals page.' }
+  }
+
+  const { data: claimed } = await db.from('checkout_orders')
+    .update({ status: 'cancelled', review_note: note, reviewed_at: now.toISOString() }).eq('id', order.id).eq('status', 'approved').select('id')
+  if (!claimed || claimed.length !== 1) return { ok: false, message: 'This order was just handled by someone else. Reload the page.' }
+
+  let cancelled = 0
+  let depositMayBePaid = false
+  for (const d of live) {
+    const { data: hit } = await db.from('deals')
+      .update({ status: 'cancelled', cancellation_reason: note }).eq('id', d.id).in('status', EARLY_DEAL_STATUSES).select('id')
+    if (hit && hit.length === 1) {
+      cancelled++
+      if (d.status === 'deposit_paid') depositMayBePaid = true
+      await logOrderEvent(db, { dealId: d.id, status: 'cancelled', comment: note })
+    }
+  }
+
+  // give everything back
+  for (const item of await loadItems(db, order.id)) {
+    if (item.hold_kind === 'oneoff') {
+      await db.from('products').update({ status: 'available', sold_at: null, reserved_until: null }).eq('id', item.product_id).eq('status', 'sold')
+    } else if (item.hold_kind === 'variant') {
+      await adjustStock(db, 'product_variants', item.variant_id as number, item.quantity)
+    } else if (item.hold_kind === 'product') {
+      await adjustStock(db, 'products', item.product_id, item.quantity)
+    }
+  }
+  if (order.discount_code) {
+    const { data: c } = await db.from('discount_codes').select('id, usage_count').eq('code', order.discount_code).maybeSingle()
+    if (c?.id) await db.from('discount_codes').update({ usage_count: Math.max(0, (Number(c.usage_count) || 0) - 1) }).eq('id', c.id)
+  }
+  return { ok: true, kind: 'approved', dealsCancelled: cancelled, depositMayBePaid }
+}
+
+/** You cancel an order: the customer did not reply, changed their mind, or the item is gone. Works before and after approval. */
+export async function cancelCheckout(db: Db, id: string, reason: string, now = new Date()): Promise<CancelResult> {
+  const { data } = await db.from('checkout_orders').select('*').eq('id', id).maybeSingle()
+  const order = data as OrderRow | null
+  if (!order) return { ok: false, message: 'Order not found' }
+  const note = cleanReason(reason, 'This order was cancelled')
+  if (order.status === 'pending' || order.status === 'expired') return cancelPending(db, order, note, now)
+  if (order.status === 'approved') return cancelApproved(db, order, note, now)
+  return { ok: false, message: 'This order is already closed' }
+}
+
+/** The customer cancels their own order, before you confirmed it. Needs the order's secret token. */
+export async function cancelByCustomer(db: Db, code: string, token: string, now = new Date()): Promise<CancelResult> {
+  const order = await findByCodeAndToken(db, code, token)
+  if (!order) return { ok: false, message: 'We could not find this order.' }
+  if (order.status === 'approved') return { ok: false, message: 'Your order is already confirmed. Please message us to change or cancel it.' }
+  if (order.status !== 'pending') return { ok: false, message: 'This order is already closed.' }
+  return cancelPending(db, order, 'You cancelled this order.', now)
+}
+
+type PendingLite = { code: string; customer_name: string; phone: string; created_at: string; hold_expires_at: string | null; total_egp: number }
+
+/** The daily Telegram reminder: orders still waiting for the customer to confirm. Pure, so it is easy to test. */
+export function describePending(rows: PendingLite[], expiredNow: number, now = new Date()): string | null {
+  if (rows.length === 0 && expiredNow === 0) return null
+  const hours = (iso: string) => Math.max(0, Math.round((now.getTime() - new Date(iso).getTime()) / 3600_000))
+  const lines = rows.slice(0, 10).map((r) => {
+    const left = r.hold_expires_at ? Math.round((new Date(r.hold_expires_at).getTime() - now.getTime()) / 3600_000) : null
+    return `• ${r.code} ${escapeTelegramHtml(r.customer_name)} ${escapeTelegramHtml(r.phone)}: ${Number(r.total_egp).toLocaleString('en-US')} EGP, placed ${hours(r.created_at)}h ago${left !== null ? `, items held ${left > 0 ? `${left}h more` : 'until the next check'}` : ''}`
+  })
+  const more = rows.length > 10 ? `\n…and ${rows.length - 10} more` : ''
+  const head = rows.length > 0 ? `⏳ <b>${rows.length} order${rows.length === 1 ? '' : 's'} waiting for the customer</b>` : '⏳ <b>Orders expired without a confirmation</b>'
+  const tail = expiredNow > 0 ? `\n${expiredNow} order${expiredNow === 1 ? '' : 's'} just expired and the items are back on sale.` : ''
+  return `${head}\n${lines.join('\n')}${more}${tail}\nOpen Admin > Orders to confirm or cancel.`
+}
+
+export async function pendingDigest(db: Db, expiredNow: number, now = new Date()): Promise<string | null> {
+  const { data } = await db.from('checkout_orders').select('code, customer_name, phone, created_at, hold_expires_at, total_egp')
+    .eq('status', 'pending').order('created_at', { ascending: true }).limit(40)
+  return describePending((data ?? []) as PendingLite[], expiredNow, now)
+}
+
 // ─── Tracking (public, order ID + last 4 digits of the phone) ─────────────────
 
 export type PublicCheckout = {
@@ -398,7 +512,7 @@ export type CheckoutTracking =
   | { kind: 'orders'; orders: PublicOrder[] }
   | { kind: 'pending'; checkout: PublicCheckout }
 
-const DEAL_TRACK_COLUMNS = 'id, status, phone, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at, order_code, expected_delivery_date, item_title, tracking_number, carrier, customer_message, selling_price_egp, deposit_amount_egp, remaining_amount_egp'
+const DEAL_TRACK_COLUMNS = 'id, status, phone, created_at, deposit_paid_at, shipped_at, arrived_egypt_at, delivered_at, order_code, expected_delivery_date, item_title, selling_price_egp, deposit_amount_egp, remaining_amount_egp'
 
 /** A cart order code on the tracking page: shows its state, or (once approved) the status of every item. */
 export async function trackCheckout(db: Db, code: string, phoneLast4: string, now = new Date()): Promise<CheckoutTracking> {

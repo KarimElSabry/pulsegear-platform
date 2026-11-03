@@ -6,6 +6,11 @@
    "step": 7
   },
   {
+   "path": ".github/workflows/ci.yml",
+   "sha": "136131a1ca65db9b2bef07cbbe8be0f86b6b9cbe9a257ea2ebc041f9fcdd4d82",
+   "step": 15
+  },
+  {
    "path": "README.md",
    "sha": "11a4c3d2c8d9bf593c5fa9efea3732836787f5583cffd4c2d9017f2774c3c699",
    "step": 2
@@ -112,7 +117,7 @@
   },
   {
    "path": "src/app/account/orders/page.tsx",
-   "sha": "ee260b67fd332c60b53cb5e0d8b225fc65c4dbffb217889ba45a7543c622db6e",
+   "sha": "6873028074bb0a9652a075c67ba950ca9f402a19116eeb9fc49134bb5dd94cb9",
    "step": 15
   },
   {
@@ -137,7 +142,7 @@
   },
   {
    "path": "src/app/admin/AdminNav.tsx",
-   "sha": "86f822774275ed1bd6a46c74e31333734391bff0deeade7f9219d236b1494e75",
+   "sha": "6fceea677e78d69d0be2de56431a4af58036b1dc05529bc4359cb68f2a8f1135",
    "step": 15
   },
   {
@@ -276,14 +281,29 @@
    "step": 15
   },
   {
+   "path": "src/app/admin/checkouts/CheckoutForms.tsx",
+   "sha": "f12c305eb415a9da34a0613c3f99c5931e6a9ea46eacf719049895bd693e5316",
+   "step": 16
+  },
+  {
    "path": "src/app/admin/checkouts/actions.ts",
    "sha": "00aceb69f0287db58bc6b88c66039684b4880570ca9ff90bc901eb05df6a64cf",
    "step": 15
   },
   {
+   "path": "src/app/admin/checkouts/actions.ts",
+   "sha": "45c8a0f1fdb4563410565017f92b37b82419e26f48b3398497003bbcbdf2774f",
+   "step": 16
+  },
+  {
    "path": "src/app/admin/checkouts/page.tsx",
-   "sha": "a8a2dfc05305c838917a4c781cf4d73a1f3d8456ad3e1604f0ae7152a57464b3",
+   "sha": "93e5f646fb05e754a6b7d3c9364f4dc88c9cfcbe980248cd77142091ff82acb7",
    "step": 15
+  },
+  {
+   "path": "src/app/admin/checkouts/page.tsx",
+   "sha": "40fa5a0281bbd562ecb2f9144ec89d5d7ff8075480139da9e4f7da9b86903de7",
+   "step": 16
   },
   {
    "path": "src/app/admin/deals/DealsClient.tsx",
@@ -337,7 +357,7 @@
   },
   {
    "path": "src/app/admin/deals/actions.ts",
-   "sha": "45358132ea4b6ba0bc3c5d0885dcbe905ba2446b6946f7787b5e283008695de3",
+   "sha": "3f112c2ac91206a24ea5c8611353fef94f35682675bca8e21ee89bb625c138c2",
    "step": 15
   },
   {
@@ -416,6 +436,11 @@
    "step": 10
   },
   {
+   "path": "src/app/admin/orders/OrderForms.tsx",
+   "sha": "80b4cf54449ad9abec671454a6769529c0bbfcbea14e956191fd183e5a0e6318",
+   "step": 15
+  },
+  {
    "path": "src/app/admin/orders/__tests__/order-actions.test.ts",
    "sha": "ecdd0716880ed31217c0afefb755b3246967c74dedbcb809c01913ea16338560",
    "step": 10
@@ -436,6 +461,11 @@
    "step": 10
   },
   {
+   "path": "src/app/admin/orders/actions.ts",
+   "sha": "ee81a70731bd5a8028e5b7c1eaba8d57cb14408fb82f8da71134274bb7cc5774",
+   "step": 15
+  },
+  {
    "path": "src/app/admin/orders/page.tsx",
    "sha": "2e8bfa2a34b74bb961772a3caa90da41c0edff2eadfb04c2f768165e3430fd5d",
    "step": 8
@@ -452,13 +482,28 @@
   },
   {
    "path": "src/app/admin/orders/page.tsx",
-   "sha": "254aaf5c6c8602065b324ea67eec5e8da3a9f491a796425bf92eb2a10635eee1",
+   "sha": "273668977a394ba2fbada789e6871b0ef077f4984573738ba2627fdc8dda5289",
    "step": 15
   },
   {
    "path": "src/app/admin/page.tsx",
    "sha": "6beab577d3a410874ef779a24cf4fd2ba3177d55fd1e7dd23221e8b348601214",
    "step": 1
+  },
+  {
+   "path": "src/app/admin/pricing/PricingForms.tsx",
+   "sha": "7074277a82343f0ca58d2f9449577e652383dab100a1fc5486300de993123777",
+   "step": 15
+  },
+  {
+   "path": "src/app/admin/pricing/actions.ts",
+   "sha": "caf9a96966ec18941bb5c40fb24ed78283f56f48f2007599e6a683c93653f69a",
+   "step": 15
+  },
+  {
+   "path": "src/app/admin/pricing/page.tsx",
+   "sha": "23252ef58558d94ad9d3c43c8ecc0c2859813d43215731039b2f2093612f3a04",
+   "step": 15
   },
   {
    "path": "src/app/admin/products/ManageProductsClient.tsx",
@@ -469,6 +514,11 @@
    "path": "src/app/admin/products/ManageProductsClient.tsx",
    "sha": "aef259f0fad97b2b5174fab7464349a9226f5ef36d97d6cca2eb274871ecc9af",
    "step": 14
+  },
+  {
+   "path": "src/app/admin/products/ManageProductsClient.tsx",
+   "sha": "941b98eb3ce292ee943b4b63539622f029732ae19eb3916a82d48c0ca233f2b0",
+   "step": 16
   },
   {
    "path": "src/app/admin/requests/actions.ts",
@@ -591,6 +641,11 @@
    "step": 7
   },
   {
+   "path": "src/app/api/cron/reprice/route.ts",
+   "sha": "eb0173928a656a629018affafaa99dc8b195caca9bb66e6923c2e3ac51ba597f",
+   "step": 15
+  },
+  {
    "path": "src/app/api/newsletter/send-weekly/route.ts",
    "sha": "b49c97f14f963563e915ae881efbace83cc5f7e1c6ebf9967127f1a68cf60c4c",
    "step": 1
@@ -626,6 +681,16 @@
    "step": 14
   },
   {
+   "path": "src/app/api/products/[id]/route.ts",
+   "sha": "b6ad52c223cc53568ffaf5743e1a47a25dee8afbc00a92ae0463386a5f546261",
+   "step": 15
+  },
+  {
+   "path": "src/app/api/products/[id]/route.ts",
+   "sha": "c23dc05b37609f529175f065a8ad4e344d52e0d724056ae8456fb4c99dab9ec4",
+   "step": 16
+  },
+  {
    "path": "src/app/api/products/[id]/variants/route.ts",
    "sha": "04ed3d1132f3e4063867461e268c39028d9810657439a3416dc309d010caa1e4",
    "step": 14
@@ -644,6 +709,11 @@
    "path": "src/app/api/reservations/release-expired/route.ts",
    "sha": "8ddc70f3b36b55bc98134f306d35d03772636a007c96204ae89888c5cd01969c",
    "step": 15
+  },
+  {
+   "path": "src/app/api/reservations/release-expired/route.ts",
+   "sha": "6575a3e5ac1c605aaaa46b1fb7db3601720170bdf1525bb22c3e508617b1a6e3",
+   "step": 16
   },
   {
    "path": "src/app/api/submit/route.ts",
@@ -672,8 +742,13 @@
   },
   {
    "path": "src/app/cart/CartClient.tsx",
-   "sha": "8a71b8346325e5ed096fc6b10f26065e64d81c9deefff041d50fadcd7e23cea7",
+   "sha": "35d866e7bbb2b27759f12a0341eb4f07ae45f7b0ebb25709da5bfec74b96bfce",
    "step": 15
+  },
+  {
+   "path": "src/app/cart/CartClient.tsx",
+   "sha": "6de583baf650e5cc017113f760dce64e9c491482782b513b40c7e991c1fdd8e7",
+   "step": 16
   },
   {
    "path": "src/app/cart/page.tsx",
@@ -682,13 +757,23 @@
   },
   {
    "path": "src/app/checkout/CheckoutClient.tsx",
-   "sha": "4e941f26eab986795a58ad08f35865811e23dd6e97172870349cca6a3fe2724b",
+   "sha": "00524f24db751544942b4e4842de2ef5235fb0c57316f3da933a99e7c7685153",
    "step": 15
+  },
+  {
+   "path": "src/app/checkout/[code]/actions.ts",
+   "sha": "af59e8180fd336e3c7082fbe1ed455be0b19bb29d0b5a38803c6e8f81bd7604d",
+   "step": 16
   },
   {
    "path": "src/app/checkout/[code]/page.tsx",
    "sha": "6d0e184fc245aec7ff270fbef88d8efa9f92df444c4153011466330913a39abc",
    "step": 15
+  },
+  {
+   "path": "src/app/checkout/[code]/page.tsx",
+   "sha": "c38b25c2e144d248253552042dd5fb14b079b6dbd054cc5929cb638caa1aaabd",
+   "step": 16
   },
   {
    "path": "src/app/checkout/page.tsx",
@@ -709,6 +794,11 @@
    "path": "src/app/faq/page.tsx",
    "sha": "e0a6323c197c3b2ce858632cb1cbfccee44a7fa2b77829d9cd9da66ee1d02cf1",
    "step": 10
+  },
+  {
+   "path": "src/app/faq/page.tsx",
+   "sha": "16b7cace7b62a339630ac774831b24cf3879eac708633f3e3ec586d1856d342c",
+   "step": 15
   },
   {
    "path": "src/app/layout.tsx",
@@ -746,6 +836,11 @@
    "step": 15
   },
   {
+   "path": "src/app/products/[id]/page.tsx",
+   "sha": "ac58268e32bbd7de664bce566ad0c7c0ddb71a3274e39377a64eda298c04f989",
+   "step": 16
+  },
+  {
    "path": "src/app/sold/page.tsx",
    "sha": "e3387d724cbcabae54c6ac0a1e1afb5083196150217cc42782aab531682d2e49",
    "step": 13
@@ -762,7 +857,7 @@
   },
   {
    "path": "src/app/track-order/TrackForm.tsx",
-   "sha": "402fed0d267231b4a3c78ac30fc89feb3c3895978d80c68e69621f08ec8491ae",
+   "sha": "020ff5d2f74af879493fe8e5a7ce3b6848b540927880a50b3d1c0d3b3ad54060",
    "step": 15
   },
   {
@@ -776,6 +871,11 @@
    "step": 10
   },
   {
+   "path": "src/app/track-order/__tests__/track-order.test.ts",
+   "sha": "f1b7f011622010cfb178ec90468366119dd74ce6de3b647e99bfe5ac57c8990a",
+   "step": 15
+  },
+  {
    "path": "src/app/track-order/actions.ts",
    "sha": "16919e696604a911e3746faf4d86985a5b4c5d09df4bf3274f2cfd64723b06be",
    "step": 9
@@ -787,7 +887,7 @@
   },
   {
    "path": "src/app/track-order/actions.ts",
-   "sha": "2d117176cea3d742758be452789e2d7307ff71f909ad123b80ca1b86600293dc",
+   "sha": "1dfed841dd93ea433aa1e54780f9cc4f1351db43a10e4a04c9060b8a36e4c35d",
    "step": 15
   },
   {
@@ -814,21 +914,6 @@
    "path": "src/components/MetaPixel.tsx",
    "sha": "350b2fb75a3ece10d7abe9ccdf3dc1d3c811dabdc48d00cc9915026f6d4ed9f2",
    "step": 5
-  },
-  {
-   "path": "src/components/OrderButtons.tsx",
-   "sha": "e72fa4bf4180252a2a339ed0dc5e3117bf56369056808055cde792bd8b1c7d42",
-   "step": 1
-  },
-  {
-   "path": "src/components/OrderButtons.tsx",
-   "sha": "790de487770e8e35e089357b09b4b8ebcf62da6385f5fe3ac92bb69281ceba4a",
-   "step": 2
-  },
-  {
-   "path": "src/components/OrderButtons.tsx",
-   "sha": "79d2b2b08dacb4f08422bbc948f14b69ddc6dbd5f34d1ed562fe6a8572dd97c9",
-   "step": 14
   },
   {
    "path": "src/components/PriceSection.tsx",
@@ -874,6 +959,16 @@
    "path": "src/components/cart/AddToCart.tsx",
    "sha": "afcfb9d84983a0b1330aec1f64e80f1489c37a76c6098b52f24c888715448ba7",
    "step": 15
+  },
+  {
+   "path": "src/components/cart/AskUsFirst.tsx",
+   "sha": "c99d8bdb3abdb6dafb7684cc9f414f4c65b0388339ac2f6b5590c81ea2fa2ed9",
+   "step": 15
+  },
+  {
+   "path": "src/components/cart/CancelMyOrder.tsx",
+   "sha": "45e36bf6442cc61a62301d49593954918c2ee77bc60cb7b13c156d4f9e7e597a",
+   "step": 16
   },
   {
    "path": "src/components/cart/CartLink.tsx",
@@ -961,6 +1056,11 @@
    "step": 11
   },
   {
+   "path": "src/components/tour/WelcomeTour.tsx",
+   "sha": "eaa4b08ecdcb03003479e377a637bf01a7085c75bb6835180799b6ef5bae860d",
+   "step": 15
+  },
+  {
    "path": "src/content/hero-slides.ts",
    "sha": "d7cce95f1dc3286a1bc36806d64a99190679a9a3f91d04e517cf21c0ce71df49",
    "step": 11
@@ -969,6 +1069,11 @@
    "path": "src/lib/__tests__/admin-actions-guard.test.ts",
    "sha": "addbc905ced43ee76d5e54bd37423328cebaa65a3b255f7225a19d932ae0d696",
    "step": 7
+  },
+  {
+   "path": "src/lib/__tests__/ask-message.test.ts",
+   "sha": "27af964aa7f87e18513bb9898d9ff625049427fcb270af96cf893fb58144e3ce",
+   "step": 15
   },
   {
    "path": "src/lib/__tests__/cart.test.ts",
@@ -989,6 +1094,11 @@
    "path": "src/lib/__tests__/checkout-service.test.ts",
    "sha": "8e16d83179d3ff60084c898128518298fa2db0e5be5c6745cdb9b3cfc59ca0e5",
    "step": 15
+  },
+  {
+   "path": "src/lib/__tests__/checkout-service.test.ts",
+   "sha": "140a78fa193846e53838a9c6e411d3348f304bcfa2d0ab8997271dbe0ef4a72e",
+   "step": 16
   },
   {
    "path": "src/lib/__tests__/customers.test.ts",
@@ -1051,14 +1161,34 @@
    "step": 10
   },
   {
+   "path": "src/lib/__tests__/orders.test.ts",
+   "sha": "f121594e61efb213891c4c3913345e695bf77017d0559d6868397bb3a566fdb2",
+   "step": 15
+  },
+  {
+   "path": "src/lib/__tests__/pricing-service.test.ts",
+   "sha": "04c47fc9f3cbd71da268109a48a2ac1bcb54c5ac0b1ff77ba4cd8e722c4d6c56",
+   "step": 15
+  },
+  {
    "path": "src/lib/__tests__/rate-limit.test.ts",
    "sha": "c864ca8d0db729cf3ba605ce0086cf3e707c1cf95b84b876d2c48ba9492f2594",
    "step": 9
   },
   {
+   "path": "src/lib/__tests__/repricing.test.ts",
+   "sha": "80740153bb1dc3630cb43dcabc0072f444546adb0b68685d94a12e59a3c2ba01",
+   "step": 15
+  },
+  {
    "path": "src/lib/__tests__/stock.test.ts",
    "sha": "eb448eb10b41c775207bc78aedc9dbb6ec340bcca3d4ca13ab5685a5ef76a156",
    "step": 14
+  },
+  {
+   "path": "src/lib/__tests__/stock.test.ts",
+   "sha": "dbd07301ae5952705bbeaa66e85eada3118d1f776c30b644c9d0f6bd5dd44bdf",
+   "step": 16
   },
   {
    "path": "src/lib/__tests__/tour.test.ts",
@@ -1074,6 +1204,11 @@
    "path": "src/lib/admin-auth.ts",
    "sha": "2874853909116d3bde57c9fea4dc78433cee325afecfbbfea0596c8e25cd33f3",
    "step": 1
+  },
+  {
+   "path": "src/lib/ask-message.ts",
+   "sha": "e02f9785860ae66ab531a5432deb35701557c68f5a9fae63832e7763eead43c2",
+   "step": 15
   },
   {
    "path": "src/lib/audience.ts",
@@ -1102,13 +1237,23 @@
   },
   {
    "path": "src/lib/checkout-service.ts",
-   "sha": "25952baac781cfa6f276a0b8ddf77a57de9e185e8ba7a620d17e3e6a3b82c2cd",
+   "sha": "c1f69d27bfbce256877183a5af9894088d2d6435663104a05868288262b3d524",
    "step": 15
+  },
+  {
+   "path": "src/lib/checkout-service.ts",
+   "sha": "87e989831ad570db33ff4a530f866e46eee9a88e66cb7d5068b192d5662458fb",
+   "step": 16
   },
   {
    "path": "src/lib/contact.ts",
    "sha": "683f3b1e3714a541935d8a05f0af7e10a2bc9289f3c2bbff8ba8a2a2391e36ce",
    "step": 1
+  },
+  {
+   "path": "src/lib/contact.ts",
+   "sha": "26c66ed17d6b475a68a921ee1ff45892950cdf8a9ca2ebebcb93fdf34f0277e3",
+   "step": 15
   },
   {
    "path": "src/lib/customers.ts",
@@ -1281,6 +1426,11 @@
    "step": 7
   },
   {
+   "path": "src/lib/jobs.ts",
+   "sha": "9381da1e79ca6aef4400ab6ee5eb37d4c4faed407f781f688b7dbf47de08ac9f",
+   "step": 15
+  },
+  {
    "path": "src/lib/meta/__tests__/capi.test.ts",
    "sha": "4ee7fbb0f93eb635e39ec64800b9058fefef4d17cd944daabfa531662177369a",
    "step": 5
@@ -1337,7 +1487,12 @@
   },
   {
    "path": "src/lib/orders.ts",
-   "sha": "b6be9e00e4e7cad496dfe481444bb0ab09fb2489dae77d8acc744201242e58c0",
+   "sha": "96df959b84cfb842bceb793200d2c49266ea607decc3621abf4bb943f3ec44e6",
+   "step": 15
+  },
+  {
+   "path": "src/lib/pricing-service.ts",
+   "sha": "0bec9085da74c9f90cc4a0efc245993ee6a1dc11fcc7f859f0ee7cc99bf7f42c",
    "step": 15
   },
   {
@@ -1351,14 +1506,29 @@
    "step": 15
   },
   {
+   "path": "src/lib/quote.ts",
+   "sha": "a7dfa2b766dad67e4f5790767030415571dde75739a5ca674313a21c4e6438e2",
+   "step": 16
+  },
+  {
    "path": "src/lib/rate-limit.ts",
    "sha": "ab2cd84725a4bf53ac5d9c8ba3eb8fcaf7cffc3f0b67de80e618401e7809de5e",
    "step": 9
   },
   {
+   "path": "src/lib/repricing.ts",
+   "sha": "7649bf731cbc9a8e260a6cde568c4449c048c4091891f4f7b141bb686644889b",
+   "step": 15
+  },
+  {
    "path": "src/lib/stock.ts",
    "sha": "2d7b2e4bde92416050f645f18f8afcefd2cfb3e4ce5287ee39002edca59bd5cc",
    "step": 14
+  },
+  {
+   "path": "src/lib/stock.ts",
+   "sha": "2fc22cf98d3a428d01944e2c5b87bc6d4e9610a350e7e8b58900a38b74e71402",
+   "step": 16
   },
   {
    "path": "src/lib/telegram.ts",
@@ -1427,7 +1597,7 @@
   },
   {
    "path": "src/proxy.ts",
-   "sha": "077c94cbec45b5d720e85b891ba83957e71beeebb5898e822cd02759526e04de",
+   "sha": "828aa2c555da8ad5b5b4937909be99b3f5d2bf9836943f337e32aa4612bc9aaf",
    "step": 15
   },
   {
@@ -1459,6 +1629,11 @@
    "path": "src/types/product.ts",
    "sha": "6b8916d5eb00b3b0ccc9454408129659f4fe45fe1e398de58f99e5bf8477ec9b",
    "step": 14
+  },
+  {
+   "path": "src/types/product.ts",
+   "sha": "3a4fb576b41ada07f96e82bff23bc62ad78a8356a085cceb1fdca828433cc048",
+   "step": 16
   },
   {
    "path": "supabase/migrations/20260929_02_lock_down_access.sql",
@@ -1526,6 +1701,16 @@
    "step": 15
   },
   {
+   "path": "supabase/migrations/20261026_01_repricing.sql",
+   "sha": "340074846d84b98c1448656949ba1529f37f17929bd76fe78cb43a9313788b35",
+   "step": 15
+  },
+  {
+   "path": "supabase/migrations/20261030_01_on_demand.sql",
+   "sha": "03f5af25215c11818a5ea4829bbe858740f756c2ab58a1e1e5b558d70da89a0d",
+   "step": 16
+  },
+  {
    "path": "supabase/schema-snapshot.json",
    "sha": "379829b8c61646a877a48aa2ac2c0eaed888c76be9169571274e824f6105b2b2",
    "step": 7
@@ -1544,6 +1729,11 @@
    "path": "vercel.json",
    "sha": "dcc71f0d6258a88679222d83d70b5b94d43ebb7b4c7a9a63e428c36b15a743ec",
    "step": 8
+  },
+  {
+   "path": "vercel.json",
+   "sha": "1f3a5ee6b8be18b5ef104b2737590913da723cbae3726c94afe6c8bca59b294d",
+   "step": 15
   },
   {
    "path": "vitest.config.mts",
@@ -1565,6 +1755,8 @@
   "src/app/admin/payment-settings/page.tsx",
   "src/app/admin/payment-settings/actions.ts",
   "src/app/admin/payment-settings/SettingsForm.tsx",
-  "supabase/migrations/20261024_01_checkout.sql"
+  "supabase/migrations/20261024_01_checkout.sql",
+  "src/components/OrderButtons.tsx",
+  "src/components/layout/tour/WelcomeTour.tsx"
  ]
 }

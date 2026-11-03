@@ -28,7 +28,7 @@ export interface DealLite {
 export interface TimelineStep { key: string; label: string; state: 'done' | 'current' | 'upcoming'; at: string | null }
 
 /** One update you posted: a status change and/or a comment, with the exact time. All of it is visible to the customer. */
-export interface OrderEventLite { id?: string; status: string | null; title: string; comment: string | null; created_at: string }
+export interface OrderEventLite { id?: string; status: string | null; title: string; comment: string | null; created_at: string; hidden?: boolean }
 export interface PublicEvent { title: string; comment: string | null; at: string }
 
 /** How far along an order is. Statuses the customer sees as the same step share a rank. */
@@ -274,7 +274,7 @@ export function buildFollowUps(input: FollowUpInput, now = new Date()): FollowUp
     const age = ageDays(d.created_at, now)
     if (age <= 2) continue
     const name = d.customer_name?.trim() || 'there'
-    out.push({ kind: 'deposit', ref: d.id, name, phone: d.phone ?? null, what: 'deposit for your order', ageDays: age, link: '/admin/deals',
+    out.push({ kind: 'deposit', ref: d.id, name, phone: d.phone ?? null, what: 'deposit for your order', ageDays: age, link: '/admin/orders',
       whatsapp: whatsappLink(d.phone, `Hi ${name}, a quick reminder from Pulse Gear: your order is ready to start as soon as the deposit arrives. Need any help?`) })
   }
   for (const r of input.reservations) {

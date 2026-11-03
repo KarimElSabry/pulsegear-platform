@@ -69,7 +69,7 @@ export default async function ProductDetailsPage({ params }: Props) {
   const images = product.images ?? []
   const db = createAdminSupabaseClient()
   const variants = await loadActiveVariants(db, product.id!)
-  const stockProduct = { status: product.status, stock_quantity: product.stock_quantity ?? null }
+  const stockProduct = { status: product.status, stock_quantity: product.stock_quantity ?? null, on_demand: product.on_demand === true }
   const buyable = anyVariantBuyable(stockProduct, variants)
   const url = `${SITE_URL}/products/${product.slug ?? product.id}`
 

@@ -15,16 +15,19 @@ interface Props {
 // ─── Image Manager Component ──────────────────────────────────────────────────
 function ImageManager({
   productId,
-  initialImages,
+  images,
+  setImages,
   variants = [],
+  onSaved,
 }: {
   productId: number
-  initialImages: ProductImage[]
+  /** The photos live in the edit window, so a switch of tab or a reopen never shows old data again. */
+  images: ProductImage[]
+  setImages: React.Dispatch<React.SetStateAction<ProductImage[]>>
   variants?: VariantLite[]
+  onSaved?: (images: ProductImage[]) => void
 }) {
-  const [images, setImages]     = useState<ProductImage[]>(
-    [...initialImages].sort((a, b) => a.display_order - b.display_order)
-  )
+  const [message, setMessage]   = useState<{ ok: boolean; text: string } | null>(null)
   const [newUrl, setNewUrl]     = useState('')
   const [adding, setAdding]     = useState(false)
   const [saving, setSaving]     = useState(false)
@@ -101,6 +104,7 @@ function ImageManager({
   // ── Save order + primary to DB ─────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true)
+    setMessage(null)
     try {
       const res = await fetch(`/api/products/${productId}/images`, {
         method:  'PATCH',
@@ -115,9 +119,14 @@ function ImageManager({
           })),
         }),
       })
-      if (!res.ok) throw new Error('Failed to save')
+      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'Failed to save')
+      const saved = images.map((img, i) => ({ ...img, display_order: i }))
+      setImages(saved)
+      onSaved?.(saved)
+      setMessage({ ok: true, text: 'Saved' })
     } catch (e) {
       console.error(e)
+      setMessage({ ok: false, text: e instanceof Error ? e.message : 'Could not save' })
     } finally {
       setSaving(false)
     }
@@ -238,6 +247,7 @@ function ImageManager({
           {saving ? '⏳ Saving...' : '💾 Save Order & Main Image'}
         </button>
       )}
+      {message && <p role="status" className={`text-sm text-center ${message.ok ? 'text-green-400' : 'text-red-400'}`}>{message.ok ? '✓ ' : '❌ '}{message.text}</p>}
 
     </div>
   )
@@ -257,6 +267,7 @@ function OptionsManager({
   onVariantsChange: (v: VariantLite[]) => void
   onStockChange: (stock: number | null) => void
 }) {
+  const [onDemand, setOnDemand] = useState(product.on_demand === true)
   const [stock, setStock] = useState(product.stock_quantity === null || product.stock_quantity === undefined ? '' : String(product.stock_quantity))
   const [drafts, setDrafts] = useState<DraftColor[]>(
     variants.map((v) => ({ id: v.id, name: v.name, color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active }))
@@ -274,7 +285,7 @@ function OptionsManager({
       const stockRes = await fetch(`/api/products/${product.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stock_quantity: stock.trim() === '' ? null : stock.trim() }),
+        body: JSON.stringify({ stock_quantity: stock.trim() === '' ? null : stock.trim(), ...(onDemand !== (product.on_demand === true) ? { on_demand: onDemand } : {}) }),
       })
       if (!stockRes.ok) throw new Error((await stockRes.json().catch(() => null))?.error || 'Could not save the stock')
 
@@ -306,6 +317,13 @@ function OptionsManager({
       <div>
         <label className="block text-xs font-bold text-zinc-400 mb-1">Stock quantity</label>
         <input value={stock} onChange={(e) => setStock(e.target.value)} inputMode="numeric" placeholder="empty = one-off item" className={`${input} w-full`} />
+        <label className="mt-2 flex items-start gap-2 text-sm text-zinc-300">
+          <input type="checkbox" checked={onDemand} onChange={(e) => setOnDemand(e.target.checked)} className="mt-1" />
+          <span><b className="text-white">Always available (bought on demand).</b> You buy it after the customer orders. An order never holds it, marks it sold or hides it. Only works when the stock quantity above is empty.</span>
+        </label>
+        {onDemand && stock.trim() !== '' && (
+          <p className="mt-1 text-xs text-amber-300">A stock number is set, so this product is sold as normal stock and &quot;Always available&quot; has no effect. Empty the stock quantity (and the color numbers) to use it.</p>
+        )}
         <p className="text-xs text-zinc-500 mt-1">
           Leave empty for a one-off item (sold once, the status says if it is still available). Type a number for normal stock; 0 means out of stock.
           With colors, each color can have its own number; an empty color number uses this one.
@@ -370,6 +388,7 @@ function EditProductModal({
   const [tab, setTab]         = useState<'details' | 'images' | 'options'>('details')
   const [variants, setVariants] = useState<VariantLite[]>([])
   const [variantsLoaded, setVariantsLoaded] = useState(false)
+  const [photos, setPhotos] = useState<ProductImage[]>(() => [...(product.images ?? [])].sort((a, b) => a.display_order - b.display_order))
 
   // Colors are loaded once. Before the step 14 migration this fails quietly and the product just has no colors.
   useEffect(() => {
@@ -603,8 +622,10 @@ function EditProductModal({
         {tab === 'images' && (
           <ImageManager
             productId={product.id!}
-            initialImages={product.images ?? []}
+            images={photos}
+            setImages={setPhotos}
             variants={variants}
+            onSaved={(saved) => onSave({ id: product.id, images: saved } as Product)}
           />
         )}
 
@@ -789,6 +810,11 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                       {product.status === 'sold' ? 'Sold'
                         : product.status === 'out_of_stock' ? 'Out of Stock'
                         : product.status}
+                    </span>
+                    <span className="mt-1 block text-xs text-zinc-400">
+                      {product.stock_quantity !== null && product.stock_quantity !== undefined
+                        ? `Stock: ${product.stock_quantity}`
+                        : product.on_demand ? '♾ Always available' : 'One-off item'}
                     </span>
                   </td>
 

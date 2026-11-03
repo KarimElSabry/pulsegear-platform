@@ -94,7 +94,12 @@ export async function PATCH(
       .eq('product_id', Number(id))
   )
 
-  await Promise.all(updates)
+  const results = await Promise.all(updates)
+  const failed = results.find((r) => r.error)
+  if (failed?.error) {
+    console.error('[PATCH images]', failed.error.message)
+    return NextResponse.json({ error: failed.error.message }, { status: 500 })
+  }
 
   revalidatePath(`/products/${id}`)
   revalidatePath('/admin/products')

@@ -18,6 +18,7 @@ export type QuoteLine = {
   note: string
   discountEnabled: boolean
   oneOff: boolean
+  onDemand: boolean
   unitsLeft: number | null
   problem: LineProblem
 }
