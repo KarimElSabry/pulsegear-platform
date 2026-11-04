@@ -436,7 +436,7 @@ export default function AdminPage() {
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-sm font-semibold text-gray-200">Size</label>
+            <label className="block text-sm font-semibold text-gray-200">Watch case size <span className="font-normal text-gray-500">(info only, not shown to customers)</span></label>
             <select
               name="size"
               className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
@@ -475,6 +475,7 @@ export default function AdminPage() {
             >
               <option value="">Select...</option>
               <option value="Fitness Watches">Fitness Watches</option>
+              <option value="Fitness Trackers">Fitness Trackers</option>
               <option value="Heart Rate Straps">Heart Rate Straps</option>
               <option value="Replacement Straps">Replacement Straps</option>
               <option value="Running Accessories">Running Accessories</option>

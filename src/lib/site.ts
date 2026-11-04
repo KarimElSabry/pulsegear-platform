@@ -9,10 +9,9 @@ export const SITE_URL = (
   'https://pulsegear-platform.vercel.app'
 ).replace(/\/$/, '')
 
-export const WHATSAPP_NUMBER = '201205300000' // TODO: set the real number without "+"
-
 export const PRODUCT_CATEGORIES = [
   'Fitness Watches',
+  'Fitness Trackers',
   'Heart Rate Straps',
   'Replacement Straps',
   'Running Accessories',

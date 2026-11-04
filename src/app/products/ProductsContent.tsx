@@ -14,7 +14,7 @@ const availabilities = ['All', 'In Stock', 'Sold']
 
 // ✅ Updated to match Admin form values exactly
 const categories = [
-  'All', 'Fitness Watches', 'Heart Rate Straps',
+  'All', 'Fitness Watches', 'Fitness Trackers', 'Heart Rate Straps',
   'Replacement Straps', 'Running Accessories',
   'Cycling Accessories', 'Other',
 ]
