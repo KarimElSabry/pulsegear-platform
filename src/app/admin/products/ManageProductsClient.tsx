@@ -346,22 +346,32 @@ function OptionsManager({
         <p className="text-xs text-zinc-500">One row = one thing a customer can buy (for example Black / M-XL). Only a color, only a size, or both. An empty price uses the product price above; the product price is the one shown on the product list, so set it to your lowest.</p>
         {drafts.length === 0 && <p className="text-zinc-500 text-sm">No options. The product is sold as one option.</p>}
         {drafts.map((d, i) => (
-          <div key={d.id ?? `new-${i}`} className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded-xl p-2">
-            <input
-              type="color"
-              aria-label="Color"
-              value={/^#[0-9a-fA-F]{6}$/.test(d.color_hex) ? d.color_hex : '#888888'}
-              onChange={(e) => update(i, { color_hex: e.target.value })}
-              className="h-8 w-8 shrink-0 cursor-pointer rounded bg-transparent"
-            />
-            <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Color, e.g. Black" className={`${input} flex-1 min-w-0`} />
-            <input value={d.size} onChange={(e) => update(i, { size: e.target.value })} placeholder="Size, e.g. M-XL" className={`${input} w-24`} />
-            <input value={d.price} onChange={(e) => update(i, { price: e.target.value })} inputMode="decimal" placeholder="price EGP" className={`${input} w-24`} />
-            <input value={d.stock} onChange={(e) => update(i, { stock: e.target.value })} inputMode="numeric" placeholder="stock" className={`${input} w-16`} />
-            <label className="flex items-center gap-1 text-xs text-zinc-400" title="Hide this color from the shop">
-              <input type="checkbox" checked={d.is_active} onChange={(e) => update(i, { is_active: e.target.checked })} /> shown
-            </label>
-            <button type="button" onClick={() => setDrafts((prev) => prev.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-300 text-lg leading-none px-1" aria-label="Remove color">×</button>
+          <div key={d.id ?? `new-${i}`} className="space-y-2 bg-zinc-800/50 border border-zinc-700 rounded-xl p-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label="Color"
+                value={/^#[0-9a-fA-F]{6}$/.test(d.color_hex) ? d.color_hex : '#888888'}
+                onChange={(e) => update(i, { color_hex: e.target.value })}
+                className="h-9 w-9 shrink-0 cursor-pointer rounded bg-transparent"
+              />
+              <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Color name, e.g. Black" className={`${input} flex-1 min-w-0 py-2`} />
+              <label className="flex shrink-0 items-center gap-1 text-xs text-zinc-400" title="Hide this option from the shop">
+                <input type="checkbox" checked={d.is_active} onChange={(e) => update(i, { is_active: e.target.checked })} /> shown
+              </label>
+              <button type="button" onClick={() => setDrafts((prev) => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-red-400 hover:text-red-300 text-xl leading-none px-1" aria-label="Remove option">×</button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <label className="block text-xs text-zinc-500">Size
+                <input value={d.size} onChange={(e) => update(i, { size: e.target.value })} placeholder="e.g. M-XL" className={`${input} mt-1 w-full`} />
+              </label>
+              <label className="block text-xs text-zinc-500">Price EGP
+                <input value={d.price} onChange={(e) => update(i, { price: e.target.value })} inputMode="decimal" placeholder="product price" className={`${input} mt-1 w-full`} />
+              </label>
+              <label className="block text-xs text-zinc-500">Stock
+                <input value={d.stock} onChange={(e) => update(i, { stock: e.target.value })} inputMode="numeric" placeholder="stock" className={`${input} mt-1 w-full`} />
+              </label>
+            </div>
           </div>
         ))}
         <button
