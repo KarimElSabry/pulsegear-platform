@@ -5,7 +5,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
-import { variantLabel, type VariantLite } from '@/lib/stock'
+import type { VariantLite } from '@/lib/stock'
 import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
 interface Props {
@@ -32,6 +32,18 @@ function ImageManager({
   const [adding, setAdding]     = useState(false)
   const [saving, setSaving]     = useState(false)
   const [dragIdx, setDragIdx]   = useState<number | null>(null)
+
+  // One entry per COLOR (not per size): a color that comes in several sizes shares its photos, so you tag them once.
+  const colorGroups: { id: number; name: string }[] = []
+  const groupOf = new Map<number, number>()
+  for (const v of variants) {
+    const name = v.name.trim()
+    if (!name) continue
+    const found = colorGroups.find((g) => g.name.toLowerCase() === name.toLowerCase())
+    if (found) groupOf.set(v.id, found.id)
+    else { colorGroups.push({ id: v.id, name }); groupOf.set(v.id, v.id) }
+  }
+  const repOf = (variantId: number | null | undefined) => (variantId == null ? '' : groupOf.get(variantId) ?? '')
 
   // ── Add new image ──────────────────────────────────────────────────────────
   const handleAdd = async () => {
@@ -171,9 +183,9 @@ function ImageManager({
               <span className="absolute top-1 right-1 text-white/60 text-xs">⠿</span>
 
               {/* Color of this photo */}
-              {variants.length > 0 && (
+              {colorGroups.length > 0 && (
                 <select
-                  value={img.variant_id ?? ''}
+                  value={repOf(img.variant_id)}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) =>
                     setImages((prev) =>
@@ -183,8 +195,8 @@ function ImageManager({
                   className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 text-white text-xs px-1 py-1 border-0 focus:outline-none"
                 >
                   <option value="">All options</option>
-                  {variants.map((v) => (
-                    <option key={v.id} value={v.id}>{variantLabel(v)}</option>
+                  {colorGroups.map((g) => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
                   ))}
                 </select>
               )}
@@ -214,7 +226,7 @@ function ImageManager({
       {/* Drag hint */}
       {images.length > 1 && (
         <p className="text-zinc-600 text-xs text-center">
-          ⠿ Drag images to reorder — hover to set main or delete{variants.length > 0 ? '. Pick a color under each photo, then save.' : ''}
+          ⠿ Drag images to reorder — hover to set main or delete{colorGroups.length > 0 ? '. Pick a color under each photo, then save. Sizes of the same color share the photos.' : ''}
         </p>
       )}
 
@@ -498,7 +510,7 @@ function EditProductModal({
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
-            🎨 Stock &amp; Colors
+            🎨 Stock, colors &amp; sizes
           </button>
           <button
             onClick={() => setTab('images')}
