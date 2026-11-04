@@ -5,7 +5,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
-import type { VariantLite } from '@/lib/stock'
+import { variantLabel, type VariantLite } from '@/lib/stock'
 import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
 interface Props {
@@ -182,9 +182,9 @@ function ImageManager({
                   }
                   className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 text-white text-xs px-1 py-1 border-0 focus:outline-none"
                 >
-                  <option value="">All colors</option>
+                  <option value="">All options</option>
                   {variants.map((v) => (
-                    <option key={v.id} value={v.id}>{v.name}</option>
+                    <option key={v.id} value={v.id}>{variantLabel(v)}</option>
                   ))}
                 </select>
               )}
@@ -254,7 +254,8 @@ function ImageManager({
 }
 
 // ─── Stock & Colors Manager ───────────────────────────────────────────────────
-type DraftColor = { id?: number; name: string; color_hex: string; stock: string; is_active: boolean }
+type DraftColor = { id?: number; name: string; size: string; price: string; color_hex: string; stock: string; is_active: boolean }
+const toDraft = (v: VariantLite): DraftColor => ({ id: v.id, name: v.name, size: v.size_name ?? '', price: v.price_egp == null ? '' : String(v.price_egp), color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active })
 
 function OptionsManager({
   product,
@@ -269,9 +270,7 @@ function OptionsManager({
 }) {
   const [onDemand, setOnDemand] = useState(product.on_demand === true)
   const [stock, setStock] = useState(product.stock_quantity === null || product.stock_quantity === undefined ? '' : String(product.stock_quantity))
-  const [drafts, setDrafts] = useState<DraftColor[]>(
-    variants.map((v) => ({ id: v.id, name: v.name, color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active }))
-  )
+  const [drafts, setDrafts] = useState<DraftColor[]>(variants.map(toDraft))
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
@@ -293,7 +292,7 @@ function OptionsManager({
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          variants: drafts.map((d) => ({ id: d.id, name: d.name, color_hex: d.color_hex.trim() || null, stock_quantity: d.stock.trim() === '' ? null : d.stock.trim(), is_active: d.is_active })),
+          variants: drafts.map((d) => ({ id: d.id, name: d.name, size_name: d.size.trim() || null, price_egp: d.price.trim() === '' ? null : d.price.trim(), color_hex: d.color_hex.trim() || null, stock_quantity: d.stock.trim() === '' ? null : d.stock.trim(), is_active: d.is_active })),
         }),
       })
       const data = await res.json().catch(() => null)
@@ -301,7 +300,7 @@ function OptionsManager({
 
       onStockChange(stock.trim() === '' ? null : Number(stock))
       onVariantsChange(data as VariantLite[])
-      setDrafts((data as VariantLite[]).map((v) => ({ id: v.id, name: v.name, color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active })))
+      setDrafts((data as VariantLite[]).map(toDraft))
       setMessage({ ok: true, text: 'Saved' })
     } catch (e) {
       setMessage({ ok: false, text: e instanceof Error ? e.message : 'Something went wrong' })
@@ -331,8 +330,9 @@ function OptionsManager({
       </div>
 
       <div className="space-y-2">
-        <p className="text-xs font-bold text-zinc-400">Colors</p>
-        {drafts.length === 0 && <p className="text-zinc-500 text-sm">No colors. The product is sold as one option.</p>}
+        <p className="text-xs font-bold text-zinc-400">Options: colors and/or sizes</p>
+        <p className="text-xs text-zinc-500">One row = one thing a customer can buy (for example Black / M-XL). Only a color, only a size, or both. An empty price uses the product price above; the product price is the one shown on the product list, so set it to your lowest.</p>
+        {drafts.length === 0 && <p className="text-zinc-500 text-sm">No options. The product is sold as one option.</p>}
         {drafts.map((d, i) => (
           <div key={d.id ?? `new-${i}`} className="flex items-center gap-2 bg-zinc-800/50 border border-zinc-700 rounded-xl p-2">
             <input
@@ -342,7 +342,9 @@ function OptionsManager({
               onChange={(e) => update(i, { color_hex: e.target.value })}
               className="h-8 w-8 shrink-0 cursor-pointer rounded bg-transparent"
             />
-            <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Name, e.g. Black" className={`${input} flex-1 min-w-0`} />
+            <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Color, e.g. Black" className={`${input} flex-1 min-w-0`} />
+            <input value={d.size} onChange={(e) => update(i, { size: e.target.value })} placeholder="Size, e.g. M-XL" className={`${input} w-24`} />
+            <input value={d.price} onChange={(e) => update(i, { price: e.target.value })} inputMode="decimal" placeholder="price EGP" className={`${input} w-24`} />
             <input value={d.stock} onChange={(e) => update(i, { stock: e.target.value })} inputMode="numeric" placeholder="stock" className={`${input} w-16`} />
             <label className="flex items-center gap-1 text-xs text-zinc-400" title="Hide this color from the shop">
               <input type="checkbox" checked={d.is_active} onChange={(e) => update(i, { is_active: e.target.checked })} /> shown
@@ -352,10 +354,10 @@ function OptionsManager({
         ))}
         <button
           type="button"
-          onClick={() => setDrafts((prev) => [...prev, { name: '', color_hex: '', stock: '', is_active: true }])}
+          onClick={() => setDrafts((prev) => [...prev, { name: '', size: '', price: '', color_hex: '', stock: '', is_active: true }])}
           className="text-sm font-bold text-blue-400 hover:text-blue-300"
         >
-          + Add color
+          + Add option
         </button>
       </div>
 
@@ -365,9 +367,9 @@ function OptionsManager({
         </p>
       )}
       <button onClick={handleSave} disabled={saving} className="w-full bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2 rounded-xl text-sm transition">
-        {saving ? 'Saving...' : '💾 Save stock & colors'}
+        {saving ? 'Saving...' : '💾 Save stock & options'}
       </button>
-      <p className="text-xs text-zinc-500">After saving colors, open the Images tab to pick which photos belong to which color.</p>
+      <p className="text-xs text-zinc-500">After saving, open the Images tab to pick which photos belong to which color. A color with several sizes shares its photos: tag them once.</p>
     </div>
   )
 }

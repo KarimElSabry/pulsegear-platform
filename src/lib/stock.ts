@@ -22,6 +22,23 @@ export type VariantLite = {
   stock_quantity: number | null
   is_active: boolean
   display_order: number
+  /** Optional size label (XS-S, M-XL ...). */
+  size_name?: string | null
+  /** Optional price of this option; empty = the product's price. */
+  price_egp?: number | null
+}
+
+/** "Black", "M-XL" or "Black · M-XL": what the customer and you read for one option. */
+export function variantLabel(v: Pick<VariantLite, 'name' | 'size_name'> | null | undefined): string | null {
+  if (!v) return null
+  const label = [v.name, v.size_name].map((x) => (x ?? '').trim()).filter(Boolean).join(' · ')
+  return label || null
+}
+
+/** The price of an option: its own price, otherwise the product's. */
+export function variantPrice(v: Pick<VariantLite, 'price_egp'> | null | undefined, productPrice: number): number {
+  const own = v?.price_egp == null ? null : Number(v.price_egp)
+  return own !== null && Number.isFinite(own) && own > 0 ? own : productPrice
 }
 
 export type Availability = {
@@ -105,28 +122,38 @@ export function cleanHex(value: unknown): string | null {
   return typeof value === 'string' && HEX.test(value.trim()) ? value.trim().toLowerCase() : null
 }
 
-export type VariantInput = { id?: number; name?: unknown; color_hex?: unknown; stock_quantity?: unknown; is_active?: unknown }
+export type VariantInput = { id?: number; name?: unknown; size_name?: unknown; price_egp?: unknown; color_hex?: unknown; stock_quantity?: unknown; is_active?: unknown }
 
 /** Validates what the admin sent for one color. Returns an error text or the clean row. */
 export function cleanVariant(input: VariantInput, order: number):
-  { error: string } | { value: { id?: number; name: string; color_hex: string | null; stock_quantity: number | null; is_active: boolean; display_order: number } } {
+  { error: string } | { value: { id?: number; name: string; size_name: string | null; price_egp: number | null; color_hex: string | null; stock_quantity: number | null; is_active: boolean; display_order: number } } {
   const name = typeof input.name === 'string' ? input.name.trim() : ''
-  if (!name) return { error: 'Every color needs a name' }
+  const size = typeof input.size_name === 'string' ? input.size_name.trim() : ''
+  if (!name && !size) return { error: 'Every option needs a color name, a size, or both' }
   if (name.length > 40) return { error: `Color name "${name.slice(0, 12)}…" is too long (max 40)` }
+  if (size.length > 40) return { error: `Size "${size.slice(0, 12)}…" is too long (max 40)` }
+  const shown = variantLabel({ name, size_name: size }) as string
+  const priceRaw = input.price_egp
+  let price: number | null = null
+  if (priceRaw !== null && priceRaw !== undefined && priceRaw !== '') {
+    const n = Number(priceRaw)
+    if (!Number.isFinite(n) || n <= 0 || n > 10_000_000) return { error: `Price for "${shown}" must be a number above 0 (or empty to use the product price)` }
+    price = Math.round(n * 100) / 100
+  }
   const raw = input.stock_quantity
   let stock: number | null = null
   if (raw !== null && raw !== undefined && raw !== '') {
     const n = Number(raw)
-    if (!Number.isInteger(n) || n < 0) return { error: `Stock for "${name}" must be a whole number, 0 or more` }
+    if (!Number.isInteger(n) || n < 0) return { error: `Stock for "${shown}" must be a whole number, 0 or more` }
     stock = n
   }
   const hexRaw = input.color_hex
   const hex = cleanHex(hexRaw)
-  if (hexRaw && !hex) return { error: `Color code for "${name}" must look like #1a2b3c` }
+  if (hexRaw && !hex) return { error: `Color code for "${shown}" must look like #1a2b3c` }
   return {
     value: {
       id: typeof input.id === 'number' ? input.id : undefined,
-      name, color_hex: hex, stock_quantity: stock,
+      name, size_name: size || null, price_egp: price, color_hex: hex, stock_quantity: stock,
       is_active: input.is_active === false ? false : true,
       display_order: order,
     },

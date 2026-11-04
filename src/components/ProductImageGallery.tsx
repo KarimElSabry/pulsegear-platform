@@ -15,7 +15,10 @@ type Props = {
 export default function ProductImageGallery({ images: allImages, title }: Props) {
   // With colors, show the photos of the chosen color (plus photos shared by every color).
   const variant = useVariant()
-  const images = imagesForVariant(allImages, variant?.variants.length ? variant.selected?.id ?? null : null, (variant?.variants.length ?? 0) > 0)
+  // A color that comes in several sizes keeps the same photos for each size.
+  const sel = variant?.selected
+  const sameColor = variant?.variants.length && sel ? variant.variants.filter((v) => v.name.trim().toLowerCase() === sel.name.trim().toLowerCase()).map((v) => v.id) : null
+  const images = imagesForVariant(allImages, sameColor, (variant?.variants.length ?? 0) > 0)
 
   const mainImage =
     images.find((img) => img.is_primary)?.image_url ??

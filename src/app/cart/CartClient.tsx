@@ -65,7 +65,7 @@ export default function CartClient() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     {l.slug ? <Link href={`/products/${l.slug}`} className="font-bold text-white hover:text-red-400">{l.title}</Link> : <p className="font-bold text-white">{l.title}</p>}
-                    {l.colorName && <p className="text-sm text-zinc-400">Color: {l.colorName}</p>}
+                    {l.colorName && <p className="text-sm text-zinc-400">Option: {l.colorName}</p>}
                   </div>
                   <button onClick={() => cart.remove(key)} className="text-sm text-zinc-500 underline hover:text-red-400">Remove</button>
                 </div>

@@ -34,8 +34,8 @@ export type QuoteResult = {
 
 const PROBLEM_TEXT: Record<Exclude<LineProblem, 'ok'>, string> = {
   gone: 'is no longer for sale',
-  choose_color: 'needs a color to be chosen',
-  color_gone: 'is not available in that color any more',
+  choose_color: 'needs a color or size to be chosen',
+  color_gone: 'is not available in that option any more',
   sold: 'was just sold',
   reserved: 'is being held for another customer',
   out_of_stock: 'is out of stock',

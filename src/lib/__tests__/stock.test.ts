@@ -52,7 +52,7 @@ describe('variants helpers', () => {
 
 describe('cleanVariant', () => {
   it('accepts a good color', () => {
-    expect(cleanVariant({ name: ' Black ', color_hex: '#000000', stock_quantity: '4' }, 2)).toEqual({ value: { id: undefined, name: 'Black', color_hex: '#000000', stock_quantity: 4, is_active: true, display_order: 2 } })
+    expect(cleanVariant({ name: ' Black ', color_hex: '#000000', stock_quantity: '4' }, 2)).toEqual({ value: { id: undefined, name: 'Black', size_name: null, price_egp: null, color_hex: '#000000', stock_quantity: 4, is_active: true, display_order: 2 } })
   })
   it('allows empty stock and empty hex', () => {
     expect(cleanVariant({ name: 'Red', stock_quantity: '' }, 0)).toMatchObject({ value: { stock_quantity: null, color_hex: null } })

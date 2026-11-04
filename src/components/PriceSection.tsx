@@ -24,7 +24,7 @@ type DiscountResponse = {
 }
 
 export default function PriceSection({
-  originalPrice,
+  originalPrice: productPrice,
   productId,
   productTitle,
   isReservable,
@@ -37,6 +37,10 @@ export default function PriceSection({
   const [discountError, setDiscountError] = useState('')
   const [discountSuccess, setDiscountSuccess] = useState('')
 
+  // The chosen option (color / size) can have its own price.
+  const variant = useVariant()
+  const originalPrice = variant && variant.variants.length > 0 ? variant.price : productPrice
+
   const finalPrice = useMemo(() => {
     if (!discountEnabled || discountPercent <= 0) return originalPrice
     return Math.round(originalPrice * (1 - discountPercent / 100))
@@ -44,7 +48,6 @@ export default function PriceSection({
 
   const amountSaved = Math.max(0, originalPrice - finalPrice)
   // Stock and the chosen color decide if it can be bought; without a provider, only the status.
-  const variant = useVariant()
   const isUnavailable = variant ? !variant.availability.canBuy : status !== 'available'
   const unavailableLabel = variant
     ? variant.availability.reason === 'sold' ? 'تم البيع' : variant.availability.reason === 'reserved' ? 'محجوز' : 'غير متوفر'

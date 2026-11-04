@@ -97,7 +97,7 @@ export default async function ProductDetailsPage({ params }: Props) {
     <div className="container-x py-12 md:py-16">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <VariantProvider product={stockProduct} variants={variants}>
+      <VariantProvider product={stockProduct} variants={variants} productPrice={product.price_egp ?? 0}>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-14">
         <ProductImageGallery images={images} title={product.title} />
 

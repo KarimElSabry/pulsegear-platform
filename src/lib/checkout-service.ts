@@ -11,7 +11,7 @@ import { timingSafeEqual } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { clampPercent, computeTotals, holdUntil, type CleanCustomer, type CheckoutStatus, type Totals } from '@/lib/checkout-core'
 import { MAX_LINE_QUANTITY, type CartLine } from '@/lib/cart'
-import { activeVariants, availability, clampQuantity, type VariantLite } from '@/lib/stock'
+import { activeVariants, availability, clampQuantity, variantLabel, variantPrice, type VariantLite } from '@/lib/stock'
 import { imagesForVariant } from '@/lib/variant-images'
 import { loadVariants } from '@/lib/variants'
 import { commissionForCode } from '@/lib/deal-codes'
@@ -85,16 +85,18 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
     const a = availability(stockProduct, variant)
     if (problem === 'ok' && !a.canBuy) problem = a.reason === 'ok' ? 'out_of_stock' : a.reason
 
-    const photos = imagesForVariant(images.filter((i) => Number(i.product_id) === Number(p.id)), variant?.id ?? null, colors.length > 0)
+    // a color that comes in several sizes shares its photos between those sizes
+    const sameColor = variant ? colors.filter((v) => v.name.trim().toLowerCase() === variant.name.trim().toLowerCase()).map((v) => v.id) : null
+    const photos = imagesForVariant(images.filter((i) => Number(i.product_id) === Number(p.id)), sameColor, colors.length > 0)
     const photo = photos.find((i) => i.is_primary) ?? photos[0]
     return {
       ...base,
       quantity: problem === 'ok' ? clampQuantity(c.quantity, a) : base.quantity,
       slug: p.slug,
       title: p.title,
-      colorName: variant?.name ?? null,
+      colorName: variantLabel(variant),
       imageUrl: photo?.image_url ?? null,
-      unitPriceEgp: Number(p.price_egp) || 0,
+      unitPriceEgp: variantPrice(variant, Number(p.price_egp) || 0),
       maxQuantity: a.maxQuantity,
       discountEnabled: p.discount_enabled !== false,
       oneOff: a.oneOff,
