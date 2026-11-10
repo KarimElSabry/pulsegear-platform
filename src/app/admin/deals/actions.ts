@@ -165,6 +165,8 @@ export async function createDeal(formData: FormData) {
     remaining_amount_egp: getFloat(formData, 'remaining_amount_egp'),
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
     discount_code: getStr(formData, 'discount_code'),
+    // listed on behalf of a client: kept out of the finance system (only sent when ticked, so it works before migration 20261113)
+    ...(formData.get('client_listing') === 'on' ? { client_listing: true } : {}),
   }
 
   assertNotNegative(payload)
@@ -174,6 +176,9 @@ export async function createDeal(formData: FormData) {
     const { discount_code: _omit, ...withoutCode } = payload
     void _omit
     ;({ data: created, error } = await supabase.from('deals').insert(withoutCode).select('id').single())
+  }
+  if (error?.message.includes('client_listing')) {
+    throw new Error('Run the Supabase migration 20261113_01_deals_client_listing.sql first, then save again.')
   }
 
   if (error) {
@@ -233,6 +238,7 @@ export async function updateDeal(id: string, formData: FormData) {
     commission_egp: getFloat(formData, 'commission_egp') ?? 0,
     discount_code: getStr(formData, 'discount_code'),
   }
+  const nowClient = formData.get('client_listing') === 'on'
 
   // The status is NOT saved with the other fields: a change goes through updateDealStatus, the same path the Orders page
   // uses, so dates, the update the customer sees, the request status and the sale record are all kept in step.
@@ -252,6 +258,14 @@ export async function updateDeal(id: string, formData: FormData) {
     throw new Error(error.message)
   }
 
+  // the "listed for a client" tick is saved on its own, so editing orders keeps working before migration 20261113 is run
+  const { data: flagRow, error: flagReadError } = await supabase.from('deals').select('client_listing').eq('id', id).maybeSingle()
+  const wasClient = !flagReadError && flagRow?.client_listing === true
+  if (flagReadError ? nowClient : wasClient !== nowClient) {
+    const { error: flagError } = await supabase.from('deals').update({ client_listing: nowClient }).eq('id', id)
+    if (flagError) throw new Error('Run the Supabase migration 20261113_01_deals_client_listing.sql first, then save again.')
+  }
+
   if (productRequestId) {
     const { error: requestError } = await supabase
       .from('product_requests')
@@ -265,6 +279,8 @@ export async function updateDeal(id: string, formData: FormData) {
 
   if (newStatus && before?.status && newStatus !== before.status) {
     await updateDealStatus(id, newStatus as DealStatus)
+  } else if (wasClient && !nowClient && before?.status === 'completed') {
+    await syncDealToSales(id) // no longer a client item: it counts as a normal sale from now on
   } else {
     await syncExistingSaleFromDeal(id)
   }
@@ -358,6 +374,14 @@ async function syncDealToSales(dealId: string) {
       dealError,
     })
     throw new Error(dealError?.message ?? 'Deal not found')
+  }
+
+  // A watch listed on behalf of a client is not our sale: no sales row, so it never reaches revenue, profit, milestones or reports.
+  // (If it was counted before the tick was set, that sale row is removed.)
+  if (deal.client_listing === true) {
+    const { error: removeError } = await supabase.from('sales').delete().eq('deal_id', dealId)
+    if (removeError) throw new Error(removeError.message)
+    return
   }
 
   let request: {

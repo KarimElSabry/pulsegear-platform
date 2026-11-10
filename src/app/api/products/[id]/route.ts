@@ -68,6 +68,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       updates.is_reservable = Boolean(body.is_reservable)
     }
     if (body.is_deal !== undefined) updates.is_deal = Boolean(body.is_deal)
+    if (body.client_listing !== undefined) updates.client_listing = Boolean(body.client_listing)
     // Empty = one-off item (status rules); a whole number = normal stock.
     if (body.stock_quantity !== undefined) {
       if (body.stock_quantity === null || body.stock_quantity === '') {

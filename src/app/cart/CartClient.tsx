@@ -53,7 +53,7 @@ export default function CartClient() {
     <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
       <div className="space-y-4">
         {error && <p role="alert" className="rounded-xl border border-red-800 bg-red-900/20 px-4 py-3 text-red-300">{error}</p>}
-        {(quote ? lines : cart.lines.map((l) => ({ ...l, slug: null, title: 'Loading…', colorName: null, imageUrl: null, unitPriceEgp: 0, maxQuantity: 10, discountEnabled: true, oneOff: false, onDemand: false, unitsLeft: null, problem: 'ok' as const }))).map((l) => {
+        {(quote ? lines : cart.lines.map((l) => ({ ...l, slug: null, title: 'Loading…', colorName: null, imageUrl: null, unitPriceEgp: 0, regularPriceEgp: null, saleName: null, salePercent: null, maxQuantity: 10, discountEnabled: true, oneOff: false, onDemand: false, unitsLeft: null, problem: 'ok' as const }))).map((l) => {
           const key = lineKey(l)
           const ok = l.problem === 'ok'
           return (
@@ -80,6 +80,8 @@ export default function CartClient() {
                       </select>
                     )}
                     <span className="font-black text-white">{egp(l.unitPriceEgp * l.quantity)}</span>
+                    {l.regularPriceEgp !== null && <span className="text-sm text-zinc-500 line-through">{egp(l.regularPriceEgp * l.quantity)}</span>}
+                    {l.saleName && <span className="rounded-full bg-red-600/20 px-2 py-0.5 text-xs font-bold text-red-300">{l.saleName} -{l.salePercent}%</span>}
                     {l.unitsLeft !== null && l.unitsLeft <= 3 && <span className="text-xs font-semibold text-amber-400">Only {l.unitsLeft} left</span>}
                   </div>
                 )}

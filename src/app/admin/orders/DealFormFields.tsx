@@ -445,6 +445,13 @@ export function DealFormFields({
       </Field>
 
       <div className="col-span-2">
+        <label className="flex items-start gap-3 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-200">
+          <input type="checkbox" name="client_listing" defaultChecked={deal?.client_listing === true} className="mt-1" />
+          <span><b>Client item.</b> This watch is listed on behalf of a client: keep this order out of the finance reports and the profit.</span>
+        </label>
+      </div>
+
+      <div className="col-span-2">
         <Field label="Notes" optional>
           <textarea name="notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className={inputClass} placeholder="Any extra info..." />
         </Field>

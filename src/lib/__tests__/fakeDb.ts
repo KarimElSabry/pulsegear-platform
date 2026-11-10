@@ -6,7 +6,7 @@ type Filter = (r: Row) => boolean
 
 let counter = 0
 const uuid = () => `00000000-0000-4000-8000-${String(++counter).padStart(12, '0')}`
-const numericIds = new Set(['checkout_items', 'product_variants', 'product_images', 'products', 'order_events_n'])
+const numericIds = new Set(['checkout_items', 'product_variants', 'product_images', 'products', 'order_events_n', 'promotions'])
 
 export class FakeDb {
   tables: Record<string, Row[]> = {}
@@ -56,6 +56,7 @@ class Query implements PromiseLike<Result> {
   neq(c: string, v: unknown) { this.filters.push((r) => r[c] !== v); return this }
   in(c: string, vs: unknown[]) { this.filters.push((r) => vs.includes(r[c])); return this }
   is(c: string, v: null) { this.filters.push((r) => (r[c] ?? null) === v); return this }
+  gte(c: string, v: string) { this.filters.push((r) => r[c] != null && String(r[c]) >= v); return this }
   lt(c: string, v: string) { this.filters.push((r) => r[c] != null && String(r[c]) < v); return this }
   order(col: string, o?: { ascending?: boolean }) { this.orderBy = { col, asc: o?.ascending !== false }; return this }
   limit(n: number) { this.lim = n; return this }

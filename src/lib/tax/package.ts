@@ -9,7 +9,7 @@ import type { LedgerTx, TaxSettings } from './types'
 
 export interface StatementLite { bank: string; account: string; currency: string; from: string | null; to: string | null; opening: number | null; closing: number | null; bankDebit: [number | null, number | null]; bankCredit: [number | null, number | null]; readDebit: [number, number]; readCredit: [number, number]; verified: boolean; note: string }
 export interface MatchLite { id: string; kind: 'exchange' | 'payment'; status: 'suggested' | 'confirmed' | 'rejected'; auto: boolean; egpTxId: string; eurTxId: string | null; checkoutId: string | null; dealId: string | null; expected: string | null; rate: number | null }
-export interface SaleLite { source: 'website' | 'manual'; code: string; date: string; customer: string; items: string; totalEgp: number; depositEgp: number; depositStatus: string; bankDate: string | null; bankAmount: number | null; status: string; deliveredAt: string | null; checkoutId: string | null; dealId: string | null }
+export interface SaleLite { source: 'website' | 'manual'; code: string; date: string; customer: string; items: string; totalEgp: number; depositEgp: number; depositStatus: string; bankDate: string | null; bankAmount: number | null; status: string; deliveredAt: string | null; checkoutId: string | null; dealId: string | null; clientItem?: boolean }
 
 export interface PackageInput { year: number; generatedOn: string; txs: LedgerTx[]; statements: StatementLite[]; matches: MatchLite[]; sales: SaleLite[]; settings: TaxSettings }
 
@@ -99,11 +99,11 @@ export function buildPackage(i: PackageInput): ZipFile[] {
     egpIn.sort((a, b) => a.date.localeCompare(b.date)).map((t) => {
       const m = payByTx.get(t.id)
       const sale = m ? i.sales.find((x) => (m.checkoutId && x.checkoutId === m.checkoutId) || (m.dealId && x.dealId === m.dealId)) : undefined
-      return [t.date, de(t.amount), t.counterpartyPhone ?? '', t.counterpartyName ?? '', t.reference ?? '', sale?.code ?? '', m ? (m.expected === 'deposit' ? 'Anzahlung' : m.expected === 'full' ? 'voller Betrag' : 'anderer Betrag') : '', t.treatment === 'business' ? 'geschaeftlich' : t.treatment === 'personal' ? 'privat' : t.treatment === 'internal' ? 'intern' : 'OFFEN']
+      return [t.date, de(t.amount), t.counterpartyPhone ?? '', t.counterpartyName ?? '', t.reference ?? '', sale?.code ?? '', m ? (m.expected === 'deposit' ? 'Anzahlung' : m.expected === 'full' ? 'voller Betrag' : 'anderer Betrag') : '', sale?.clientItem ? 'Kundenartikel (Geld des Kunden, keine Einnahme)' : t.treatment === 'business' ? 'geschaeftlich' : t.treatment === 'personal' ? 'privat' : t.treatment === 'internal' ? 'intern' : 'OFFEN']
     }))
 
-  const salesCsv = csv(['Datum', 'Bestellung', 'Quelle', 'Kunde', 'Artikel', 'Gesamt EGP', 'Anzahlung EGP', 'Anzahlung Status', 'Bankeingang Datum', 'Bankeingang EGP', 'Status', 'Geliefert am'],
-    sales.sort((a, b) => a.date.localeCompare(b.date)).map((x) => [x.date, x.code, x.source === 'website' ? 'Webshop' : 'manuell', x.customer, x.items, de(x.totalEgp), de(x.depositEgp), x.depositStatus, x.bankDate ?? '', de(x.bankAmount), x.status, x.deliveredAt ?? '']))
+  const salesCsv = csv(['Datum', 'Bestellung', 'Quelle', 'Kunde', 'Artikel', 'Gesamt EGP', 'Anzahlung EGP', 'Anzahlung Status', 'Bankeingang Datum', 'Bankeingang EGP', 'Status', 'Geliefert am', 'Kundenartikel (nicht in der Auswertung)'],
+    sales.sort((a, b) => a.date.localeCompare(b.date)).map((x) => [x.date, x.code, x.source === 'website' ? 'Webshop' : 'manuell', x.customer, x.items, de(x.totalEgp), de(x.depositEgp), x.depositStatus, x.bankDate ?? '', de(x.bankAmount), x.status, x.deliveredAt ?? '', x.clientItem ? 'ja' : '']))
 
   const statementsCsv = csv(['Bank', 'Konto (letzte 4)', 'Waehrung', 'Von', 'Bis', 'Anfangssaldo', 'Endsaldo', 'Soll Anzahl (Bank)', 'Soll Summe (Bank)', 'Soll Anzahl (gelesen)', 'Soll Summe (gelesen)', 'Haben Anzahl (Bank)', 'Haben Summe (Bank)', 'Haben Anzahl (gelesen)', 'Haben Summe (gelesen)', 'Vollstaendig nachgewiesen', 'Hinweis'],
     i.statements.map((x) => [x.bank.toUpperCase(), x.account.slice(-4), x.currency, x.from, x.to, de(x.opening), de(x.closing), x.bankDebit[0] ?? '', de(x.bankDebit[1]), x.readDebit[0], de(x.readDebit[1]), x.bankCredit[0] ?? '', de(x.bankCredit[1]), x.readCredit[0], de(x.readCredit[1]), x.verified ? 'ja' : 'NEIN', x.note]))

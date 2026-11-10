@@ -18,6 +18,8 @@ import BlogTeasers from '@/components/home/BlogTeasers'
 import HomeFaq from '@/components/home/HomeFaq'
 import NewsletterSignup from '@/components/newsletter/NewsletterSignup'
 import ScrollReveal from '@/components/ScrollReveal'
+import CampaignSection from '@/components/home/CampaignSection'
+import { loadLiveCampaigns } from '@/lib/promotions-service'
 
 export const revalidate = 60
 
@@ -78,12 +80,16 @@ async function getHomeData(): Promise<HomeData> {
 
 export default async function HomePage() {
   const { featured, deals, stats, brands, categories } = await getHomeData()
+  // the campaign that is live right now (the page refreshes every minute); without the campaign tables there is simply none
+  const campaign = (await loadLiveCampaigns(createAdminSupabaseClient(), new Date(), { perCampaign: 10 }).catch(() => []))[0]
 
   return (
     <>
       <HeroVideo />
       <StatsStrip stats={stats} />
       <BrandMarquee brands={brands} />
+
+      {campaign && <CampaignSection campaign={campaign} />}
 
       {/* Shop by category (live: only categories with available products) */}
       {categories.length > 0 && (

@@ -122,6 +122,7 @@ export async function addProduct(formData: FormData): Promise<void> {
         source_url: sourceUrl,
         status: 'available',
         is_reservable: isReservable,
+        client_listing: formData.get('client_listing') === 'on',
         vinted_id: vintedId,
       },
       imageUrls

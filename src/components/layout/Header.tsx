@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 import CartLink from '@/components/cart/CartLink'
+import { useLiveCampaigns } from '@/components/promotions/PromotionsProvider'
 
 const navLinks = [
   { label: 'Products', href: '/products' },
@@ -21,6 +22,9 @@ const navLinks = [
 
 export default function Header() {
   const pathname = usePathname()
+  // While a campaign is live, the HOT DEALS link carries its name (it still goes to the Deals page, which lists the campaign products).
+  const campaign = useLiveCampaigns()[0]
+  const links = navLinks.map((l) => (campaign && l.href === '/deals' ? { ...l, label: `${campaign.name.length > 24 ? `${campaign.name.slice(0, 23)}…` : campaign.name}`.toUpperCase() + ' 🔥' } : l))
   const supabase = useMemo(() => createBrowserSupabaseClient(), [])
   const [menuOpen, setMenuOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -93,7 +97,7 @@ export default function Header() {
         </Link>
 
         <nav className="hidden lg:flex flex-1 items-center justify-center gap-7 xl:gap-9">
-          {navLinks.map((link) => {
+          {links.map((link) => {
             const isActive = isActiveLink(link.href)
 
             return (
@@ -191,7 +195,7 @@ export default function Header() {
         <div className="border-t border-line bg-surface-0 lg:hidden">
           <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-4 md:px-6 lg:px-8">
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {navLinks.map((link) => {
+              {links.map((link) => {
                 const isActive = isActiveLink(link.href)
 
                 return (

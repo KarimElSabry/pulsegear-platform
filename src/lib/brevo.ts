@@ -2,6 +2,7 @@
 
 import { Product, ProductImage } from '@/types/product'
 import { createAdminSupabaseClient } from '@/lib/supabase'
+import { saleSectionHtml, type SaleEmailItem } from '@/lib/campaign-email'
 
 const BREVO_API_URL = 'https://api.brevo.com/v3'
 
@@ -48,9 +49,10 @@ function extractFirstName(name?: string) {
   return name.trim().split(/\s+/)[0] || ''
 }
 
-function buildEmailTemplate(
+export function buildEmailTemplate(
   newProducts: (Product & { images?: ProductImage[] })[],
-  soldProducts: (Product & { images?: ProductImage[] })[]
+  soldProducts: (Product & { images?: ProductImage[] })[],
+  sales: SaleEmailItem[] = []
 ): string {
   const siteUrl = getSiteUrl()
   const weekDate = new Date().toLocaleDateString('en-US', {
@@ -108,6 +110,7 @@ function buildEmailTemplate(
         </div>
 
         <div style="padding:24px;">
+          ${saleSectionHtml(sales)}
           <h2 style="font-size:20px; border-bottom:2px solid #000; padding-bottom:8px;">
             New This Week
             <span style="background:#000; color:#fff; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">
@@ -303,13 +306,10 @@ export async function removeContactFromBrevo(email: string): Promise<void> {
   throw new Error(err?.message || 'Failed to remove contact from Brevo')
 }
 
-export async function sendWeeklyNewsletter(
-  newProducts: (Product & { images?: ProductImage[] })[],
-  soldProducts: (Product & { images?: ProductImage[] })[]
-): Promise<void> {
+/** Creates a Brevo email campaign for the newsletter list and sends it now. */
+export async function sendBrevoCampaign(input: { name: string; subject: string; html: string }): Promise<void> {
   const apiKey = getBrevoApiKey()
   const listId = getNewsletterListId()
-  const htmlContent = buildEmailTemplate(newProducts, soldProducts)
 
   const createRes = await fetch(`${BREVO_API_URL}/emailCampaigns`, {
     method: 'POST',
@@ -318,14 +318,14 @@ export async function sendWeeklyNewsletter(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      name: `Weekly Newsletter - ${new Date().toLocaleDateString('en-US')}`,
-      subject: `Pulse Gear Weekly — ${newProducts.length} New Items This Week`,
+      name: input.name,
+      subject: input.subject,
       sender: {
         name: getSenderName(),
         email: getSenderEmail(),
       },
       type: 'classic',
-      htmlContent,
+      htmlContent: input.html,
       recipients: { listIds: [listId] },
     }),
   })
@@ -359,6 +359,44 @@ export async function sendWeeklyNewsletter(
 
     throw new Error(sendErr?.message || 'Failed to send newsletter campaign')
   }
+}
+
+/** Sends one email to the shop's own sender address, so you can look at a campaign email before it goes to everyone. */
+export async function sendBrevoTest(subject: string, html: string): Promise<string> {
+  const to = getSenderEmail()
+  const res = await fetch(`${BREVO_API_URL}/smtp/email`, {
+    method: 'POST',
+    headers: { 'api-key': getBrevoApiKey(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sender: { name: getSenderName(), email: to },
+      to: [{ email: to }],
+      subject: `[TEST] ${subject}`,
+      htmlContent: html.replace('{{ contact.EMAIL }}', encodeURIComponent(to)),
+    }),
+  })
+  if (!res.ok) {
+    let err: any = null
+    try { err = await res.json() } catch { err = null }
+    throw new Error(err?.message || 'Failed to send the test email')
+  }
+  return to
+}
+
+export async function sendWeeklyNewsletter(
+  newProducts: (Product & { images?: ProductImage[] })[],
+  soldProducts: (Product & { images?: ProductImage[] })[],
+  sales: SaleEmailItem[] = []
+): Promise<void> {
+  const subject = newProducts.length > 0
+    ? `Pulse Gear Weekly — ${newProducts.length} New Items This Week`
+    : sales.length > 0
+      ? `Pulse Gear Weekly — ${sales[0].campaignName}`
+      : `Pulse Gear Weekly — ${newProducts.length} New Items This Week`
+  await sendBrevoCampaign({
+    name: `Weekly Newsletter - ${new Date().toLocaleDateString('en-US')}`,
+    subject,
+    html: buildEmailTemplate(newProducts, soldProducts, sales),
+  })
 }
 
 export async function sendWishlistSoldAlerts(productId: number): Promise<void> {

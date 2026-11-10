@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { href: '/admin/products',            label: '📦 Manage Products' },
   { href: '/admin/reservations',        label: '📋 Reservations'    },
   { href: '/admin/discounts',           label: '🏷️ Discount Codes'  },
+  { href: '/admin/campaigns',           label: '🔥 Campaigns'       },
   { href: '/admin/analytics',           label: '📊 Analytics'       },
   { href: '/admin/analytics/sales-performance', label: '💹 Sales Performance' },
   { href: '/admin/analytics/reports',  label: '📑 Reports'         },

@@ -13,6 +13,10 @@ export type QuoteLine = {
   colorName: string | null
   imageUrl: string | null
   unitPriceEgp: number
+  /** Set while a campaign is live: the regular price that is crossed out. */
+  regularPriceEgp: number | null
+  saleName: string | null
+  salePercent: number | null
   quantity: number
   maxQuantity: number
   note: string

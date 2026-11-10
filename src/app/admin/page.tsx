@@ -499,6 +499,11 @@ export default function AdminPage() {
           </select>
         </div>
 
+        <label className="flex items-start gap-3 rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3 text-sm text-gray-200">
+          <input type="checkbox" name="client_listing" className="mt-1" />
+          <span><b>Listed on behalf of a client.</b> The shop shows it under the filter &quot;Client listing&quot;. You can also switch this later in Manage Products.</span>
+        </label>
+
         <div className="space-y-1">
           <label className="block text-sm font-semibold text-gray-200">Source URL</label>
           <input

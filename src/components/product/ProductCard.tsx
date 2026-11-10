@@ -9,6 +9,8 @@ import { isOptimizable } from '@/lib/image-hosts'
 import { Product } from '@/types/product'
 import { useWishlist } from '@/hooks/useWishlist'
 import { useLikes } from '@/hooks/useLikes'
+import { useSale } from '@/components/promotions/PromotionsProvider'
+import { isClientListing } from '@/lib/sellers'
 
 type Props = {
   product: Product
@@ -28,6 +30,7 @@ const conditionStyles: Record<string, { text: string; bg: string }> = {
 export default function ProductCard({ product }: Props) {
   const { isLoved, toggleLove } = useWishlist()
   const { likes, loading, addLike, liked, isSold } = useLikes(product.id!, product.status)
+  const sale = useSale(product.id, product.price_egp ?? 0)
   const [imageFailed, setImageFailed] = useState(false) // dead external photo (e.g. expired Vinted link)
 
   const primaryImage =
@@ -82,6 +85,14 @@ export default function ProductCard({ product }: Props) {
             </div>
           )}
 
+          {/* 🏷️ Campaign: name on the left, percent off on the right (only while the product is not sold or reserved) */}
+          {sale && product.status === 'available' && (
+            <div className="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
+              <span className="max-w-[65%] truncate rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white">{sale.name}</span>
+              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">-{sale.percent}%</span>
+            </div>
+          )}
+
           {/* ❤️ Wishlist Button */}
           <button
             onClick={(e) => {
@@ -129,6 +140,7 @@ export default function ProductCard({ product }: Props) {
           <div className="flex items-center justify-between">
             <span className="text-xs text-red-500 font-semibold uppercase tracking-wide">
               {product.brand ?? '—'}
+              {isClientListing(product) && <span className="ml-2 rounded-full bg-sky-400/10 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-sky-300">Client listing</span>}
             </span>
 
             {/* ✅ Colored condition badge */}
@@ -143,10 +155,17 @@ export default function ProductCard({ product }: Props) {
           </h2>
 
           {/* ✅ Price — fixed locale to avoid SSR/client hydration mismatch */}
-          <p className="text-white font-black text-lg mt-2">
-            {(product.price_egp ?? 0).toLocaleString('en-US')}{' '}
-            <span className="text-zinc-400 text-sm font-normal">EGP</span>
-          </p>
+          {sale && product.status === 'available' ? (
+            <p className="text-white font-black text-lg mt-2 flex flex-wrap items-baseline gap-x-2">
+              <span>{sale.price.toLocaleString('en-US')} <span className="text-zinc-400 text-sm font-normal">EGP</span></span>
+              <span className="text-zinc-500 text-sm font-normal line-through">{sale.regular.toLocaleString('en-US')}</span>
+            </p>
+          ) : (
+            <p className="text-white font-black text-lg mt-2">
+              {(product.price_egp ?? 0).toLocaleString('en-US')}{' '}
+              <span className="text-zinc-400 text-sm font-normal">EGP</span>
+            </p>
+          )}
 
         </div>
       </div>

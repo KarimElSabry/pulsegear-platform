@@ -130,6 +130,9 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         <div className="text-sm text-zinc-300 space-y-1">
           {o.items.map((i, idx) => <p key={idx}>• {i.title}{i.color ? ` (${i.color})` : ''} × {i.quantity}{o.kind === 'online' ? ` — ${egp(i.net)}` : ''}</p>)}
           {noteById.get(o.checkout?.id ?? '') && <p className="text-xs text-amber-300">Customer note: {noteById.get(o.checkout?.id ?? '')}</p>}
+          {live.some((d) => fullById.get(d.id)?.client_listing === true) && (
+            <p className="text-xs font-semibold text-sky-300">👤 Client item: not counted in the finance reports or the profit</p>
+          )}
           <p className="text-xs text-zinc-400">
             Total <b className="text-white">{egp(o.total)}</b>
             {live.length > 0 && (paidAt ? <> · deposit marked paid {when(paidAt)}{depositNow ? ` (${egp(depositNow)})` : ''}</> : <> · deposit not marked paid</>)}

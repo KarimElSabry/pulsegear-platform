@@ -17,7 +17,10 @@ export async function loadSales(db: SupabaseClient, ledgerById: Map<string, { da
   const ids = ((orders ?? []) as Row[]).map((o) => String(o.id))
   const items = ids.length ? (await db.from('checkout_items').select('checkout_id, title, color_name, quantity').in('checkout_id', ids)).data ?? [] : []
   const receipts = ids.length ? (await db.from('payment_receipts').select('checkout_id, status').in('checkout_id', ids)).data ?? [] : []
-  const deals = (await db.from('deals').select('id, status, delivered_at, selling_price_egp, deposit_amount_egp, customer_name, created_at, checkout_id, order_code, item_title').neq('status', 'cancelled')).data ?? []
+  const DEAL_COLUMNS = 'id, status, delivered_at, selling_price_egp, deposit_amount_egp, customer_name, created_at, checkout_id, order_code, item_title'
+  // client_listing exists after migration 20261113; before it the orders still load, just without the mark
+  const wideDeals = await db.from('deals').select(`${DEAL_COLUMNS}, client_listing`).neq('status', 'cancelled')
+  const deals = (wideDeals.error ? (await db.from('deals').select(DEAL_COLUMNS).neq('status', 'cancelled')).data : wideDeals.data) ?? []
   const bank = (checkoutId: string | null, dealId: string | null) => {
     const m = matches.find((x) => x.kind === 'payment' && x.status === 'confirmed' && ((checkoutId && x.checkoutId === checkoutId) || (dealId && x.dealId === dealId)))
     const t = m ? ledgerById.get(m.egpTxId) : undefined
@@ -36,6 +39,7 @@ export async function loadSales(db: SupabaseClient, ledgerById: Map<string, { da
       bankDate: b?.date ?? null, bankAmount: b?.amount ?? null,
       status: mine.length ? [...new Set(mine.map((d) => String(d.status)))].join('/') : String(o.status),
       deliveredAt: mine.map((d) => d.delivered_at as string | null).filter(Boolean).sort().at(-1)?.slice(0, 10) ?? null, checkoutId: String(o.id), dealId: null,
+      clientItem: mine.some((d) => d.client_listing === true),
     })
   }
   for (const d of deals as Row[]) {
@@ -44,7 +48,7 @@ export async function loadSales(db: SupabaseClient, ledgerById: Map<string, { da
     out.push({
       source: 'manual', code: String(d.order_code ?? ''), date: String(d.created_at).slice(0, 10), customer: String(d.customer_name ?? ''), items: String(d.item_title ?? ''),
       totalEgp: num(d.selling_price_egp), depositEgp: num(d.deposit_amount_egp), depositStatus: b ? 'Bankeingang bestaetigt' : d.status === 'deposit_pending' ? 'offen' : 'als bezahlt markiert',
-      bankDate: b?.date ?? null, bankAmount: b?.amount ?? null, status: String(d.status), deliveredAt: (d.delivered_at as string | null)?.slice(0, 10) ?? null, checkoutId: null, dealId: String(d.id),
+      bankDate: b?.date ?? null, bankAmount: b?.amount ?? null, status: String(d.status), deliveredAt: (d.delivered_at as string | null)?.slice(0, 10) ?? null, checkoutId: null, dealId: String(d.id), clientItem: d.client_listing === true,
     })
   }
   return out

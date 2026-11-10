@@ -11,6 +11,8 @@ import { timingSafeEqual } from 'crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { clampPercent, computeTotals, holdUntil, type CleanCustomer, type CheckoutStatus, type Totals } from '@/lib/checkout-core'
 import { MAX_LINE_QUANTITY, type CartLine } from '@/lib/cart'
+import { loadPromotionData } from '@/lib/promotions-service'
+import { saleFor } from '@/lib/promotions'
 import { activeVariants, availability, clampQuantity, variantLabel, variantPrice, type VariantLite } from '@/lib/stock'
 import { imagesForVariant } from '@/lib/variant-images'
 import { loadVariants } from '@/lib/variants'
@@ -58,21 +60,23 @@ async function lookupDiscount(db: Db, raw: string | null | undefined): Promise<{
 }
 
 /** Prices, names and availability of a cart, from the database. The browser only says what and how many. */
-export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?: string | null } = {}): Promise<QuoteResult> {
+export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?: string | null; now?: Date } = {}): Promise<QuoteResult> {
   const ids = [...new Set(cart.map((l) => l.productId))]
-  const [products, images, variantMap, discount] = await Promise.all([
+  const [products, images, variantMap, discount, campaigns] = await Promise.all([
     loadProducts(db, ids),
     loadImages(db, ids),
     loadVariants(db, ids),
     lookupDiscount(db, opts.discountCode),
+    loadPromotionData(db, ids),
   ])
+  const now = opts.now ?? new Date()
   const byId = new Map(products.map((p) => [Number(p.id), p]))
 
   const lines: QuoteLine[] = cart.map((c): QuoteLine => {
     const p = byId.get(c.productId)
     const base = { productId: c.productId, variantId: c.variantId, note: c.note, quantity: Math.min(c.quantity, MAX_LINE_QUANTITY) }
     if (!p) {
-      return { ...base, slug: null, title: 'An item in your cart', colorName: null, imageUrl: null, unitPriceEgp: 0, maxQuantity: 0, discountEnabled: false, oneOff: true, onDemand: false, unitsLeft: null, problem: 'gone' }
+      return { ...base, slug: null, title: 'An item in your cart', colorName: null, imageUrl: null, unitPriceEgp: 0, regularPriceEgp: null, saleName: null, salePercent: null, maxQuantity: 0, discountEnabled: false, oneOff: true, onDemand: false, unitsLeft: null, problem: 'gone' }
     }
     const colors = activeVariants(variantMap.get(Number(p.id)))
     const variant: VariantLite | null = c.variantId ? colors.find((v) => v.id === c.variantId) ?? null : null
@@ -89,6 +93,9 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
     const sameColor = variant ? colors.filter((v) => v.name.trim().toLowerCase() === variant.name.trim().toLowerCase()).map((v) => v.id) : null
     const photos = imagesForVariant(images.filter((i) => Number(i.product_id) === Number(p.id)), sameColor, colors.length > 0)
     const photo = photos.find((i) => i.is_primary) ?? photos[0]
+    // the regular price of the chosen option, and the campaign price if one of its campaigns is live right now
+    const regular = variantPrice(variant, Number(p.price_egp) || 0)
+    const sale = saleFor(Number(p.id), regular, campaigns.promotions, campaigns.items, now)
     return {
       ...base,
       quantity: problem === 'ok' ? clampQuantity(c.quantity, a) : base.quantity,
@@ -96,9 +103,13 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
       title: p.title,
       colorName: variantLabel(variant),
       imageUrl: photo?.image_url ?? null,
-      unitPriceEgp: variantPrice(variant, Number(p.price_egp) || 0),
+      unitPriceEgp: sale?.price ?? regular,
+      regularPriceEgp: sale ? regular : null,
+      saleName: sale?.name ?? null,
+      salePercent: sale?.percent ?? null,
       maxQuantity: a.maxQuantity,
-      discountEnabled: p.discount_enabled !== false,
+      // discount codes still work on a sale price, unless the campaign switches them off
+      discountEnabled: p.discount_enabled !== false && (sale ? sale.allowCodes : true),
       oneOff: a.oneOff,
       onDemand: a.onDemand,
       unitsLeft: a.unitsLeft,
@@ -224,7 +235,7 @@ export async function placeCheckout(db: Db, input: { lines: CartLine[]; customer
   if (input.lines.length === 0) return { ok: false, reason: 'EMPTY', message: 'Your cart is empty' }
 
   await releaseExpired(db, now)
-  const quote = await quoteCart(db, input.lines, { discountCode: input.discountCode })
+  const quote = await quoteCart(db, input.lines, { discountCode: input.discountCode, now })
   if (input.discountCode?.trim() && quote.discountError) return { ok: false, reason: 'DISCOUNT', message: quote.discountError }
   const bad = quote.lines.filter((l) => l.problem !== 'ok')
   if (bad.length) return { ok: false, reason: 'UNAVAILABLE', message: bad.map(problemText).join('. ') + '. Please update your cart.' }
@@ -343,6 +354,12 @@ export async function approveCheckout(db: Db, id: string, now = new Date()): Pro
     const { data: c } = await db.from('discount_codes').select('discount_percent').eq('code', order.discount_code).maybeSingle()
     codePercent = clampPercent(c?.discount_percent, 0)
   }
+  // products listed on behalf of a client: their orders stay out of the finance system (needs migration 20261112/20261113; without it nothing is marked)
+  const clientProducts = new Set<number>()
+  {
+    const { data: flagged, error: flagError } = await db.from('products').select('id, client_listing').in('id', [...new Set(fresh.map((i) => Number(i.product_id)))])
+    if (!flagError) for (const p of (flagged ?? []) as { id: number; client_listing?: boolean | null }[]) if (p.client_listing === true) clientProducts.add(Number(p.id))
+  }
   for (const item of fresh) {
     const unit = Number(item.unit_price_egp) || 0
     const net = Math.round(unit * item.quantity) - (Number(item.discount_egp) || 0)
@@ -356,9 +373,11 @@ export async function approveCheckout(db: Db, id: string, now = new Date()): Pro
       discount_code: order.discount_code,
       commission_egp: order.discount_code && (Number(item.discount_egp) || 0) > 0 ? commissionForCode(net, codePercent) : 0,
       user_id: order.user_id, checkout_id: order.id, checkout_code: order.code, item_title: title, notes,
+      ...(clientProducts.has(Number(item.product_id)) ? { client_listing: true } : {}),
     }).select('id').single()
     if (error || !deal) {
       console.error('[checkout] could not create a deal:', error?.message)
+      if (error?.message.includes('client_listing')) return undo('This order contains a client item. Run the Supabase migration 20261113_01_deals_client_listing.sql, then approve it again. Nothing was changed.', dealIds)
       return undo('Could not create the order records. Nothing was changed, please try again.', dealIds)
     }
     dealIds.push(deal.id as string)

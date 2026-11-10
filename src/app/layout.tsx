@@ -12,6 +12,8 @@ import CartProvider from '@/components/cart/CartProvider'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import MarketingTracker from '@/components/MarketingTracker'
 import MetaPixel from '@/components/MetaPixel'
+import { PromotionsProvider } from '@/components/promotions/PromotionsProvider'
+import CampaignBar from '@/components/promotions/CampaignBar'
 import { SITE_URL, SITE_NAME } from '@/lib/site'
 
 import './globals.css'
@@ -71,12 +73,15 @@ export default function RootLayout({
         <GoogleAnalytics />
         <MetaPixel />
         <MarketingTracker />
+        <PromotionsProvider>
         <CartProvider>
+          <CampaignBar />
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
           <WelcomeTour />
         </CartProvider>
+        </PromotionsProvider>
         <Analytics />
         <SpeedInsights />
       </body>

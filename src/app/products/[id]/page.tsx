@@ -13,6 +13,7 @@ import { loadActiveVariants } from '@/lib/variants'
 import { anyVariantBuyable } from '@/lib/stock'
 import { releaseExpired } from '@/lib/checkout-service'
 import { SITE_NAME, SITE_URL } from '@/lib/site'
+import { isClientListing } from '@/lib/sellers'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -107,6 +108,9 @@ export default async function ProductDetailsPage({ params }: Props) {
               <span className="rounded-full bg-brand px-3 py-1 text-xs font-bold uppercase text-white">
                 {product.brand}
               </span>
+            )}
+            {isClientListing(product) && (
+              <span className="rounded-full bg-sky-500/15 px-3 py-1 text-xs font-bold text-sky-300">Client listing</span>
             )}
             {product.category && (
               <span className="rounded-full bg-surface-3 px-3 py-1 text-xs font-bold uppercase text-muted-strong">

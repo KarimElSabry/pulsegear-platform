@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
 import type { VariantLite } from '@/lib/stock'
+import { filterProducts, statusCounts, type StatusFilter } from '@/lib/product-admin-filter'
 import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
 interface Props {
@@ -675,8 +676,11 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
   const [syncing, setSyncing]       = useState(false)
   const [syncResult, setSyncResult] = useState<{ checked: number; sold: number; errors: number } | null>(null)
   const [syncError, setSyncError]   = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active')
+  const [query, setQuery] = useState('')
 
-  const sortedProducts = [...products].sort((a, b) => {
+  const counts = statusCounts(products)
+  const sortedProducts = filterProducts([...products], statusFilter, query).sort((a, b) => {
     const statusDiff =
       (STATUS_ORDER[a.status ?? 'available'] ?? 99) -
       (STATUS_ORDER[b.status ?? 'available'] ?? 99)
@@ -789,9 +793,23 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
         </div>
       </div>
 
+      {/* ── Filter: Active / Sold / Out of stock / All + search ── */}
+      <div className="flex items-center gap-2 flex-wrap mb-4">
+        {([['active', 'Active'], ['sold', 'Sold'], ['out_of_stock', 'Out of stock'], ['all', 'All']] as const).map(([key, label]) => (
+          <button key={key} type="button" onClick={() => setStatusFilter(key)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition border ${statusFilter === key ? 'bg-blue-600 border-blue-500 text-white' : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700'}`}>
+            {label} <span className="opacity-70">({counts[key]})</span>
+          </button>
+        ))}
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or ID…"
+          className="ml-auto bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 placeholder-zinc-600 w-56" />
+      </div>
+
       {/* ── Table ── */}
       {products.length === 0 ? (
         <p className="text-zinc-500">No products added</p>
+      ) : sortedProducts.length === 0 ? (
+        <p className="text-zinc-500">No products match this filter.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-zinc-700">
           <table className="w-full border-collapse">
@@ -805,6 +823,7 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Featured</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">🔥 Deal</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">🏷️ Discount</th>
+                <th className="p-4 text-left text-zinc-300 font-semibold text-sm">👤 Client</th>
                 <th className="p-4 text-left text-zinc-300 font-semibold text-sm">Actions</th>
               </tr>
             </thead>
@@ -889,6 +908,16 @@ export default function ManageProductsClient({ products: initialProducts }: Prop
                       onToggle={() => handleToggle(product.id!, 'discount_enabled', product.discount_enabled ?? true)}
                       title={product.discount_enabled ? 'Disable discounts' : 'Enable discounts'}
                       color="bg-green-600"
+                    />
+                  </td>
+
+                  {/* Listed on behalf of a client */}
+                  <td className="p-4">
+                    <ToggleBtn
+                      value={product.client_listing ?? false}
+                      onToggle={() => handleToggle(product.id!, 'client_listing', product.client_listing ?? false)}
+                      title={product.client_listing ? 'Listed for a client: press to make it a Pulse Gear product' : 'Mark as listed on behalf of a client'}
+                      color="bg-sky-600"
                     />
                   </td>
 

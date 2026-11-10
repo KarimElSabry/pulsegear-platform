@@ -198,7 +198,33 @@ export async function applyConfirmedEffects(db: SupabaseClient, items: { kind: '
   const ex = items.filter((i) => i.kind === 'exchange').map((i) => i.egpTxId)
   const pay = items.filter((i) => i.kind === 'payment').map((i) => i.egpTxId)
   if (ex.length) await db.from('bank_transactions').update({ treatment: 'internal' }).in('id', ex).eq('treatment', 'unreviewed')
-  if (pay.length) await db.from('bank_transactions').update({ treatment: 'business' }).in('id', pay).eq('treatment', 'unreviewed')
+  if (pay.length) {
+    // money paid for a watch listed on behalf of a client is the client's money, not our income: it is kept out like an own-account transfer
+    const client = await clientPaymentTxIds(db, pay)
+    const own = pay.filter((id) => !client.has(id))
+    if (own.length) await db.from('bank_transactions').update({ treatment: 'business' }).in('id', own).eq('treatment', 'unreviewed')
+    if (client.size) await db.from('bank_transactions').update({ treatment: 'internal' }).in('id', [...client]).eq('treatment', 'unreviewed')
+  }
+}
+
+/** Which of these bank lines were matched to an order that is a client item (empty when the column does not exist yet). */
+export async function clientPaymentTxIds(db: SupabaseClient, egpTxIds: string[]): Promise<Set<string>> {
+  const out = new Set<string>()
+  const { data: matches } = await db.from('tx_matches').select('egp_tx_id, checkout_id, deal_id').eq('kind', 'payment').in('egp_tx_id', egpTxIds)
+  const rows = (matches ?? []) as Row[]
+  const checkoutIds = rows.map((r) => r.checkout_id as string | null).filter((x): x is string => !!x)
+  const dealIds = rows.map((r) => r.deal_id as string | null).filter((x): x is string => !!x)
+  const clientCheckouts = new Set<string>(), clientDeals = new Set<string>()
+  if (checkoutIds.length) {
+    const { data, error } = await db.from('deals').select('checkout_id').eq('client_listing', true).in('checkout_id', checkoutIds)
+    if (!error) for (const d of (data ?? []) as Row[]) clientCheckouts.add(String(d.checkout_id))
+  }
+  if (dealIds.length) {
+    const { data, error } = await db.from('deals').select('id').eq('client_listing', true).in('id', dealIds)
+    if (!error) for (const d of (data ?? []) as Row[]) clientDeals.add(String(d.id))
+  }
+  for (const r of rows) if ((r.checkout_id && clientCheckouts.has(String(r.checkout_id))) || (r.deal_id && clientDeals.has(String(r.deal_id)))) out.add(String(r.egp_tx_id))
+  return out
 }
 
 export async function decideMatch(db: SupabaseClient, id: string, status: 'confirmed' | 'rejected'): Promise<{ ok: boolean; message: string }> {

@@ -431,3 +431,19 @@ describe('daily reminder', () => {
     expect(t).toContain('&lt;b&gt;')
   })
 })
+
+describe('client items (listed on behalf of a client)', () => {
+  it('approving an order marks the deal of a client product, and only that one', async () => {
+    db.rows('products').find((p) => p.id === 1)!.client_listing = true
+    const o = await pendingOrder()
+    await approveCheckout(client(), o.id, at(30))
+    const deals = db.rows('deals')
+    expect(deals[0].client_listing).toBe(true) // Product 1
+    expect(deals[1].client_listing).toBeUndefined() // Product 2
+  })
+  it('works before the migration: nothing is marked and the order is created', async () => {
+    const o = await pendingOrder()
+    expect((await approveCheckout(client(), o.id, at(30))).ok).toBe(true)
+    expect(db.rows('deals').every((d) => d.client_listing === undefined)).toBe(true)
+  })
+})

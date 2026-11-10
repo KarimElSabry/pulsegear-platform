@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import ProductGrid from '@/components/product/ProductGrid'
+import { SELLER_OPTIONS, canonSeller } from '@/lib/sellers'
 
 const conditions = [
   'All', 'New with tags', 'New without tags',
@@ -31,6 +32,7 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
   const [condition, setCondition]       = useState('All')
   const [availability, setAvailability] = useState(() => canon(availabilities, searchParams.get('availability')))
   const [category, setCategory]         = useState(() => canon(categories, searchParams.get('category')))
+  const [seller, setSeller]             = useState<string>(() => canonSeller(searchParams.get('seller')))
 
   // When the URL changes (e.g. a header or homepage link), re-apply it during render.
   const urlKey = searchParams.toString()
@@ -40,6 +42,7 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
     setBrand(searchParams.get('brand') ?? 'All')
     setAvailability(canon(availabilities, searchParams.get('availability')))
     setCategory(canon(categories, searchParams.get('category')))
+    setSeller(canonSeller(searchParams.get('seller')))
   }
 
   const brands = ['All', ...initialBrands]
@@ -109,6 +112,20 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
           </select>
         </div>
 
+        {/* Seller: Pulse Gear's own products or listings on behalf of clients */}
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-zinc-500 uppercase tracking-wide">Seller</label>
+          <select
+            value={seller}
+            onChange={(e) => setSeller(e.target.value)}
+            className="bg-zinc-800 text-white text-sm px-4 py-2 rounded-full border border-zinc-700 focus:outline-none focus:border-red-500"
+          >
+            {SELLER_OPTIONS.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Reset */}
         <div className="flex flex-col justify-end">
           <button
@@ -117,6 +134,7 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
               setCondition('All')
               setAvailability('All')
               setCategory('All') // ✅ Reset category too
+              setSeller('All')
             }}
             className="text-sm text-zinc-400 hover:text-red-500 transition-colors px-4 py-2 rounded-full border border-zinc-700 hover:border-red-500"
           >
@@ -132,6 +150,7 @@ export default function ProductsContent({ initialBrands }: { initialBrands: stri
         filterCondition={condition}
         filterAvailability={availability}
         filterCategory={category} // ✅ NEW
+        filterSeller={seller}
       />
 
     </main>

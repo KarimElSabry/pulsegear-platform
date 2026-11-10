@@ -7,6 +7,7 @@ import { createBrowserSupabaseClient } from '@/lib/supabase'
 import type { Product } from '@/types/product'
 import ProductCard from './ProductCard'
 import { sortUnsoldFirst } from '@/lib/product-sort'
+import { matchesSeller } from '@/lib/sellers'
 
 type Props = {
   limit?: number
@@ -14,6 +15,7 @@ type Props = {
   filterCondition?: string
   filterAvailability?: string
   filterCategory?: string
+  filterSeller?: string
   randomize?: boolean
 }
 
@@ -23,6 +25,7 @@ export default function ProductGrid({
   filterCondition,
   filterAvailability,
   filterCategory,
+  filterSeller,
   randomize,
 }: Props) {
   const [products, setProducts] = useState<Product[]>([])
@@ -96,6 +99,10 @@ export default function ProductGrid({
         p.category?.toLowerCase().replace(/ /g, '_') ===
         filterCategory.toLowerCase().replace(/ /g, '_')
     )
+  }
+
+  if (filterSeller && filterSeller !== 'All') {
+    displayed = displayed.filter((p) => matchesSeller(p, filterSeller))
   }
 
   // Unsold first (newest first), then sold (most recently sold first)

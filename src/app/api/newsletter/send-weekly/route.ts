@@ -7,6 +7,7 @@ import { sendWeeklyNewsletter } from '@/lib/brevo'
 import { createAdminSupabaseClient } from '@/lib/supabase'
 import { isCronAuthorized } from '@/lib/admin-auth'
 import { withJobLog } from '@/lib/jobs'
+import { loadLiveSaleItems } from '@/lib/promotions-service'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -41,17 +42,21 @@ async function handle(req: Request) {
     if (newErr) throw newErr
     if (soldErr) throw soldErr
 
-    // Nothing new and nothing sold: skip, rather than emailing subscribers an empty update.
-    if ((newProducts?.length ?? 0) === 0 && (soldProducts?.length ?? 0) === 0) {
-      return NextResponse.json({ success: true, skipped: 'no new or sold products this week' })
+    // Products on sale right now (live campaigns) go into the newsletter too.
+    const sales = await loadLiveSaleItems(supabase, new Date())
+
+    // Nothing new, nothing sold and nothing on sale: skip, rather than emailing subscribers an empty update.
+    if ((newProducts?.length ?? 0) === 0 && (soldProducts?.length ?? 0) === 0 && sales.length === 0) {
+      return NextResponse.json({ success: true, skipped: 'no new, sold or sale products this week' })
     }
 
-    await sendWeeklyNewsletter(newProducts || [], soldProducts || [])
+    await sendWeeklyNewsletter(newProducts || [], soldProducts || [], sales)
 
     return NextResponse.json({
       success: true,
       newProducts: newProducts?.length || 0,
       soldProducts: soldProducts?.length || 0,
+      onSale: sales.length,
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Failed to send newsletter'

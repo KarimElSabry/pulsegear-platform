@@ -227,6 +227,8 @@ export class ProductService {
         is_deal: product.is_deal ?? false,
         discount_enabled: product.discount_enabled ?? true,
         vinted_id: product.vinted_id ?? null,
+        // only sent when ticked, so adding products still works before migration 20261112 is run
+        ...(product.client_listing ? { client_listing: true } : {}),
       })
       .select()
       .single()

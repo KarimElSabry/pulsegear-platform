@@ -53,6 +53,9 @@ export interface Product {
   // 🔥 Deals
   is_deal?:          boolean
 
+  // 👤 Listed on behalf of a client (shop filter "Client listing")
+  client_listing?:   boolean
+
   // 🔗 Source
   source?:           ProductSource
   source_url?:       string

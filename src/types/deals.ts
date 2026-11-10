@@ -81,6 +81,8 @@ export interface Deal {
   commission_egp: number | null
   /** Discount / partner code used; its percentage sets the commission. */
   discount_code?: string | null
+  /** Listed on behalf of a client: kept out of the finance system and the profit. */
+  client_listing?: boolean | null
   // set for orders placed through the cart checkout
   checkout_id?: string | null
   checkout_code?: string | null

@@ -134,3 +134,32 @@ describe('changeDecision', () => {
     expect((await changeDecision(client(), 'bad key', 'personal')).ok).toBe(false)
   })
 })
+
+describe('payments for client items are not business income', () => {
+  beforeEach(() => {
+    db.seed('bank_transactions', [
+      { id: 't-own-0000000001', treatment: 'unreviewed', currency: 'EGP', amount: 5000 },
+      { id: 't-client-00000001', treatment: 'unreviewed', currency: 'EGP', amount: 9000 },
+      { id: 't-client-00000002', treatment: 'unreviewed', currency: 'EGP', amount: 4000 },
+    ])
+    db.seed('deals', [{ id: 'd-own', checkout_id: 'c-own' }, { id: 'd-client', checkout_id: 'c-client', client_listing: true }, { id: 'd-manual-client', checkout_id: null, client_listing: true }])
+    db.seed('tx_matches', [
+      { id: 'm1', kind: 'payment', egp_tx_id: 't-own-0000000001', checkout_id: 'c-own', deal_id: null, status: 'suggested' },
+      { id: 'm2', kind: 'payment', egp_tx_id: 't-client-00000001', checkout_id: 'c-client', deal_id: null, status: 'suggested' },
+      { id: 'm3', kind: 'payment', egp_tx_id: 't-client-00000002', checkout_id: null, deal_id: 'd-manual-client', status: 'suggested' },
+    ])
+  })
+  const treatment = (id: string) => db.rows('bank_transactions').find((t) => t.id === id)?.treatment
+
+  it('confirming all: own orders become business income, client items stay out (internal)', async () => {
+    await confirmAllSuggested(client())
+    expect(treatment('t-own-0000000001')).toBe('business')
+    expect(treatment('t-client-00000001')).toBe('internal')
+    expect(treatment('t-client-00000002')).toBe('internal') // order made by hand and ticked as a client item
+  })
+  it('before the migration (no client column) every payment is business income as before', async () => {
+    db.failing.add('deals')
+    await confirmAllSuggested(client())
+    expect(treatment('t-client-00000001')).toBe('business')
+  })
+})

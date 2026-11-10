@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import ReserveButton from '@/components/ReserveButton'
 import AddToCart from '@/components/cart/AddToCart'
 import { useVariant } from '@/components/product/VariantContext'
+import { useSale } from '@/components/promotions/PromotionsProvider'
 
 type Props = {
   originalPrice: number
@@ -39,12 +40,16 @@ export default function PriceSection({
 
   // The chosen option (color / size) can have its own price.
   const variant = useVariant()
-  const originalPrice = variant && variant.variants.length > 0 ? variant.price : productPrice
+  const regularPrice = variant && variant.variants.length > 0 ? variant.price : productPrice
+  // A live campaign lowers the price; discount codes then work on the sale price (unless the campaign switches them off).
+  const sale = useSale(productId, regularPrice)
+  const originalPrice = sale ? sale.price : regularPrice
+  const codesOk = discountEnabled && (sale ? sale.allowCodes : true)
 
   const finalPrice = useMemo(() => {
-    if (!discountEnabled || discountPercent <= 0) return originalPrice
+    if (!codesOk || discountPercent <= 0) return originalPrice
     return Math.round(originalPrice * (1 - discountPercent / 100))
-  }, [originalPrice, discountPercent, discountEnabled])
+  }, [originalPrice, discountPercent, codesOk])
 
   const amountSaved = Math.max(0, originalPrice - finalPrice)
   // Stock and the chosen color decide if it can be bought; without a provider, only the status.
@@ -56,7 +61,7 @@ export default function PriceSection({
   const showReserve = isReservable && (variant ? variant.availability.oneOff : true)
 
   const handleApplyDiscount = async () => {
-    if (!discountEnabled) {
+    if (!codesOk) {
       setDiscountPercent(0)
       setDiscountError('هذا المنتج غير مؤهل لاستخدام أكواد الخصم')
       setDiscountSuccess('')
@@ -129,7 +134,17 @@ export default function PriceSection({
       <div>
         <p className="text-zinc-400 text-sm mb-2">السعر</p>
 
-        {discountEnabled && discountPercent > 0 ? (
+        {sale && (
+          <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2">
+            <span className="text-sm font-bold text-white">{sale.name}</span>
+            <span className="flex items-center gap-2 text-sm">
+              <span className="text-zinc-400 line-through">{sale.regular.toLocaleString('en-EG')} EGP</span>
+              <span className="rounded-full bg-red-600 px-2 py-0.5 font-black text-white">-{sale.percent}%</span>
+            </span>
+          </div>
+        )}
+
+        {codesOk && discountPercent > 0 ? (
           <div className="flex flex-col gap-1">
             <p className="text-zinc-500 line-through text-lg">
               {originalPrice.toLocaleString('en-EG')} EGP
@@ -151,7 +166,7 @@ export default function PriceSection({
       <div className="border-t border-zinc-800 pt-5 space-y-3">
         <p className="text-white font-bold text-sm">كود الخصم</p>
 
-        {!discountEnabled ? (
+        {!codesOk ? (
           <div className="bg-zinc-800/70 border border-zinc-700 rounded-xl px-4 py-3">
             <p className="text-sm text-zinc-400">الخصومات غير متاحة لهذا المنتج.</p>
           </div>
@@ -204,7 +219,7 @@ export default function PriceSection({
           <AddToCart productId={productId} discountCode={discountPercent > 0 ? discountCode : undefined} />
         )}
 
-        {showReserve ? (
+        {showReserve && !sale ? (
           <ReserveButton
             productId={productId}
             productTitle={productTitle}
