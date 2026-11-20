@@ -14,7 +14,7 @@ import { MAX_LINE_QUANTITY, type CartLine } from '@/lib/cart'
 import { loadPromotionData } from '@/lib/promotions-service'
 import { saleFor } from '@/lib/promotions'
 import { activeVariants, availability, clampQuantity, variantLabel, variantPrice, type VariantLite } from '@/lib/stock'
-import { imagesForVariant } from '@/lib/variant-images'
+import { imagesForVariant, sameColorIds } from '@/lib/variant-images'
 import { loadVariants } from '@/lib/variants'
 import { commissionForCode } from '@/lib/deal-codes'
 import { logOrderEvent } from '@/lib/order-events'
@@ -90,7 +90,7 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
     if (problem === 'ok' && !a.canBuy) problem = a.reason === 'ok' ? 'out_of_stock' : a.reason
 
     // a color that comes in several sizes shares its photos between those sizes
-    const sameColor = variant ? colors.filter((v) => v.name.trim().toLowerCase() === variant.name.trim().toLowerCase()).map((v) => v.id) : null
+    const sameColor = variant ? sameColorIds(colors, variant) : null
     const photos = imagesForVariant(images.filter((i) => Number(i.product_id) === Number(p.id)), sameColor, colors.length > 0)
     const photo = photos.find((i) => i.is_primary) ?? photos[0]
     // the regular price of the chosen option, and the campaign price if one of its campaigns is live right now
