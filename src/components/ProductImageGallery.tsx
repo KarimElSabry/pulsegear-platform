@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { ProductImage } from '@/types/product'
 import { useVariant } from '@/components/product/VariantContext'
-import { imagesForVariant } from '@/lib/variant-images'
+import { imagesForVariant, sameColorIds } from '@/lib/variant-images'
 import { isOptimizable } from '@/lib/image-hosts'
 
 type Props = {
@@ -17,7 +17,7 @@ export default function ProductImageGallery({ images: allImages, title }: Props)
   const variant = useVariant()
   // A color that comes in several sizes keeps the same photos for each size.
   const sel = variant?.selected
-  const sameColor = variant?.variants.length && sel ? variant.variants.filter((v) => v.name.trim().toLowerCase() === sel.name.trim().toLowerCase()).map((v) => v.id) : null
+  const sameColor = variant?.variants.length ? sameColorIds(variant.variants, sel) : null
   const images = imagesForVariant(allImages, sameColor, (variant?.variants.length ?? 0) > 0)
 
   const mainImage =

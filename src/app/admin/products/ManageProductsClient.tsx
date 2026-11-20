@@ -6,6 +6,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
 import type { VariantLite } from '@/lib/stock'
+import { photoGroups } from '@/lib/variant-images'
+import { uploadProductPhoto } from '@/lib/product-photo-upload'
+import { createBrowserSupabaseClient } from '@/lib/supabase'
 import { filterProducts, statusCounts, type StatusFilter } from '@/lib/product-admin-filter'
 import { deleteProduct, updateProductStatus, triggerVintedSync } from '@/app/admin/actions'
 
@@ -34,17 +37,45 @@ function ImageManager({
   const [saving, setSaving]     = useState(false)
   const [dragIdx, setDragIdx]   = useState<number | null>(null)
 
-  // One entry per COLOR (not per size): a color that comes in several sizes shares its photos, so you tag them once.
-  const colorGroups: { id: number; name: string }[] = []
-  const groupOf = new Map<number, number>()
-  for (const v of variants) {
-    const name = v.name.trim()
-    if (!name) continue
-    const found = colorGroups.find((g) => g.name.toLowerCase() === name.toLowerCase())
-    if (found) groupOf.set(v.id, found.id)
-    else { colorGroups.push({ id: v.id, name }); groupOf.set(v.id, v.id) }
+  // One entry per color (its sizes are written next to it) and one per size-only option, so a photo of a color that
+  // comes in several sizes is tagged once.
+  const colorGroups = photoGroups(variants)
+  const repOf = (variantId: number | null | undefined) => (variantId == null ? '' : colorGroups.find((g) => g.ids.includes(variantId))?.id ?? '')
+  const [uploading, setUploading] = useState(false)
+
+  // ── Upload photos from the computer ───────────────────────────────────────
+  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = '' // lets you pick the same file again later
+    if (!files.length) return
+    setUploading(true)
+    setMessage(null)
+    const problems: string[] = []
+    let current = images
+    let added = 0
+    const storage = createBrowserSupabaseClient()
+    for (const file of files) {
+      const up = await uploadProductPhoto(storage, file)
+      if (!up.ok) { problems.push(up.message); continue }
+      try {
+        const res = await fetch(`/api/products/${productId}/images`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_url: up.url }),
+        })
+        if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'could not save the photo')
+        current = [...current, await res.json()]
+        added++
+      } catch (err) {
+        problems.push(`"${file.name}": ${err instanceof Error ? err.message : 'could not save the photo'}`)
+      }
+    }
+    if (added > 0) { setImages(current); onSaved?.(current) }
+    setUploading(false)
+    setMessage(problems.length
+      ? { ok: false, text: `${added ? `${added} added. ` : ''}${problems.join(' ')}` }
+      : { ok: true, text: `${added} photo${added === 1 ? '' : 's'} added${colorGroups.length > 0 ? '. Pick the color under each new photo, then save.' : ''}` })
   }
-  const repOf = (variantId: number | null | undefined) => (variantId == null ? '' : groupOf.get(variantId) ?? '')
 
   // ── Add new image ──────────────────────────────────────────────────────────
   const handleAdd = async () => {
@@ -58,7 +89,9 @@ function ImageManager({
       })
       if (!res.ok) throw new Error('Failed to add image')
       const added = await res.json()
-      setImages((prev) => [...prev, added])
+      const next = [...images, added]
+      setImages(next)
+      onSaved?.(next)
       setNewUrl('')
     } catch (e) {
       console.error(e)
@@ -77,14 +110,13 @@ function ImageManager({
         body:    JSON.stringify({ image_id: imageId }),
       })
       if (!res.ok) throw new Error('Failed to delete image')
-      setImages((prev) => {
-        const filtered = prev.filter((img) => img.id !== imageId)
-        // If deleted was primary, promote first
-        if (!filtered.some((img) => img.is_primary) && filtered.length > 0) {
-          filtered[0] = { ...filtered[0], is_primary: true }
-        }
-        return filtered
-      })
+      const filtered = images.filter((img) => img.id !== imageId)
+      // If deleted was primary, promote first
+      if (!filtered.some((img) => img.is_primary) && filtered.length > 0) {
+        filtered[0] = { ...filtered[0], is_primary: true }
+      }
+      setImages(filtered)
+      onSaved?.(filtered)
     } catch (e) {
       console.error(e)
     }
@@ -197,7 +229,7 @@ function ImageManager({
                 >
                   <option value="">All options</option>
                   {colorGroups.map((g) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
+                    <option key={g.id} value={g.id}>{g.label}</option>
                   ))}
                 </select>
               )}
@@ -230,6 +262,15 @@ function ImageManager({
           ⠿ Drag images to reorder — hover to set main or delete{colorGroups.length > 0 ? '. Pick a color under each photo, then save. Sizes of the same color share the photos.' : ''}
         </p>
       )}
+
+      {/* Upload from the computer */}
+      <label className={`flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-zinc-600 rounded-xl transition bg-zinc-800/50 ${uploading ? 'opacity-60' : 'cursor-pointer hover:border-blue-500'}`}>
+        <span className="text-sm font-bold text-white">{uploading ? '⏳ Uploading…' : '📁 Upload photos from your computer'}</span>
+        <span className="text-xs text-zinc-500 mt-1">JPG, PNG, WEBP or AVIF, up to 10 MB each. You can pick several.</span>
+        <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple className="hidden" onChange={handleFiles} disabled={uploading} />
+      </label>
+
+      <p className="text-center text-xs uppercase tracking-widest text-zinc-600">or paste a link</p>
 
       {/* Add New Image */}
       <div className="flex gap-2">
@@ -279,7 +320,7 @@ function OptionsManager({
   product: Product
   variants: VariantLite[]
   onVariantsChange: (v: VariantLite[]) => void
-  onStockChange: (stock: number | null) => void
+  onStockChange: (stock: number | null, onDemand: boolean) => void
 }) {
   const [onDemand, setOnDemand] = useState(product.on_demand === true)
   const [stock, setStock] = useState(product.stock_quantity === null || product.stock_quantity === undefined ? '' : String(product.stock_quantity))
@@ -311,7 +352,7 @@ function OptionsManager({
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'Could not save the colors')
 
-      onStockChange(stock.trim() === '' ? null : Number(stock))
+      onStockChange(stock.trim() === '' ? null : Number(stock), onDemand)
       onVariantsChange(data as VariantLite[])
       setDrafts((data as VariantLite[]).map(toDraft))
       setMessage({ ok: true, text: 'Saved' })
@@ -531,7 +572,7 @@ function EditProductModal({
                 : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
             }`}
           >
-            🖼️ Images ({product.images?.length ?? 0})
+            🖼️ Images ({photos.length})
           </button>
         </div>
 
@@ -637,7 +678,10 @@ function EditProductModal({
               product={form}
               variants={variants}
               onVariantsChange={setVariants}
-              onStockChange={(stock) => setForm((prev) => ({ ...prev, stock_quantity: stock }))}
+              onStockChange={(stock, onDemand) => {
+                setForm((prev) => ({ ...prev, stock_quantity: stock, on_demand: onDemand }))
+                onSave({ id: product.id, stock_quantity: stock, on_demand: onDemand } as Product) // update the list too, so reopening shows what was saved
+              }}
             />
           ) : (
             <p className="text-zinc-500 text-sm">Loading…</p>
