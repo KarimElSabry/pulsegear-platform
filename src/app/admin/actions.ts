@@ -5,6 +5,8 @@
 import { assertAdmin } from '@/lib/admin-auth'
 import { revalidatePath } from 'next/cache'
 import { ProductService } from '@/services/productService'
+import { createAdminSupabaseClient } from '@/lib/supabase'
+import { parseVariantsField, saveOptionsForNewProduct } from '@/lib/variant-service'
 import { createClient } from '@supabase/supabase-js'
 import type { ProductCondition, ProductStatus } from '@/types/product'
 
@@ -102,11 +104,16 @@ export async function addProduct(formData: FormData): Promise<void> {
     ? (conditionRaw as ProductCondition)
     : undefined
 
+  // colors and/or sizes typed while adding: checked before anything is created
+  const options = parseVariantsField(formData.get('variants'))
+  if ('error' in options) throw new Error(options.error)
+
   const isReservable = formData.get('is_reservable') === 'true'
   const vintedId = (formData.get('vinted_id') as string)?.trim() || (await getNextProductId())
 
+  let created: { id?: number } | null = null
   try {
-    await ProductService.createProduct(
+    created = await ProductService.createProduct(
       {
         title: formData.get('title') as string,
         description: (formData.get('description') as string) || undefined,
@@ -136,6 +143,12 @@ export async function addProduct(formData: FormData): Promise<void> {
     }
 
     throw new Error(message || 'Failed to add product')
+  }
+
+  if (options.rows.length > 0) {
+    if (!created?.id) throw new Error('The product was added, but its colors/sizes could not be saved. Add them in Manage Products > Edit.')
+    const saved = await saveOptionsForNewProduct(createAdminSupabaseClient(), created.id, options.rows, (id) => ProductService.deleteProduct(id))
+    if (!saved.ok) throw new Error(saved.message)
   }
 
   revalidatePath('/admin')

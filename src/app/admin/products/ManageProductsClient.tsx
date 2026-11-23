@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Product, ProductCondition, ProductStatus, ProductImage } from '@/types/product'
 import type { VariantLite } from '@/lib/stock'
+import OptionRows, { draftsPayload, toDraft, type DraftColor } from './OptionRows'
 import { photoGroups } from '@/lib/variant-images'
 import { uploadProductPhoto } from '@/lib/product-photo-upload'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
@@ -308,9 +309,6 @@ function ImageManager({
 }
 
 // ─── Stock & Colors Manager ───────────────────────────────────────────────────
-type DraftColor = { id?: number; name: string; size: string; price: string; color_hex: string; stock: string; is_active: boolean }
-const toDraft = (v: VariantLite): DraftColor => ({ id: v.id, name: v.name, size: v.size_name ?? '', price: v.price_egp == null ? '' : String(v.price_egp), color_hex: v.color_hex ?? '', stock: v.stock_quantity === null ? '' : String(v.stock_quantity), is_active: v.is_active })
-
 function OptionsManager({
   product,
   variants,
@@ -328,9 +326,6 @@ function OptionsManager({
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
 
-  const update = (i: number, patch: Partial<DraftColor>) =>
-    setDrafts((prev) => prev.map((d, idx) => (idx === i ? { ...d, ...patch } : d)))
-
   const handleSave = async () => {
     setSaving(true)
     setMessage(null)
@@ -345,9 +340,7 @@ function OptionsManager({
       const res = await fetch(`/api/products/${product.id}/variants`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          variants: drafts.map((d) => ({ id: d.id, name: d.name, size_name: d.size.trim() || null, price_egp: d.price.trim() === '' ? null : d.price.trim(), color_hex: d.color_hex.trim() || null, stock_quantity: d.stock.trim() === '' ? null : d.stock.trim(), is_active: d.is_active })),
-        }),
+        body: JSON.stringify({ variants: draftsPayload(drafts) }),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error || 'Could not save the colors')
@@ -383,47 +376,7 @@ function OptionsManager({
         </p>
       </div>
 
-      <div className="space-y-2">
-        <p className="text-xs font-bold text-zinc-400">Options: colors and/or sizes</p>
-        <p className="text-xs text-zinc-500">One row = one thing a customer can buy (for example Black / M-XL). Only a color, only a size, or both. An empty price uses the product price above; the product price is the one shown on the product list, so set it to your lowest.</p>
-        {drafts.length === 0 && <p className="text-zinc-500 text-sm">No options. The product is sold as one option.</p>}
-        {drafts.map((d, i) => (
-          <div key={d.id ?? `new-${i}`} className="space-y-2 bg-zinc-800/50 border border-zinc-700 rounded-xl p-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                aria-label="Color"
-                value={/^#[0-9a-fA-F]{6}$/.test(d.color_hex) ? d.color_hex : '#888888'}
-                onChange={(e) => update(i, { color_hex: e.target.value })}
-                className="h-9 w-9 shrink-0 cursor-pointer rounded bg-transparent"
-              />
-              <input value={d.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Color name, e.g. Black" className={`${input} flex-1 min-w-0 py-2`} />
-              <label className="flex shrink-0 items-center gap-1 text-xs text-zinc-400" title="Hide this option from the shop">
-                <input type="checkbox" checked={d.is_active} onChange={(e) => update(i, { is_active: e.target.checked })} /> shown
-              </label>
-              <button type="button" onClick={() => setDrafts((prev) => prev.filter((_, idx) => idx !== i))} className="shrink-0 text-red-400 hover:text-red-300 text-xl leading-none px-1" aria-label="Remove option">×</button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <label className="block text-xs text-zinc-500">Size
-                <input value={d.size} onChange={(e) => update(i, { size: e.target.value })} placeholder="e.g. M-XL" className={`${input} mt-1 w-full`} />
-              </label>
-              <label className="block text-xs text-zinc-500">Price EGP
-                <input value={d.price} onChange={(e) => update(i, { price: e.target.value })} inputMode="decimal" placeholder="product price" className={`${input} mt-1 w-full`} />
-              </label>
-              <label className="block text-xs text-zinc-500">Stock
-                <input value={d.stock} onChange={(e) => update(i, { stock: e.target.value })} inputMode="numeric" placeholder="stock" className={`${input} mt-1 w-full`} />
-              </label>
-            </div>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => setDrafts((prev) => [...prev, { name: '', size: '', price: '', color_hex: '', stock: '', is_active: true }])}
-          className="text-sm font-bold text-blue-400 hover:text-blue-300"
-        >
-          + Add option
-        </button>
-      </div>
+      <OptionRows drafts={drafts} setDrafts={setDrafts} />
 
       {message && (
         <p className={`text-sm rounded-xl px-4 py-2 border ${message.ok ? 'text-green-400 bg-green-900/20 border-green-800' : 'text-red-400 bg-red-900/20 border-red-800'}`}>

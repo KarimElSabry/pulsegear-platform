@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 import { addProduct, addSale, getNextProductId } from './actions'
+import OptionRows, { draftsPayload, type DraftColor } from './products/OptionRows'
 
 const FALLBACK_RATE = 55
 const DEFAULT_SHIPPING_EUR = 10
@@ -14,6 +15,8 @@ const SIZE_OPTIONS = ['39 - 42 mm', '43 - 46 mm', '47 mm & above', 'One Size']
 
 export default function AdminPage() {
   const [imageUrls, setImageUrls] = useState<string[]>([])
+  // colors and/or sizes with their own price and stock (empty price = the product price)
+  const [options, setOptions] = useState<DraftColor[]>([])
   const [manualUrls, setManualUrls] = useState<string>('')
   const [uploading, setUploading] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -159,6 +162,7 @@ export default function AdminPage() {
 
   function resetForm() {
     setImageUrls([])
+    setOptions([])
     setManualUrls('')
     setOriginalEur('')
     setShippingEur(String(DEFAULT_SHIPPING_EUR))
@@ -182,6 +186,7 @@ export default function AdminPage() {
         .filter(Boolean)
 
       formData.set('images', [...imageUrls, ...manualList].join('\n'))
+      formData.set('variants', JSON.stringify(draftsPayload(options)))
       await addProduct(formData)
 
       setSubmitSuccess('Product added successfully.')
@@ -512,6 +517,12 @@ export default function AdminPage() {
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
             placeholder="https://www.vinted.com/items/..."
           />
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-gray-700 p-4">
+          <label className="block text-sm font-semibold text-gray-200">Colors &amp; sizes (optional)</label>
+          <OptionRows drafts={options} setDrafts={setOptions} pricePlaceholder="same as product" />
+          <p className="text-xs text-gray-500">Leave the prices empty and every option costs the product price above. Photos for each color are picked afterwards in Manage Products &gt; Edit &gt; Images.</p>
         </div>
 
         <div className="space-y-3">
