@@ -95,7 +95,7 @@ export async function quoteCart(db: Db, cart: CartLine[], opts: { discountCode?:
     const photo = photos.find((i) => i.is_primary) ?? photos[0]
     // the regular price of the chosen option, and the campaign price if one of its campaigns is live right now
     const regular = variantPrice(variant, Number(p.price_egp) || 0)
-    const sale = saleFor(Number(p.id), regular, campaigns.promotions, campaigns.items, now)
+    const sale = saleFor(Number(p.id), regular, campaigns.promotions, campaigns.items, now, variant ? variant.id : null)
     return {
       ...base,
       quantity: problem === 'ok' ? clampQuantity(c.quantity, a) : base.quantity,

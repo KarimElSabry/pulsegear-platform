@@ -3,7 +3,16 @@
 // checkout (server) calculate the same price from the same data.
 
 export type Promotion = { id: number; name: string; starts_at: string | null; ends_at: string | null; is_active: boolean; allow_codes: boolean }
-export type PromotionItem = { promotion_id: number; product_id: number; percent_off: number }
+/** variant_ids: the options (colors / sizes) that get the discount. Null or empty = every option of the product. */
+export type PromotionItem = { promotion_id: number; product_id: number; percent_off: number; variant_ids?: number[] | null }
+
+/** Rows from the database to clean items (numbers, and variant_ids as null or a non-empty list). */
+export function normalizeItem(raw: { promotion_id: unknown; product_id: unknown; percent_off: unknown; variant_ids?: unknown }): PromotionItem {
+  const ids = Array.isArray(raw.variant_ids) ? [...new Set(raw.variant_ids.map(Number).filter((n) => Number.isInteger(n) && n > 0))] : []
+  return { promotion_id: Number(raw.promotion_id), product_id: Number(raw.product_id), percent_off: Number(raw.percent_off), variant_ids: ids.length ? ids : null }
+}
+
+export const isRestricted = (it: Pick<PromotionItem, 'variant_ids'>) => Array.isArray(it.variant_ids) && it.variant_ids.length > 0
 
 export type Sale = {
   promotionId: number
@@ -13,6 +22,8 @@ export type Sale = {
   regular: number
   price: number
   allowCodes: boolean
+  /** True when only some options are on sale and no option was chosen yet (product lists): the price is not lowered, a badge says so. */
+  partial?: boolean
 }
 
 export const MAX_PERCENT = 95
@@ -31,8 +42,13 @@ export const isLive = (p: Promotion, now: Date) => promotionStatus(p, now) === '
 /** Whole pounds, never below 1. */
 export const salePrice = (regular: number, percent: number) => Math.max(1, Math.round(regular * (1 - percent / 100)))
 
-/** The best live sale for a product (lowest price wins when campaigns overlap), or null. */
-export function saleFor(productId: number, regular: number, promotions: Promotion[], items: PromotionItem[], now: Date): Sale | null {
+/**
+ * The best live sale for a product (lowest price wins when campaigns overlap), or null.
+ * variantId = the option being priced (null = the product has no options / none chosen: discounts limited to some options do not apply).
+ * Left out (undefined) in product lists, where no option is chosen: a discount limited to some options then gives a "partial" sale
+ * (badge only, the price is not lowered); a discount on the whole product always wins over it.
+ */
+export function saleFor(productId: number, regular: number, promotions: Promotion[], items: PromotionItem[], now: Date, variantId?: number | null): Sale | null {
   if (!(regular > 0)) return null
   const live = new Map(promotions.filter((p) => isLive(p, now)).map((p) => [p.id, p]))
   let best: Sale | null = null
@@ -42,11 +58,19 @@ export function saleFor(productId: number, regular: number, promotions: Promotio
     if (!promo) continue
     const percent = Number(it.percent_off)
     if (!(percent > 0)) continue
-    const price = salePrice(regular, percent)
-    if (price >= regular) continue
-    if (!best || price < best.price || (price === best.price && promo.id < best.promotionId)) {
-      best = { promotionId: promo.id, name: promo.name, percent: Math.round((1 - price / regular) * 100), regular, price, allowCodes: promo.allow_codes }
+    let partial = false
+    if (isRestricted(it)) {
+      if (variantId === undefined) partial = true
+      else if (variantId === null || !it.variant_ids!.map(Number).includes(Number(variantId))) continue
     }
+    const price = partial ? regular : salePrice(regular, percent)
+    if (!partial && price >= regular) continue
+    const cand: Sale = { promotionId: promo.id, name: promo.name, percent: partial ? Math.max(1, Math.round(percent)) : Math.round((1 - price / regular) * 100), regular, price, allowCodes: promo.allow_codes, ...(partial ? { partial: true } : {}) }
+    if (!best) { best = cand; continue }
+    if (!!cand.partial !== !!best.partial) { if (!cand.partial) best = cand; continue }
+    const better = cand.partial ? cand.percent > best.percent : cand.price < best.price
+    const tie = cand.partial ? cand.percent === best.percent : cand.price === best.price
+    if (better || (tie && cand.promotionId < best.promotionId)) best = cand
   }
   return best
 }
@@ -85,7 +109,7 @@ export function isoToCairoLocal(iso: string | null | undefined): string {
 
 // ── Validation of what the admin sends ────────────────────────────────────────────────
 
-export type CleanPromotion = { name: string; starts_at: string | null; ends_at: string | null; is_active: boolean; allow_codes: boolean; items: { product_id: number; percent_off: number }[] }
+export type CleanPromotion = { name: string; starts_at: string | null; ends_at: string | null; is_active: boolean; allow_codes: boolean; items: { product_id: number; percent_off: number; variant_ids: number[] | null }[] }
 
 export function cleanPromotion(input: { name?: unknown; starts?: unknown; ends?: unknown; is_active?: unknown; allow_codes?: unknown; items?: unknown }): { error: string } | { value: CleanPromotion } {
   const name = typeof input.name === 'string' ? input.name.trim() : ''
@@ -103,15 +127,21 @@ export function cleanPromotion(input: { name?: unknown; starts?: unknown; ends?:
   if (!Array.isArray(input.items) || input.items.length === 0) return { error: 'Choose at least one product.' }
   if (input.items.length > 300) return { error: 'A campaign can have at most 300 products.' }
   const seen = new Set<number>()
-  const items: { product_id: number; percent_off: number }[] = []
-  for (const raw of input.items as { product_id?: unknown; percent_off?: unknown }[]) {
+  const items: { product_id: number; percent_off: number; variant_ids: number[] | null }[] = []
+  for (const raw of input.items as { product_id?: unknown; percent_off?: unknown; variant_ids?: unknown }[]) {
     const product_id = Number(raw?.product_id)
     const percent = Number(raw?.percent_off)
     if (!Number.isInteger(product_id) || product_id <= 0) return { error: 'One of the products is not valid.' }
     if (!Number.isFinite(percent) || percent <= 0 || percent > MAX_PERCENT) return { error: `Every discount must be between 1% and ${MAX_PERCENT}%.` }
+    let variant_ids: number[] | null = null
+    if (Array.isArray(raw?.variant_ids) && raw.variant_ids.length > 0) {
+      const ids = raw.variant_ids.map(Number)
+      if (ids.length > 100 || ids.some((n) => !Number.isInteger(n) || n <= 0)) return { error: 'One of the options is not valid.' }
+      variant_ids = [...new Set(ids)]
+    }
     if (seen.has(product_id)) continue
     seen.add(product_id)
-    items.push({ product_id, percent_off: Math.round(percent * 100) / 100 })
+    items.push({ product_id, percent_off: Math.round(percent * 100) / 100, variant_ids })
   }
   return { value: { name, starts_at, ends_at, is_active: input.is_active === false ? false : true, allow_codes: input.allow_codes === false ? false : true, items } }
 }

@@ -2,12 +2,16 @@
 // Server only: reads campaigns. Tolerant of migration 20261110 not being run yet: without the tables nothing is on sale.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { liveCampaigns, saleFor, type LiveCampaignInfo, type Promotion, type PromotionItem } from '@/lib/promotions'
+import { liveCampaigns, normalizeItem, saleFor, type LiveCampaignInfo, type Promotion, type PromotionItem } from '@/lib/promotions'
+import { variantPrice } from '@/lib/stock'
 import type { Product } from '@/types/product'
 import type { SaleEmailItem } from '@/lib/campaign-email'
 import { SITE_URL } from '@/lib/site'
 
 export const PROMOTION_COLUMNS = 'id, name, starts_at, ends_at, is_active, allow_codes'
+/** variant_ids needs migration 20261114; without it the old columns are read and every campaign covers every option. */
+export const ITEM_COLUMNS = 'promotion_id, product_id, percent_off, variant_ids'
+export const ITEM_COLUMNS_OLD = 'promotion_id, product_id, percent_off'
 
 /** Active campaigns and their products (for the given products, or all). The caller decides what is live right now. */
 export async function loadPromotionData(db: SupabaseClient, productIds?: number[]): Promise<{ promotions: Promotion[]; items: PromotionItem[] }> {
@@ -15,13 +19,17 @@ export async function loadPromotionData(db: SupabaseClient, productIds?: number[
     const { data: promos, error } = await db.from('promotions').select(PROMOTION_COLUMNS).eq('is_active', true)
     if (error || !promos || promos.length === 0) return { promotions: [], items: [] }
     const ids = (promos as Promotion[]).map((p) => Number(p.id))
-    let q = db.from('promotion_products').select('promotion_id, product_id, percent_off').in('promotion_id', ids)
-    if (productIds) q = q.in('product_id', productIds)
-    const { data: items, error: itemError } = await q
+    const read = (columns: string) => {
+      let q = db.from('promotion_products').select(columns).in('promotion_id', ids)
+      if (productIds) q = q.in('product_id', productIds)
+      return q
+    }
+    let { data: items, error: itemError } = await read(ITEM_COLUMNS)
+    if (itemError) ({ data: items, error: itemError } = await read(ITEM_COLUMNS_OLD))
     if (itemError || !items) return { promotions: [], items: [] }
     return {
       promotions: (promos as Promotion[]).map((p) => ({ ...p, id: Number(p.id) })),
-      items: (items as PromotionItem[]).map((i) => ({ promotion_id: Number(i.promotion_id), product_id: Number(i.product_id), percent_off: Number(i.percent_off) })),
+      items: (items as unknown as Record<string, unknown>[]).map((i) => normalizeItem(i as Parameters<typeof normalizeItem>[0])),
     }
   } catch {
     return { promotions: [], items: [] }
@@ -41,16 +49,34 @@ export async function loadLiveSaleItems(db: SupabaseClient, now: Date, opts: { p
   const { data: products } = await db.from('products').select('id, slug, title, price_egp, status').in('id', productIds)
   const { data: images } = await db.from('product_images').select('product_id, image_url, is_primary, display_order').in('product_id', productIds)
 
+  const { data: optionRows } = await db.from('product_variants').select('id, product_id, price_egp, is_active').in('product_id', productIds)
+  const optionsByProduct = new Map<number, { id: number; price_egp: number | null }[]>()
+  for (const o of (optionRows ?? []) as { id: number; product_id: number; price_egp: number | null; is_active: boolean }[]) {
+    if (o.is_active === false) continue
+    optionsByProduct.set(Number(o.product_id), [...(optionsByProduct.get(Number(o.product_id)) ?? []), { id: Number(o.id), price_egp: o.price_egp }])
+  }
+
   const out: SaleEmailItem[] = []
   for (const p of (products ?? []) as { id: number; slug: string | null; title: string; price_egp: number; status: string }[]) {
     if (p.status !== 'available') continue
     const regular = Number(p.price_egp) || 0
-    const sale = saleFor(Number(p.id), regular, promotions, items, now)
+    let sale = saleFor(Number(p.id), regular, promotions, items, now)
     if (!sale) continue
+    // a discount on only some options: show the cheapest discounted option
+    if (sale.partial) {
+      let cheapest: typeof sale | null = null
+      for (const v of optionsByProduct.get(Number(p.id)) ?? []) {
+        const r = variantPrice(v, regular)
+        const s2 = saleFor(Number(p.id), r, promotions, items, now, v.id)
+        if (s2 && !s2.partial && (!cheapest || s2.price < cheapest.price)) cheapest = s2
+      }
+      if (!cheapest) continue
+      sale = cheapest
+    }
     const photos = ((images ?? []) as { product_id: number; image_url: string; is_primary: boolean; display_order: number }[])
       .filter((i) => Number(i.product_id) === Number(p.id))
       .sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.display_order - b.display_order)
-    out.push({ campaignName: sale.name, title: p.title, imageUrl: photos[0]?.image_url ?? null, url: `${SITE_URL}/products/${p.slug ?? p.id}`, regular, price: sale.price, percent: sale.percent })
+    out.push({ campaignName: sale.name, title: p.title, imageUrl: photos[0]?.image_url ?? null, url: `${SITE_URL}/products/${p.slug ?? p.id}`, regular: sale.regular, price: sale.price, percent: sale.percent })
   }
   return out.sort((a, b) => b.percent - a.percent).slice(0, 100)
 }

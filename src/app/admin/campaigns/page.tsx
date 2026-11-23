@@ -4,8 +4,9 @@
 import Link from 'next/link'
 import { assertAdmin } from '@/lib/admin-auth'
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { isoToCairoLocal, promotionStatus, type Promotion, type PromotionItem } from '@/lib/promotions'
-import { PROMOTION_COLUMNS } from '@/lib/promotions-service'
+import { isoToCairoLocal, normalizeItem, promotionStatus, type Promotion, type PromotionItem } from '@/lib/promotions'
+import { PROMOTION_COLUMNS, ITEM_COLUMNS, ITEM_COLUMNS_OLD } from '@/lib/promotions-service'
+import { variantLabel, variantPrice } from '@/lib/stock'
 import { CampaignForm, DeleteForm, EmailForm, SwitchForm, type CampaignInitial, type ProductLite } from './CampaignForms'
 
 export const dynamic = 'force-dynamic'
@@ -37,13 +38,26 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
     )
   }
   const promos = ((promoRows ?? []) as Promotion[]).map((p) => ({ ...p, id: Number(p.id) }))
-  const { data: itemRows } = promos.length ? await db.from('promotion_products').select('promotion_id, product_id, percent_off').in('promotion_id', promos.map((p) => p.id)) : { data: [] }
-  const items = ((itemRows ?? []) as PromotionItem[]).map((i) => ({ promotion_id: Number(i.promotion_id), product_id: Number(i.product_id), percent_off: Number(i.percent_off) }))
+  const readItems = (columns: string) => db.from('promotion_products').select(columns).in('promotion_id', promos.map((p) => p.id))
+  let itemRows: unknown[] | null = []
+  if (promos.length) {
+    let r = await readItems(ITEM_COLUMNS)
+    if (r.error) r = await readItems(ITEM_COLUMNS_OLD) // migration 20261114 not run yet
+    itemRows = r.data as unknown[] | null
+  }
+  const items = ((itemRows ?? []) as Record<string, unknown>[]).map((i) => normalizeItem(i as Parameters<typeof normalizeItem>[0]))
 
   const { data: productRows } = await db.from('products').select('id, title, brand, category, price_egp, status').order('created_at', { ascending: false })
   const products: ProductLite[] = ((productRows ?? []) as { id: number; title: string; brand: string | null; category: string | null; price_egp: number; status: string }[])
     .map((p) => ({ id: Number(p.id), title: p.title, brand: p.brand, category: p.category, price: Number(p.price_egp) || 0, status: p.status }))
     .sort((a, b) => (a.status === 'available' ? 0 : 1) - (b.status === 'available' ? 0 : 1))
+  // the colors / sizes of each product, so a discount can be limited to some of them
+  const { data: optionRows } = await db.from('product_variants').select('id, product_id, name, size_name, price_egp, is_active').order('id')
+  for (const o of (optionRows ?? []) as { id: number; product_id: number; name: string; size_name: string | null; price_egp: number | null; is_active: boolean }[]) {
+    if (o.is_active === false) continue
+    const p = products.find((x) => x.id === Number(o.product_id))
+    if (p) (p.options ??= []).push({ id: Number(o.id), label: variantLabel(o) ?? `Option ${o.id}`, name: o.name.trim(), size: (o.size_name ?? '').trim(), price: variantPrice(o, p.price) })
+  }
 
   // when each campaign was emailed (needs migration 20261111; without it the column is simply unknown)
   const emailedAt = new Map<number, string | null>()
@@ -52,7 +66,7 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
 
   const editing = sp.edit ? promos.find((p) => p.id === Number(sp.edit)) : undefined
   const initial: CampaignInitial | null = editing
-    ? { id: editing.id, name: editing.name, starts: isoToCairoLocal(editing.starts_at), ends: isoToCairoLocal(editing.ends_at), isActive: editing.is_active, allowCodes: editing.allow_codes, items: items.filter((i) => i.promotion_id === editing.id).map((i) => ({ product_id: i.product_id, percent_off: i.percent_off })) }
+    ? { id: editing.id, name: editing.name, starts: isoToCairoLocal(editing.starts_at), ends: isoToCairoLocal(editing.ends_at), isActive: editing.is_active, allowCodes: editing.allow_codes, items: items.filter((i) => i.promotion_id === editing.id).map((i) => ({ product_id: i.product_id, percent_off: i.percent_off, variant_ids: i.variant_ids ?? null })) }
     : sp.new
       ? { id: null, name: '', starts: '', ends: '', isActive: true, allowCodes: true, items: [] }
       : null

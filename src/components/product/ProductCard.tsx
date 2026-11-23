@@ -89,7 +89,7 @@ export default function ProductCard({ product }: Props) {
           {sale && product.status === 'available' && (
             <div className="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
               <span className="max-w-[65%] truncate rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white">{sale.name}</span>
-              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">-{sale.percent}%</span>
+              <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">{sale.partial ? 'Up to ' : ''}-{sale.percent}%</span>
             </div>
           )}
 
@@ -155,7 +155,7 @@ export default function ProductCard({ product }: Props) {
           </h2>
 
           {/* ✅ Price — fixed locale to avoid SSR/client hydration mismatch */}
-          {sale && product.status === 'available' ? (
+          {sale && !sale.partial && product.status === 'available' ? (
             <p className="text-white font-black text-lg mt-2 flex flex-wrap items-baseline gap-x-2">
               <span>{sale.price.toLocaleString('en-US')} <span className="text-zinc-400 text-sm font-normal">EGP</span></span>
               <span className="text-zinc-500 text-sm font-normal line-through">{sale.regular.toLocaleString('en-US')}</span>

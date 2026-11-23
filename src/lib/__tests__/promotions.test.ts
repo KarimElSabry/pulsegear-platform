@@ -56,7 +56,7 @@ describe('cleanPromotion', () => {
   it('cleans a good campaign (duplicate products keep the first)', () => {
     const r = cleanPromotion(ok)
     expect(r).toMatchObject({ value: { name: 'Early White Friday', is_active: true, allow_codes: true } })
-    if ('value' in r) expect(r.value.items).toEqual([{ product_id: 1, percent_off: 20 }, { product_id: 2, percent_off: 15.56 }])
+    if ('value' in r) expect(r.value.items).toEqual([{ product_id: 1, percent_off: 20, variant_ids: null }, { product_id: 2, percent_off: 15.56, variant_ids: null }])
   })
   it('rejects bad input', () => {
     expect(cleanPromotion({ ...ok, name: '' })).toHaveProperty('error')

@@ -8,6 +8,7 @@ import { PROMOTION_COLUMNS } from '@/lib/promotions-service'
 type Db = SupabaseClient
 const MISSING = /promotions|promotion_products|schema cache|does not exist/i
 
+const NEEDS_OPTIONS_MIGRATION = 'Run the Supabase migration 20261114_01_campaign_options.sql first (needed for discounts on only some colors or sizes), then try again.'
 const failure = (message: string) => ({ ok: false as const, message: MISSING.test(message) ? 'Run the Supabase migration 20261110_01_campaigns.sql first, then try again.' : message })
 
 /** Campaigns that run at the same time as this one and share products with it: the lower price wins, so you should know. */
@@ -42,8 +43,29 @@ export async function saveCampaign(db: Db, id: number | null, c: CleanPromotion)
   const promotionId = campaignId as number
 
   // add or update the chosen products first, then remove the ones that were taken out (a failure never leaves it empty)
-  const rows = c.items.map((i) => ({ promotion_id: promotionId, product_id: i.product_id, percent_off: i.percent_off }))
-  const { error: upsertError } = await db.from('promotion_products').upsert(rows, { onConflict: 'promotion_id,product_id' })
+  const restricted = c.items.some((i) => i.variant_ids && i.variant_ids.length > 0)
+  if (restricted) {
+    // every chosen option must really belong to its product
+    const { data: owned } = await db.from('product_variants').select('id, product_id').in('product_id', c.items.filter((i) => i.variant_ids).map((i) => i.product_id))
+    const ownerOf = new Map(((owned ?? []) as { id: number; product_id: number }[]).map((v) => [Number(v.id), Number(v.product_id)]))
+    for (const i of c.items) {
+      if (i.variant_ids?.some((v) => ownerOf.get(v) !== i.product_id)) {
+        if (id === null) await db.from('promotions').delete().eq('id', promotionId)
+        return { ok: false, message: 'One of the chosen options does not belong to its product any more. Reload the page and try again.' }
+      }
+    }
+  }
+  const baseRows = c.items.map((i) => ({ promotion_id: promotionId, product_id: i.product_id, percent_off: i.percent_off }))
+  const rows = c.items.map((i, k) => ({ ...baseRows[k], variant_ids: i.variant_ids && i.variant_ids.length > 0 ? i.variant_ids : null }))
+  let { error: upsertError } = await db.from('promotion_products').upsert(rows, { onConflict: 'promotion_id,product_id' })
+  // before migration 20261114 the column does not exist: fine as long as no option is picked
+  if (upsertError && /variant_ids|schema cache/i.test(upsertError.message)) {
+    if (restricted) {
+      if (id === null) await db.from('promotions').delete().eq('id', promotionId)
+      return { ok: false, message: NEEDS_OPTIONS_MIGRATION }
+    }
+    ;({ error: upsertError } = await db.from('promotion_products').upsert(baseRows, { onConflict: 'promotion_id,product_id' }))
+  }
   if (upsertError) {
     if (id === null) await db.from('promotions').delete().eq('id', promotionId)
     return failure(/foreign key|violates/i.test(upsertError.message) ? 'One of the chosen products does not exist any more. Reload the page and try again.' : upsertError.message)

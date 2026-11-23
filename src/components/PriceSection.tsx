@@ -42,7 +42,7 @@ export default function PriceSection({
   const variant = useVariant()
   const regularPrice = variant && variant.variants.length > 0 ? variant.price : productPrice
   // A live campaign lowers the price; discount codes then work on the sale price (unless the campaign switches them off).
-  const sale = useSale(productId, regularPrice)
+  const sale = useSale(productId, regularPrice, variant && variant.variants.length > 0 ? variant.selected?.id ?? null : null)
   const originalPrice = sale ? sale.price : regularPrice
   const codesOk = discountEnabled && (sale ? sale.allowCodes : true)
 

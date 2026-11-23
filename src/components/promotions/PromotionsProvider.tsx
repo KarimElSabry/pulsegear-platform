@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
-import { liveCampaigns, saleFor, type LiveCampaignInfo, type Promotion, type PromotionItem, type Sale } from '@/lib/promotions'
+import { liveCampaigns, normalizeItem, saleFor, type LiveCampaignInfo, type Promotion, type PromotionItem, type Sale } from '@/lib/promotions'
 
 type Value = { promotions: Promotion[]; items: PromotionItem[]; now: Date }
 const Ctx = createContext<Value>({ promotions: [], items: [], now: new Date(0) })
@@ -24,11 +24,14 @@ export function PromotionsProvider({ children }: { children: ReactNode }) {
       try {
         const { data: promos, error } = await supabase.from('promotions').select('id, name, starts_at, ends_at, is_active, allow_codes').eq('is_active', true)
         if (error || !promos || promos.length === 0) return
-        const { data: items } = await supabase.from('promotion_products').select('promotion_id, product_id, percent_off').in('promotion_id', promos.map((p) => p.id))
+        const ids = promos.map((p) => p.id)
+        const first = await supabase.from('promotion_products').select('promotion_id, product_id, percent_off, variant_ids').in('promotion_id', ids)
+        // before migration 20261114 the column does not exist: read the old columns (every campaign covers every option)
+        const items: unknown[] | null = first.error ? (await supabase.from('promotion_products').select('promotion_id, product_id, percent_off').in('promotion_id', ids)).data : first.data
         if (cancelled) return
         setData({
           promotions: promos.map((p) => ({ ...p, id: Number(p.id) })) as Promotion[],
-          items: (items ?? []).map((i) => ({ promotion_id: Number(i.promotion_id), product_id: Number(i.product_id), percent_off: Number(i.percent_off) })),
+          items: ((items ?? []) as unknown as Record<string, unknown>[]).map((i) => normalizeItem(i as Parameters<typeof normalizeItem>[0])),
         })
         setNow(new Date())
       } catch { /* campaigns are optional: without them everything is shown at the regular price */ }
@@ -41,9 +44,10 @@ export function PromotionsProvider({ children }: { children: ReactNode }) {
 }
 
 /** The live sale of a product at the given regular price, or null. */
-export function useSale(productId: number | null | undefined, regularPrice: number): Sale | null {
+/** variantId: the chosen option (null = none / no options); leave out in product lists. See saleFor. */
+export function useSale(productId: number | null | undefined, regularPrice: number, variantId?: number | null): Sale | null {
   const { promotions, items, now } = useContext(Ctx)
-  return useMemo(() => (productId ? saleFor(productId, regularPrice, promotions, items, now) : null), [productId, regularPrice, promotions, items, now])
+  return useMemo(() => (productId ? saleFor(productId, regularPrice, promotions, items, now, variantId) : null), [productId, regularPrice, promotions, items, now, variantId])
 }
 
 /** Campaigns live right now (the one ending first at the top), for the announcement bar and the menu. */
