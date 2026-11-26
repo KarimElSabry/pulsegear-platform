@@ -52,7 +52,10 @@ export async function emailCampaign(db: SupabaseClient, id: number, mode: EmailM
     await deps.sendAll({ name: `Campaign - ${promo.name} - ${claimAt.slice(0, 10)}`, subject: email.subject, html: email.html })
   } catch (e) {
     await db.from('promotions').update({ emailed_at: previous }).eq('id', id) // not sent: allow another try
-    return { ok: false, message: `Not sent: ${e instanceof Error ? e.message : 'the email service failed'}. Nothing went out.` }
+    const reason = e instanceof Error ? e.message : 'the email service failed'
+    // Brevo's own safety filter: it refused the text, nothing is wrong with your account or list
+    const hint = /executable code|html content/i.test(reason) ? ' Brevo\'s filter thought the email text contains code. The campaign name and the product titles go into the email: remove special characters from them ( < > { } = ` ) and try again.' : ''
+    return { ok: false, message: `Not sent: ${reason}. Nothing went out.${hint}` }
   }
   return { ok: true, message: 'Sent to your newsletter list.' }
 }

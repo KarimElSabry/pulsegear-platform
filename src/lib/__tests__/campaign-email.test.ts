@@ -10,12 +10,44 @@ vi.mock('../supabase', () => ({ createAdminSupabaseClient: vi.fn(), createBrowse
 
 const item = (over: Partial<SaleEmailItem> = {}): SaleEmailItem => ({ campaignName: 'Early White Friday', title: 'Polar Ignite 3', imageUrl: 'https://img/x.jpg', url: 'https://shop/products/p1', regular: 1000, price: 800, percent: 20, ...over })
 
+import { mailText, mailUrl } from '../campaign-email'
+
+describe('text that Brevo could take for code', () => {
+  it('takes out angle brackets, template braces, javascript: and onclick= patterns', () => {
+    expect(mailText('Wahoo <b>ELEMNT</b> {{ x }} {% y %}')).toBe('Wahoo b ELEMNT /b x y')
+    expect(mailText('javascript:alert(1)')).toBe('javascript -alert(1)')
+    expect(mailText('Oura onclick=run() Ring')).toBe('Oura onclick -run() Ring')
+    expect(mailText('onerror = bad')).toBe('onerror - bad')
+  })
+  it('keeps normal titles, ampersands and apostrophes (escaped)', () => {
+    expect(mailText("Wahoo & Oura  Bundle  (Size 10)")).toBe('Wahoo &amp; Oura Bundle (Size 10)')
+    expect(mailText("Oura's ring")).toBe('Oura&#39;s ring')
+    expect(mailText(null)).toBe('')
+    expect(mailText('Pace 3 on sale = great')).toBe('Pace 3 on sale = great') // "on" alone is not an event handler
+  })
+  it('links: only web addresses, written the standard way', () => {
+    expect(mailUrl('https://shop.com/products/a b')).toBe('https://shop.com/products/a%20b')
+    expect(mailUrl('javascript:alert(1)')).toBeNull()
+    expect(mailUrl('data:text/html,<script>')).toBeNull()
+    expect(mailUrl('not a url')).toBeNull()
+    expect(mailUrl(null)).toBeNull()
+  })
+  it('the built email has no script-like text even for a hostile product title and link', () => {
+    const e = buildCampaignEmail({ name: 'A <script>x</script> {{ y }}', endsAt: null, allowCodes: true },
+      [{ campaignName: 'A', title: '<img src=x onerror=alert(1)> javascript:go()', imageUrl: 'javascript:evil()', url: 'javascript:evil()', regular: 100, price: 80, percent: 20 }], 'https://shop')
+    expect(e.html).not.toMatch(/<script|javascript:|onerror\s*=|<img src=x/i)
+    expect(e.html.match(/\{\{/g)).toHaveLength(1) // only the unsubscribe placeholder
+    expect(e.subject).not.toMatch(/[<>{}]/)
+    expect(e.html).toContain('href="#"')
+  })
+})
+
 describe('email pieces', () => {
   it('escapes text that comes from products and names', () => {
     expect(esc(`<script>"x" & 'y'</script>`)).toBe('&lt;script&gt;&quot;x&quot; &amp; &#39;y&#39;&lt;/script&gt;')
     const html = saleSectionHtml([item({ title: '<b>Evil</b>', campaignName: 'A & B' })])
     expect(html).not.toContain('<b>Evil</b>')
-    expect(html).toContain('&lt;b&gt;Evil&lt;/b&gt;')
+    expect(html).toContain('b Evil /b') // angle brackets are taken out, not just escaped
     expect(html).toContain('A &amp; B')
   })
   it('shows sale price, crossed-out regular price and percent', () => {
@@ -127,6 +159,16 @@ describe('emailing a campaign', () => {
     await emailCampaign(client(), 1, 'all', deps, NOW)
     expect(await emailCampaign(client(), 1, 'again', deps, new Date('2026-11-26T10:00:00Z'))).toMatchObject({ ok: true })
     expect(sent).toHaveLength(2)
+  })
+  it('explains Brevo\'s "executable code" refusal in plain words and still allows another try', async () => {
+    const strict: EmailDeps = { sendAll: async () => { throw new Error('Please remove any executable code from your HTML content.') }, sendTest: async () => 'x' }
+    const r = await emailCampaign(client(), 1, 'all', strict, NOW)
+    expect(r.ok).toBe(false)
+    expect(r.message).toContain('Nothing went out')
+    expect(r.message).toContain('product titles')
+    expect(db.rows('promotions')[0].emailed_at).toBeNull()
+    failNext = true
+    expect((await emailCampaign(client(), 1, 'all', deps, NOW)).message).not.toContain('product titles') // other errors get no hint
   })
   it('a failed send is not recorded, so you can try again', async () => {
     failNext = true

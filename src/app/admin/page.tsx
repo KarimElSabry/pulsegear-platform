@@ -515,7 +515,7 @@ export default function AdminPage() {
             name="source_url"
             type="url"
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-            placeholder="https://www.vinted.com/items/..."
+            placeholder="https://www.example.com/items/..."
           />
         </div>
 
@@ -552,12 +552,12 @@ export default function AdminPage() {
 
           <textarea
             rows={3}
-            placeholder={'https://www.vinted.com/photos/...\nhttps://www.vinted.com/photos/...'}
+            placeholder={'https://www.example.com/photos/...\nhttps://www.example.com/photos/...'}
             value={manualUrls}
             onChange={(e) => setManualUrls(e.target.value)}
             className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition resize-none text-sm font-mono"
           />
-          <p className="text-xs text-gray-500">📌 One URL per line — paste Vinted image links here</p>
+          <p className="text-xs text-gray-500">📌 One URL per line — paste product's image links here</p>
 
           {imageUrls.length > 0 && (
             <div>
