@@ -2,7 +2,7 @@
 
 import { Product, ProductImage } from '@/types/product'
 import { createAdminSupabaseClient } from '@/lib/supabase'
-import { saleSectionHtml, type SaleEmailItem } from '@/lib/campaign-email'
+import { emailImageSrc, mailText, saleSectionHtml, type SaleEmailItem } from '@/lib/campaign-email'
 
 const BREVO_API_URL = 'https://api.brevo.com/v3'
 
@@ -41,7 +41,8 @@ function getSiteUrl() {
 
 function getPrimaryImage(product: Product & { images?: ProductImage[] }): string {
   const primary = product.images?.find((img) => img.is_primary)
-  return primary?.image_url || product.images?.[0]?.image_url || ''
+  // a photo link that looks like code (Brevo refuses the whole email for it) is replaced by a clean link on our own site
+  return emailImageSrc(product.id, primary?.image_url || product.images?.[0]?.image_url) ?? ''
 }
 
 function extractFirstName(name?: string) {
@@ -70,7 +71,7 @@ export function buildEmailTemplate(
             ? `<img src="${getPrimaryImage(p)}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px;"/>`
             : ''
         }
-        <h3 style="margin:0 0 6px; font-size:18px; color:#111;">${p.title}</h3>
+        <h3 style="margin:0 0 6px; font-size:18px; color:#111;">${mailText(p.title)}</h3>
         <p style="font-size:22px; font-weight:bold; color:#000; margin:6px 0;">${p.price_egp} EGP</p>
         <span style="background:#22c55e; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">Available</span>
         <br/><br/>
@@ -91,7 +92,7 @@ export function buildEmailTemplate(
             ? `<img src="${getPrimaryImage(p)}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px; filter:grayscale(60%);"/>`
             : ''
         }
-        <h3 style="margin:0 0 6px; font-size:18px; color:#555;">${p.title}</h3>
+        <h3 style="margin:0 0 6px; font-size:18px; color:#555;">${mailText(p.title)}</h3>
         <p style="font-size:20px; font-weight:bold; color:#999; margin:6px 0;">${p.price_egp} EGP</p>
         <span style="background:#ef4444; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">Sold</span>
       </div>
@@ -190,7 +191,7 @@ function buildWishlistSoldAlertTemplate(
                 ? `<img src="${imageUrl}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px; filter:grayscale(40%);"/>`
                 : ''
             }
-            <h3 style="margin:0 0 6px; font-size:18px; color:#333;">${product.title}</h3>
+            <h3 style="margin:0 0 6px; font-size:18px; color:#333;">${mailText(product.title)}</h3>
             <p style="font-size:20px; font-weight:bold; color:#777; margin:6px 0;">${product.price_egp} EGP</p>
             <span style="background:#ef4444; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">Sold</span>
           </div>

@@ -10,7 +10,7 @@ vi.mock('../supabase', () => ({ createAdminSupabaseClient: vi.fn(), createBrowse
 
 const item = (over: Partial<SaleEmailItem> = {}): SaleEmailItem => ({ campaignName: 'Early White Friday', title: 'Polar Ignite 3', imageUrl: 'https://img/x.jpg', url: 'https://shop/products/p1', regular: 1000, price: 800, percent: 20, ...over })
 
-import { diagnoseEmail, mailText, mailUrl } from '../campaign-email'
+import { diagnoseEmail, emailImageSrc, looksLikeCode, mailText, mailUrl } from '../campaign-email'
 
 describe('text that Brevo could take for code', () => {
   it('takes out angle brackets, template braces, javascript: and onclick= patterns', () => {
@@ -39,6 +39,43 @@ describe('text that Brevo could take for code', () => {
     expect(e.html.match(/\{\{/g)).toHaveLength(1) // only the unsubscribe placeholder
     expect(e.subject).not.toMatch(/[<>{}]/)
     expect(e.html).toContain('href="#"')
+  })
+})
+
+describe('photo links that look like code (the real cause: ",onerror=redirect/" in a CDN photo link)', () => {
+  const HEALF = 'https://de.healf.com/cdn-cgi/image/width=1536,quality=80,format=auto,fit=scale-down,onerror=redirect/img/shopify/s/files/a.jpg'
+  const CODE_LIKE = /\bon[a-z]{3,}\s*=/i
+
+  it('a normal photo link is used as it is', () => {
+    expect(emailImageSrc(3, 'https://cdn.example.com/a.jpg?width=100&quality=80', 'https://shop')).toBe('https://cdn.example.com/a.jpg?width=100&quality=80')
+  })
+  it('a link with onerror= is replaced by a clean link on our own site', () => {
+    expect(looksLikeCode(HEALF)).toBe(true)
+    expect(emailImageSrc(9, HEALF, 'https://shop/')).toBe('https://shop/api/email-image/9')
+  })
+  it('no product id for a code-like link, or an unusable link: no picture, never the raw link', () => {
+    expect(emailImageSrc(undefined, HEALF, 'https://shop')).toBeNull()
+    expect(emailImageSrc(0, HEALF, 'https://shop')).toBeNull()
+    expect(emailImageSrc(1, 'javascript:evil()', 'https://shop')).toBeNull()
+    expect(emailImageSrc(1, null, 'https://shop')).toBeNull()
+  })
+  it('the campaign email never contains the code-like link, anywhere', () => {
+    const e = buildCampaignEmail({ name: 'Wahoo & Oura Sale', endsAt: null, allowCodes: false }, [item({ productId: 9, title: 'Oura Ring 5', imageUrl: HEALF })], 'https://shop')
+    expect(e.html).not.toMatch(CODE_LIKE)
+    expect(e.html).toContain('https://shop/api/email-image/9')
+    expect(e.html).toContain('Oura Ring 5')
+  })
+  it('a product page link that looks like code becomes a plain #', () => {
+    const e = buildCampaignEmail({ name: 'X', endsAt: null, allowCodes: false }, [item({ url: 'https://shop/products/a?x=1&onload=2' })], 'https://shop')
+    expect(e.html).not.toMatch(CODE_LIKE)
+    expect(e.html).toContain('href="#"')
+  })
+  it('the weekly newsletter and the wishlist alert are protected the same way', () => {
+    const p = { id: 9, slug: 'oura', title: 'Oura <b>Ring</b>', price_egp: 100, images: [{ image_url: HEALF, is_primary: true, display_order: 0 }] } as never
+    const html = buildEmailTemplate([p], [p])
+    expect(html).not.toMatch(CODE_LIKE)
+    expect(html).toContain('/api/email-image/9')
+    expect(html).not.toContain('<b>Ring</b>')
   })
 })
 
@@ -198,6 +235,14 @@ describe('emailing a campaign', () => {
     expect(items.find((i) => i.title === 'Watch')?.imageUrl).toBe('w.jpg')
     expect((await loadLiveSaleItems(client(), NOW, { promotionId: 2 })).map((i) => [i.title, i.percent])).toEqual([['Strap', 10]])
     expect(await loadLiveSaleItems(client(), new Date('2026-12-05T00:00:00Z'), { promotionId: 1 })).toEqual([])
+  })
+  it('the sale items carry the product id, so a code-like photo link becomes the clean link in the real email', async () => {
+    db.rows('product_images')[0].image_url = 'https://de.healf.com/cdn-cgi/image/width=1536,onerror=redirect/img/a.jpg'
+    const items = await loadLiveSaleItems(client(), NOW)
+    expect(items.find((i) => i.title === 'Watch')?.productId).toBe(1)
+    const e = buildCampaignEmail({ name: 'X', endsAt: null, allowCodes: false }, items, 'https://shop')
+    expect(e.html).not.toMatch(/\bon[a-z]{3,}\s*=/i)
+    expect(e.html).toContain('https://shop/api/email-image/1')
   })
   it('a test goes only to you and marks nothing as sent', async () => {
     expect(await emailCampaign(client(), 1, 'test', deps, NOW)).toMatchObject({ ok: true })

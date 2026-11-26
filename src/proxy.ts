@@ -13,6 +13,7 @@ type PublicRule = { pattern: RegExp; methods?: string[] }
 
 const PUBLIC_API: PublicRule[] = [
   { pattern: /^\/api\/products$/, methods: ['GET'] },
+  { pattern: /^\/api\/email-image\/\d+$/, methods: ['GET'] }, // photo link used inside emails, looked up by product id
   { pattern: /^\/api\/products\/likes$/, methods: ['GET', 'POST'] },
   { pattern: /^\/api\/products\/[^/]+$/, methods: ['GET'] },
   { pattern: /^\/api\/products\/[^/]+\/images$/, methods: ['GET'] },

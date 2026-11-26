@@ -2,6 +2,8 @@
 // The sale part of the newsletter and the one-campaign email. Pure: data in, HTML out.
 
 export type SaleEmailItem = {
+  /** Needed to give a photo link that looks like code (for example "...,onerror=redirect/...") a clean link on our own site. */
+  productId?: number
   campaignName: string
   title: string
   imageUrl: string | null
@@ -10,6 +12,8 @@ export type SaleEmailItem = {
   price: number
   percent: number
 }
+
+import { SITE_URL } from '@/lib/site'
 
 export const MAX_EMAIL_ITEMS = 12
 
@@ -42,23 +46,43 @@ export function mailUrl(u: unknown): string | null {
   }
 }
 
+/**
+ * Does a link look like code to an email filter? Photo links from shops often carry options such as
+ * ".../width=1536,quality=80,onerror=redirect/img/..." and Brevo reads "onerror=" as an event handler and refuses the whole email.
+ */
+export const looksLikeCode = (s: string) => /\bon[a-z]{3,}\s*=|(java|vb)script\s*:|[<>]/i.test(s)
+
+/**
+ * The photo link to put in an email. A normal photo link is used as it is. A link that looks like code is replaced by
+ * a clean link on our own site that sends the visitor to the photo (/api/email-image/<product id>), so the email text never contains it.
+ * Returns null when there is no usable photo (the email then simply has no picture).
+ */
+export function emailImageSrc(productId: number | string | null | undefined, url: unknown, siteUrl: string = SITE_URL): string | null {
+  const safe = mailUrl(url)
+  if (!safe) return null
+  if (!looksLikeCode(safe)) return safe
+  const id = Number(productId)
+  return Number.isInteger(id) && id > 0 ? `${siteUrl.replace(/\/$/, '')}/api/email-image/${id}` : null
+}
+
 const egp = (n: number) => `${n.toLocaleString('en-US')} EGP`
 
-function card(i: SaleEmailItem): string {
+function card(i: SaleEmailItem, siteUrl: string = SITE_URL): string {
+  const photo = emailImageSrc(i.productId, i.imageUrl, siteUrl)
   return `
       <div style="border:1px solid #fecaca; padding:16px; margin:12px 0; border-radius:12px; background:#ffffff;">
-        ${mailUrl(i.imageUrl) ? `<img src="${esc(mailUrl(i.imageUrl))}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px;" alt=""/>` : ''}
+        ${photo ? `<img src="${esc(photo)}" width="100%" style="border-radius:8px; max-height:220px; object-fit:cover; margin-bottom:12px;" alt=""/>` : ''}
         <span style="background:#dc2626; color:#fff; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:bold;">-${i.percent}%</span>
         <h3 style="margin:10px 0 6px; font-size:18px; color:#111;">${mailText(i.title)}</h3>
         <p style="font-size:22px; font-weight:bold; color:#000; margin:6px 0;">
           ${egp(i.price)} <span style="font-size:15px; font-weight:normal; color:#888; text-decoration:line-through;">${egp(i.regular)}</span>
         </p>
-        <a href="${esc(mailUrl(i.url) ?? '#')}" style="background:#dc2626; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-block;">View Product →</a>
+        <a href="${esc(mailUrl(i.url) && !looksLikeCode(mailUrl(i.url)!) ? mailUrl(i.url) : '#')}" style="background:#dc2626; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-block;">View Product →</a>
       </div>`
 }
 
 /** "On sale now" block for the weekly newsletter. Empty string when nothing is on sale. */
-export function saleSectionHtml(items: SaleEmailItem[]): string {
+export function saleSectionHtml(items: SaleEmailItem[], siteUrl: string = SITE_URL): string {
   if (items.length === 0) return ''
   const names = [...new Set(items.map((i) => i.campaignName))]
   return `
@@ -66,7 +90,7 @@ export function saleSectionHtml(items: SaleEmailItem[]): string {
             🔥 On Sale Now
             <span style="background:#dc2626; color:#fff; font-size:13px; padding:2px 10px; border-radius:20px; margin-left:8px;">${mailText(names.join(' · '))}</span>
           </h2>
-          ${items.slice(0, MAX_EMAIL_ITEMS).map(card).join('')}
+          ${items.slice(0, MAX_EMAIL_ITEMS).map((i) => card(i, siteUrl)).join('')}
           <hr style="border:none; border-top:1px solid #eee; margin:28px 0;"/>`
 }
 
@@ -87,7 +111,7 @@ export function buildCampaignEmail(campaign: { name: string; endsAt: string | nu
           <p style="color:#aaa; margin:8px 0 0; font-size:14px;">${campaign.endsAt ? `Ends ${esc(cairoDate(campaign.endsAt))}` : 'For a limited time'}</p>
         </div>
         <div style="padding:24px;">
-          ${items.slice(0, MAX_EMAIL_ITEMS).map(card).join('')}
+          ${items.slice(0, MAX_EMAIL_ITEMS).map((i) => card(i, siteUrl)).join('')}
           ${items.length > MAX_EMAIL_ITEMS ? `<p style="color:#555; font-size:14px;">…and ${items.length - MAX_EMAIL_ITEMS} more on the website.</p>` : ''}
           ${campaign.allowCodes ? '<p style="color:#555; font-size:13px; margin:16px 0 0;">Your discount code still works on top of these prices.</p>' : ''}
           <div style="text-align:center; margin:36px 0 16px;">

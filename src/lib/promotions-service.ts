@@ -76,7 +76,7 @@ export async function loadLiveSaleItems(db: SupabaseClient, now: Date, opts: { p
     const photos = ((images ?? []) as { product_id: number; image_url: string; is_primary: boolean; display_order: number }[])
       .filter((i) => Number(i.product_id) === Number(p.id))
       .sort((a, b) => Number(b.is_primary) - Number(a.is_primary) || a.display_order - b.display_order)
-    out.push({ campaignName: sale.name, title: p.title, imageUrl: photos[0]?.image_url ?? null, url: `${SITE_URL}/products/${p.slug ?? p.id}`, regular: sale.regular, price: sale.price, percent: sale.percent })
+    out.push({ campaignName: sale.name, productId: Number(p.id), title: p.title, imageUrl: photos[0]?.image_url ?? null, url: `${SITE_URL}/products/${p.slug ?? p.id}`, regular: sale.regular, price: sale.price, percent: sale.percent })
   }
   return out.sort((a, b) => b.percent - a.percent).slice(0, 100)
 }
