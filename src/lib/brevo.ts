@@ -361,6 +361,28 @@ export async function sendBrevoCampaign(input: { name: string; subject: string; 
   }
 }
 
+/**
+ * Asks Brevo whether it accepts this HTML, WITHOUT sending anything: creates a draft campaign (no recipients, never sent) and deletes it again.
+ * Returns true when Brevo's code filter refuses the text. Any other problem (wrong key, no connection) is thrown, so it is never mistaken for a refusal.
+ */
+export async function brevoRefusesHtml(html: string): Promise<boolean> {
+  const apiKey = getBrevoApiKey()
+  const headers = { 'api-key': apiKey, 'Content-Type': 'application/json' }
+  const res = await fetch(`${BREVO_API_URL}/emailCampaigns`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ name: `check ${Date.now()}`, subject: 'check', sender: { name: getSenderName(), email: getSenderEmail() }, type: 'classic', htmlContent: html }),
+  })
+  let data: any = null
+  try { data = await res.json() } catch { data = null }
+  if (res.ok && data?.id) {
+    await fetch(`${BREVO_API_URL}/emailCampaigns/${data.id}`, { method: 'DELETE', headers }).catch(() => undefined)
+    return false
+  }
+  if (/executable code|html content/i.test(String(data?.message ?? ''))) return true
+  throw new Error(data?.message || 'Brevo could not check the email')
+}
+
 /** Sends one email to the shop's own sender address, so you can look at a campaign email before it goes to everyone. */
 export async function sendBrevoTest(subject: string, html: string): Promise<string> {
   const to = getSenderEmail()

@@ -103,3 +103,28 @@ export function buildCampaignEmail(campaign: { name: string; endsAt: string | nu
     </html>`
   return { subject, html }
 }
+
+
+/**
+ * Finds what Brevo's code filter objects to, by asking it about smaller emails (nothing is sent).
+ * `refuses(html)` says whether Brevo refuses that HTML. Returns a list of plain sentences; empty = nothing could be isolated.
+ */
+export async function diagnoseEmail(campaign: { name: string; endsAt: string | null; allowCodes: boolean }, items: SaleEmailItem[], siteUrl: string, refuses: (html: string) => Promise<boolean>): Promise<string[]> {
+  const build = (list: SaleEmailItem[]) => buildCampaignEmail(campaign, list, siteUrl).html
+  if (await refuses(build([]))) return [`the campaign name "${campaign.name}" or the fixed text of the email`]
+  const found: string[] = []
+  for (const item of items.slice(0, MAX_EMAIL_ITEMS)) {
+    if (!(await refuses(build([item])))) continue
+    const parts: [string, SaleEmailItem, string][] = [
+      ['title', { ...item, title: 'x' }, item.title],
+      ['photo link', { ...item, imageUrl: null }, String(item.imageUrl ?? '')],
+      ['product link', { ...item, url: siteUrl }, item.url],
+    ]
+    const culprits: string[] = []
+    for (const [label, changed, value] of parts) {
+      if (!(await refuses(build([changed])))) culprits.push(`its ${label} (${value.slice(0, 120)})`)
+    }
+    found.push(`product "${item.title.slice(0, 80)}": ${culprits.length ? culprits.join(' and ') : 'the combination of its title and links'}`)
+  }
+  return found
+}

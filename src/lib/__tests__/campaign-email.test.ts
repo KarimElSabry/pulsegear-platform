@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { FakeDb } from './fakeDb'
 import { buildCampaignEmail, esc, saleSectionHtml, type SaleEmailItem } from '../campaign-email'
-import { buildEmailTemplate, sendBrevoCampaign, sendWeeklyNewsletter } from '../brevo'
+import { brevoRefusesHtml, buildEmailTemplate, sendBrevoCampaign, sendWeeklyNewsletter } from '../brevo'
 import { emailCampaign, type EmailDeps } from '../campaign-email-service'
 import { loadLiveSaleItems } from '../promotions-service'
 
@@ -10,7 +10,7 @@ vi.mock('../supabase', () => ({ createAdminSupabaseClient: vi.fn(), createBrowse
 
 const item = (over: Partial<SaleEmailItem> = {}): SaleEmailItem => ({ campaignName: 'Early White Friday', title: 'Polar Ignite 3', imageUrl: 'https://img/x.jpg', url: 'https://shop/products/p1', regular: 1000, price: 800, percent: 20, ...over })
 
-import { mailText, mailUrl } from '../campaign-email'
+import { diagnoseEmail, mailText, mailUrl } from '../campaign-email'
 
 describe('text that Brevo could take for code', () => {
   it('takes out angle brackets, template braces, javascript: and onclick= patterns', () => {
@@ -39,6 +39,68 @@ describe('text that Brevo could take for code', () => {
     expect(e.html.match(/\{\{/g)).toHaveLength(1) // only the unsubscribe placeholder
     expect(e.subject).not.toMatch(/[<>{}]/)
     expect(e.html).toContain('href="#"')
+  })
+})
+
+describe('diagnoseEmail (asks Brevo about smaller emails)', () => {
+  const camp = { name: 'Wahoo & Oura Sale', endsAt: null, allowCodes: true }
+  const good = (n: number) => item({ title: `Good ${n}`, url: `https://shop/products/good-${n}`, imageUrl: `https://img/good-${n}.jpg` })
+  // a pretend Brevo filter: refuses any email that contains the word "BADWORD"
+  const refuses = (word: string) => async (html: string) => html.includes(word)
+
+  it('names the product and the part that Brevo refuses', async () => {
+    const bad = item({ title: 'Oura Ring', imageUrl: 'https://img/x.jpg?a=1&BADWORD=2', url: 'https://shop/products/oura' })
+    const found = await diagnoseEmail(camp, [good(1), bad, good(2)], 'https://shop', refuses('BADWORD'))
+    expect(found).toHaveLength(1)
+    expect(found[0]).toContain('product "Oura Ring"')
+    expect(found[0]).toContain('photo link')
+    expect(found[0]).not.toContain('title')
+  })
+  it('finds a refused title and a refused product link too', async () => {
+    const t = await diagnoseEmail(camp, [item({ title: 'BADWORD ring' })], 'https://shop', refuses('BADWORD'))
+    expect(t[0]).toContain('its title')
+    const l = await diagnoseEmail(camp, [item({ url: 'https://shop/products/BADWORD' })], 'https://shop', refuses('BADWORD'))
+    expect(l[0]).toContain('product link')
+  })
+  it('reports every product that is refused', async () => {
+    const found = await diagnoseEmail(camp, [item({ title: 'BADWORD 1' }), good(1), item({ title: 'BADWORD 2' })], 'https://shop', refuses('BADWORD'))
+    expect(found).toHaveLength(2)
+  })
+  it('blames the campaign name when even an empty email is refused', async () => {
+    const found = await diagnoseEmail({ ...camp, name: 'BADWORD sale' }, [good(1)], 'https://shop', refuses('BADWORD'))
+    expect(found).toHaveLength(1)
+    expect(found[0]).toContain('campaign name')
+  })
+  it('nothing refused alone = nothing to report', async () => {
+    expect(await diagnoseEmail(camp, [good(1), good(2)], 'https://shop', async () => false)).toEqual([])
+  })
+})
+
+describe('brevoRefusesHtml (a draft check, never a send)', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs() })
+  const env = () => { vi.stubEnv('BREVO_API_KEY', 'k'); vi.stubEnv('BREVO_SENDER_EMAIL', 'shop@example.com') }
+  const reply = (ok: boolean, body: unknown) => ({ ok, json: async () => body })
+
+  it('accepted: creates a draft, deletes it again, never sends', async () => {
+    env()
+    const f = vi.fn().mockResolvedValueOnce(reply(true, { id: 77 })).mockResolvedValueOnce(reply(true, {}))
+    vi.stubGlobal('fetch', f)
+    expect(await brevoRefusesHtml('<p>hi</p>')).toBe(false)
+    expect(f.mock.calls[0][0]).toContain('/emailCampaigns')
+    expect(f.mock.calls[1][0]).toContain('/emailCampaigns/77')
+    expect(f.mock.calls[1][1].method).toBe('DELETE')
+    expect(f.mock.calls.some((c) => String(c[0]).includes('sendNow'))).toBe(false)
+    expect(JSON.parse(f.mock.calls[0][1].body).recipients).toBeUndefined() // no recipients: it could not reach anyone
+  })
+  it('refused by the code filter = true', async () => {
+    env()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(false, { message: 'Please remove any executable code from your HTML content.' })))
+    expect(await brevoRefusesHtml('x')).toBe(true)
+  })
+  it('any other problem is thrown, never taken for a refusal', async () => {
+    env()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(false, { message: 'Key not found' })))
+    await expect(brevoRefusesHtml('x')).rejects.toThrow('Key not found')
   })
 })
 
@@ -169,6 +231,31 @@ describe('emailing a campaign', () => {
     expect(db.rows('promotions')[0].emailed_at).toBeNull()
     failNext = true
     expect((await emailCampaign(client(), 1, 'all', deps, NOW)).message).not.toContain('product titles') // other errors get no hint
+  })
+  it('when Brevo refuses the text, the message says which product and part (asked from Brevo, nothing sent)', async () => {
+    db.rows('products')[1].title = 'Strap BADWORD'
+    const asked: string[] = []
+    const strict: EmailDeps = {
+      sendAll: async () => { throw new Error('Please remove any executable code from your HTML content.') },
+      sendTest: async () => 'x',
+      refuses: async (html) => { asked.push(html); return html.includes('BADWORD') },
+    }
+    const r = await emailCampaign(client(), 1, 'all', strict, NOW)
+    expect(r.ok).toBe(false)
+    expect(r.message).toContain('product "Strap BADWORD"')
+    expect(r.message).toContain('Nothing went out')
+    expect(asked.length).toBeGreaterThan(1)
+    expect(db.rows('promotions')[0].emailed_at).toBeNull()
+  })
+  it('a problem while asking Brevo is shown, and the campaign can still be tried again', async () => {
+    const broken: EmailDeps = {
+      sendAll: async () => { throw new Error('Please remove any executable code from your HTML content.') },
+      sendTest: async () => 'x',
+      refuses: async () => { throw new Error('Key not found') },
+    }
+    const r = await emailCampaign(client(), 1, 'all', broken, NOW)
+    expect(r.message).toContain('Could not find the exact part: Key not found')
+    expect(db.rows('promotions')[0].emailed_at).toBeNull()
   })
   it('a failed send is not recorded, so you can try again', async () => {
     failNext = true

@@ -3,7 +3,7 @@
 // This reaches real customers, so it can only be sent once per campaign unless you ask to send again, and a double click sends once.
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { buildCampaignEmail } from '@/lib/campaign-email'
+import { buildCampaignEmail, diagnoseEmail } from '@/lib/campaign-email'
 import { promotionStatus, type Promotion } from '@/lib/promotions'
 import { PROMOTION_COLUMNS, loadLiveSaleItems } from '@/lib/promotions-service'
 import { SITE_URL } from '@/lib/site'
@@ -11,6 +11,8 @@ import { SITE_URL } from '@/lib/site'
 export type EmailDeps = {
   sendAll: (input: { name: string; subject: string; html: string }) => Promise<void>
   sendTest: (subject: string, html: string) => Promise<string>
+  /** Asks Brevo if it refuses some HTML, without sending (used to find what its code filter objects to). */
+  refuses?: (html: string) => Promise<boolean>
 }
 
 export type EmailMode = 'test' | 'all' | 'again'
@@ -55,7 +57,16 @@ export async function emailCampaign(db: SupabaseClient, id: number, mode: EmailM
     const reason = e instanceof Error ? e.message : 'the email service failed'
     // Brevo's own safety filter: it refused the text, nothing is wrong with your account or list
     const hint = /executable code|html content/i.test(reason) ? ' Brevo\'s filter thought the email text contains code. The campaign name and the product titles go into the email: remove special characters from them ( < > { } = ` ) and try again.' : ''
-    return { ok: false, message: `Not sent: ${reason}. Nothing went out.${hint}` }
+    let found = ''
+    if (hint && deps.refuses) {
+      try {
+        const list = await diagnoseEmail({ name: promo.name, endsAt: promo.ends_at, allowCodes: promo.allow_codes }, items, SITE_URL, deps.refuses)
+        found = list.length ? ` I asked Brevo which part it refuses: ${list.join('; ')}. Fix that, or switch that product out of the campaign, and try again.` : ' I could not isolate a single part (each part passes on its own).'
+      } catch (diagnoseError) {
+        found = ` (Could not find the exact part: ${diagnoseError instanceof Error ? diagnoseError.message : 'check failed'}.)`
+      }
+    }
+    return { ok: false, message: `Not sent: ${reason}. Nothing went out.${hint}${found}` }
   }
   return { ok: true, message: 'Sent to your newsletter list.' }
 }

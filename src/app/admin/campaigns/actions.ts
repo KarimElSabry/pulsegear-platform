@@ -8,7 +8,7 @@ import { createAdminSupabaseClient } from '@/lib/supabase'
 import { cleanPromotion } from '@/lib/promotions'
 import { deleteCampaign, saveCampaign, setCampaignActive } from '@/lib/campaign-service'
 import { emailCampaign, type EmailMode } from '@/lib/campaign-email-service'
-import { sendBrevoCampaign, sendBrevoTest } from '@/lib/brevo'
+import { brevoRefusesHtml, sendBrevoCampaign, sendBrevoTest } from '@/lib/brevo'
 
 export interface CampaignResult { ok: boolean; message: string; id?: number }
 
@@ -68,7 +68,7 @@ export async function emailCampaignAction(_prev: CampaignResult | null, formData
   const id = idOf(formData)
   const mode = String(formData.get('mode') ?? '')
   if (!id || !['test', 'all', 'again'].includes(mode)) return { ok: false, message: 'Missing campaign.' }
-  const result = await emailCampaign(createAdminSupabaseClient(), id, mode as EmailMode, { sendAll: sendBrevoCampaign, sendTest: sendBrevoTest })
+  const result = await emailCampaign(createAdminSupabaseClient(), id, mode as EmailMode, { sendAll: sendBrevoCampaign, sendTest: sendBrevoTest, refuses: brevoRefusesHtml })
   if (result.ok) revalidatePath('/admin/campaigns')
   return result
 }
